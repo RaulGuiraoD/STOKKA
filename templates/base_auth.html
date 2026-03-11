@@ -1,0 +1,140 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}STOKKA{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <!-- libreria externa para añadir iconos-->
+
+    <style>
+        /* Estilos base para la estructura de autenticación */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Merriweather', serif;
+        }
+
+        .main-auth-container {
+            background: var(--verde-stokka);
+            /* Usando tu variable */
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 50px;
+            color: white;
+        }
+
+        .auth-logo-top {
+            font-size: 80px;
+            font-style: italic;
+            font-weight: 300;
+            margin: 0;
+        }
+
+        /* Footer Blanco (20% aprox) */
+        .footer-auth {
+            background: white;
+            min-height: 20vh;
+            display: flex;
+            padding: 40px 10%;
+            color: black;
+        }
+
+        .footer-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border-right: 2px solid #eee;
+            padding-right: 40px;
+        }
+
+        .social-btn {
+            width: 35px;
+            height: 35px;
+            background: var(--verde-stokka);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+
+        .footer-content {
+            flex: 1;
+            display: flex;
+            justify-content: space-around;
+            padding-left: 40px;
+        }
+
+        .footer-col h4 {
+            color: var(--verde-stokka);
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .footer-col ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-col li {
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #333;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-auth-container">
+        <h1 class="auth-logo-top">STOKKA</h1>
+        {% block content %}{% endblock %}
+    </div>
+
+    <footer class="footer-auth">
+        <div class="footer-sidebar">
+            <a href="#" class="social-btn">𝕏</a>
+            <a href="#" class="social-btn"><i class="fa-brands fa-linkedin"></i></a>
+            <a href="#" class="social-btn"><i class="fa-brands fa-instagram"></i></a>
+            <a href="#" class="social-btn"><i class="fa-brands fa-youtube"></i></a>
+        </div>
+        <div class="footer-content">
+            <div class="footer-col">
+                <h4>Contacto</h4>
+                <ul>
+                    <li>Ejemplo</li>
+                    <li>Ejemplo</li>
+                    <li>Ejemplo</li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Explorar</h4>
+                <ul>
+                    <li>Ejemplo</li>
+                    <li>Ejemplo </li>
+                    <li>Ejemplo</li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Recursos</h4>
+                <ul>
+                    <li>Ejemplo</li>
+                    <li>Ejemplo </li>
+                    <li>Ejemplo</li>
+                </ul>
+            </div>
+        </div>
+    </footer>
+</body>
+
+</html>

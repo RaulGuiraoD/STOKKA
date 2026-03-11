@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Perfil{% endblock %}
+
+{% block content %}
+<div class="perfil-container-figma">
+    <h1 class="perfil-title-figma">Editar Información</h1>
+    
+    <div class="info-bloque">
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="info-item-figma-edit">
+                <label class="figma-label">Nombre</label>
+                <input type="text" name="nombre" value="{{ user.first_name }}" class="figma-input-edit">
+            </div>
+
+            <div class="info-item-figma-edit">
+                <label class="figma-label">Apellido</label>
+                <input type="text" name="apellido" value="{{ user.last_name }}" class="figma-input-edit">
+            </div>
+
+            <div class="info-item-figma-edit">
+                <label class="figma-label">Correo electrónico</label>
+                <input type="email" name="email" value="{{ user.email }}" class="figma-input-edit">
+            </div>
+
+            <div class="info-item-figma-edit">
+                <label class="figma-label">Teléfono</label>
+                <input type="text" name="telefono" value="{{ perfil.telefono|default:'' }}" class="figma-input-edit" placeholder="+34 000-000-000">
+            </div>
+
+            <div class="perfil-main-actions">
+                <a href="{% url 'perfil' %}" class="btn-figma-light">Cancelar</a>
+                <button type="submit" class="btn-confirmar-stokka">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Separación entre campos */
+    .info-item-figma-edit {
+        margin-bottom: 20px; /* Aquí le damos aire a los campos */
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .figma-label {
+        font-weight: bold;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .figma-input-edit {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        font-family: 'Merriweather', serif;
+        font-size: 15px;
+        box-sizing: border-box;
+    }
+
+    .figma-input-edit:focus {
+        border-color: var(--verde-stokka);
+        outline: none;
+        box-shadow: 0 0 5px rgba(0, 61, 0, 0.1);
+    }
+
+    /* Botones */
+    .perfil-main-actions {
+        margin-top: 30px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .btn-figma-light {
+        background: white;
+        text-decoration: none;
+        color: black;
+        border: 1px solid var(--rojo-alerta);
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-size: 15px;
+        cursor: pointer;
+        display: inline-block;
+        text-align: center;
+        transition: 0.3s;
+        min-width: 120px;
+    }
+
+    .btn-figma-light:hover {
+        background-color: var(--rojo-alerta);
+        color: white;
+    }
+
+    .btn-confirmar-stokka {
+        background: white;
+        color: black;
+        border: 1px solid var(--verde-stokka);
+        border-radius: 10px;
+        padding: 10px 25px;
+        font-size: 15px;
+        cursor: pointer;
+        font-family: 'Merriweather', serif;
+        transition: 0.3s;
+        min-width: 170px;
+    }
+
+    .btn-confirmar-stokka:hover {
+        background-color: var(--verde-stokka);
+        color: white;
+
+    }
+</style>
+{% endblock %}

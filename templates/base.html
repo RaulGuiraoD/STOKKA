@@ -1,0 +1,82 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STOKKA - {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+</head>
+
+<body>
+    <header class="dashboard-header">
+        <div class="header-left" onclick="location.href='{% url 'index' %}'" style="cursor:pointer;">
+            <img src="{% static 'assets/Logo stokka.png' %}" class="mini-logo" alt="Logo">
+            <span class="brand-name">STOKKA</span>
+        </div>
+
+        <div class="header-center">
+            <div class="search-bar">
+                <input type="text" placeholder="Buscar productos...">
+                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="user-identity">
+                <div class="user-text">
+                    <span class="user-name">HOLA, {{ user.first_name|upper }}</span>
+                    <span class="user-role">{% if user.is_superuser %}ADMINISTRADOR{% else %}PERSONAL{% endif %}</span>
+                </div>
+                <div class="user-avatar-circle">
+                    {% if user.perfil.foto %}
+                        <img src="{{ user.perfil.foto.url }}" alt="Avatar">
+                    {% else %}
+                        <i class="fa-solid fa-circle-user"></i>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <nav class="dashboard-sidebar">
+            <div class="nav-links">
+                <a href="{% url 'index' %}" class="nav-icon {% if request.resolver_match.url_name == 'index' %}active{% endif %}" title="Home">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+
+                <a href="#" class="nav-icon" title="Inventario">
+                    <i class="fa-solid fa-file-circle-plus"></i>
+                </a>
+
+                {% if user.is_superuser %}
+                <a href="#" class="nav-icon" title="Gestión Usuarios">
+                    <i class="fa-solid fa-users-gear"></i>
+                </a>
+                {% endif %}
+
+                <a href="#" class="nav-icon" title="Mensajes">
+                    <i class="fa-solid fa-envelope"></i>
+                </a>
+
+                <a href="#" class="nav-icon" title="Editar">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </a>
+
+                <a href="{% url 'perfil' %}" class="nav-icon {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}" title="Ajustes">
+                    <i class="fa-solid fa-gear"></i>
+                </a>
+            </div>
+        </nav>
+
+        <main class="dashboard-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+:root {
+    --verde-stokka: #003D00;
+    --verde-secundario: #1CA300;
+    --rojo-alerta: #C10D00;
+    --amarillo-alerta: #F5C907;
+    --blanco: #FFFFFF;
+    --gris-fondo: #F2F4F6; 
+}
+
+body {
+    background-color: var(--gris-fondo);
+    color: #333;
+}
+
+/* Clases para la tabla pasiva */
+.fila-critica {
+    background-color: rgba(193, 13, 0, 0.1) !important; 
+    border-left: 5px solid var(--rojo-alerta);
+}
+
+.fila-aviso {
+    background-color: rgba(245, 201, 7, 0.1) !important;
+    border-left: 5px solid var(--amarillo-alerta);
+}
+
+.sidebar {
+    background-color: var(--verde-stokka);
+    color: white;
+}
