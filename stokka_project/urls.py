@@ -35,6 +35,8 @@ urlpatterns = [
     path('perfil/editar/', views.editar_perfil_view, name='editar_perfil'),
     path('perfil/cambiar-foto/', views.cambiar_foto, name='cambiar_foto'),
     path('perfil/eliminar-foto/', views.eliminar_foto, name='eliminar_foto'),
+    path('gestion-usuarios/', views.gestion_usuarios, name='gestion_usuarios'),
+    path('eliminar-usuario/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),
 ]
 
 # Esto es para que se vean el Logo y las Facturas en desarrollo

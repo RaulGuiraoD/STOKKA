@@ -6,9 +6,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STOKKA - {% block title %}{% endblock %}</title>
+    
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
 </head>
 
 <body>
@@ -29,11 +32,11 @@
             <div class="user-identity">
                 <div class="user-text">
                     <span class="user-name">HOLA, {{ user.first_name|upper }}</span>
-                    <span class="user-role">{% if user.is_superuser %}ADMINISTRADOR{% else %}PERSONAL{% endif %}</span>
+                    <span class="user-role">{{ user.get_rol_display|upper }}</span>
                 </div>
                 <div class="user-avatar-circle">
                     {% if user.perfil.foto %}
-                        <img src="{{ user.perfil.foto.url }}" alt="Avatar">
+                       <img src="{{ user.perfil.foto.url }}" alt="Avatar">
                     {% else %}
                         <i class="fa-solid fa-circle-user"></i>
                     {% endif %}
@@ -53,8 +56,8 @@
                     <i class="fa-solid fa-file-circle-plus"></i>
                 </a>
 
-                {% if user.is_superuser %}
-                <a href="#" class="nav-icon" title="Gestión Usuarios">
+                {% if user.es_admin_o_dueño %}
+                <a href="{% url 'gestion_usuarios' %}" class="nav-icon {% if request.resolver_match.url_name == 'gestion_usuarios' %}active{% endif %}" title="Gestión Usuarios">
                     <i class="fa-solid fa-users-gear"></i>
                 </a>
                 {% endif %}
@@ -78,5 +81,6 @@
         </main>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

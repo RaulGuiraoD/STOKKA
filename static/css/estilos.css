@@ -10,9 +10,60 @@
 body {
     background-color: var(--gris-fondo);
     color: #333;
+    font-family: 'Merriweather', serif;
 }
 
-/* Clases para la tabla pasiva */
+/* --- CLASES DE GESTIÓN DE USUARIOS (NUEVAS) --- */
+
+/* Botón Nuevo Usuario */
+.btn-stokka {
+    background-color: var(--verde-stokka) !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    border-radius: 10px !important;
+    text-decoration: none !important;
+    display: inline-flex !important;
+    align-items: center;
+    font-weight: bold;
+    transition: 0.3s;
+}
+
+.btn-stokka:hover {
+    filter: brightness(1.2);
+}
+
+/* Badge de Roles */
+.rol-stokka {
+    padding: 6px 14px !important;
+    border-radius: 20px !important;
+    font-weight: 700 !important;
+    font-size: 11px !important;
+    text-transform: uppercase;
+    display: inline-block !important;
+    color: #ffffff !important;
+    text-align: center;
+}
+
+.bg-stokka-dueno { background-color: var(--verde-stokka) !important; }
+.bg-stokka-admin { background-color: var(--amarillo-alerta) !important; color: #000 !important; }
+.bg-stokka-empleado { background-color: var(--verde-secundario) !important; }
+
+/* Tarjetas de Usuario */
+.card-usuario {
+    background: white;
+    border-radius: 15px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-usuario:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* --- OTRAS CLASES EXISTENTES --- */
 .fila-critica {
     background-color: rgba(193, 13, 0, 0.1) !important; 
     border-left: 5px solid var(--rojo-alerta);
@@ -21,9 +72,4 @@ body {
 .fila-aviso {
     background-color: rgba(245, 201, 7, 0.1) !important;
     border-left: 5px solid var(--amarillo-alerta);
-}
-
-.sidebar {
-    background-color: var(--verde-stokka);
-    color: white;
 }

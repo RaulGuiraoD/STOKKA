@@ -1,11 +1,11 @@
-/* dashboard.css */
-
 :root {
     --header-height: 70px;
     --sidebar-width: 80px;
-    --bg-gris: #f4f4f4;
+    --verde-stokka: #003D00;
+    --bg-gris: #F2F4F6;
 }
 
+/* ESTRUCTURA BASE */
 body {
     margin: 0;
     background-color: var(--bg-gris);
@@ -75,7 +75,7 @@ body {
     cursor: pointer;
 }
 
-/* Identidad de Usuario en Header */
+/* USUARIO HEADER */
 .user-identity {
     display: flex;
     align-items: center;
@@ -103,7 +103,6 @@ body {
     opacity: 0.7;
 }
 
-/* Contenedor del avatar */
 .user-avatar-circle {
     width: 40px;
     height: 40px;
@@ -114,32 +113,12 @@ body {
     justify-content: center;
     background-color: rgba(255, 255, 255, 0.2);
     border: 2px solid rgba(255, 255, 255, 0.5);
-    transition: transform 0.3s ease;
 }
 
-.user-avatar-circle:hover {
-    transform: scale(1.05);
-}
-
-.user-avatar-circle i {
-    font-size: 24px;
-    color: white;
-}
-
-/* Imagen real del usuario */
 .user-avatar-circle img {
-    width: 100% !important;
-    height: 100% !important;
-    max-width: 100%;       
-    max-height: 100%;      
-    object-fit: cover;    
-    display: block;        
-}
-
-/* LAYOUT */
-.main-layout {
-    display: flex;
-    margin-top: var(--header-height);
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 /* SIDEBAR */
@@ -176,22 +155,27 @@ body {
     font-size: 28px;
     text-decoration: none;
     color: var(--verde-stokka);
-    transition: all 0.3s ease;
+    transition: 0.3s;
     border-radius: 12px;
 }
 
-.nav-icon:hover,
-.nav-icon.active {
+.nav-icon:hover, .nav-icon.active {
     background-color: var(--verde-stokka);
     color: white;
-    transform: scale(1.1);
 }
 
-/* ÁREA DE CONTENIDO */
+/* CONTENIDO */
 .dashboard-content {
     margin-left: var(--sidebar-width);
-    flex-grow: 1;
+    margin-top: var(--header-height);
     padding: 30px;
-    background-color: var(--bg-gris);
     min-height: calc(100vh - var(--header-height));
+    box-sizing: border-box;
+}
+
+/* RESPONSIVE */
+@media (max-width: 991px) {
+    .dashboard-sidebar { display: none; }
+    .dashboard-content { margin-left: 0; }
+    .search-bar { width: 70%; }
 }
