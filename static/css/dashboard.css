@@ -9,9 +9,9 @@
    ESTILOS PERTENECIENTES AL BASE.HTML (Layout Principal)
    ========================================================================== */
 
-body {
-    background-color: var(--bg-gris);
-    font-family: 'Merriweather', serif;
+/* Aseguramos la fuente en todo el proyecto */
+body, input, button, select, textarea {
+    font-family: 'Merriweather', serif !important;
 }
 
 .dashboard-header {
@@ -26,10 +26,26 @@ body {
     filter: brightness(0) invert(1);
 }
 
+/* BARRA DE BÚSQUEDA: Más larga y grande */
+.search-bar {
+    max-width: 700px !important; 
+    width: 60% !important;        
+    height: 45px;                
+    font-size: 1.1rem;
+}
+
+.search-bar input {
+    font-size: 1rem;
+}
+
 .brand-name {
-    font-size: 24px;
+    font-size: 26px;
     font-weight: bold;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
+}
+.user-name {
+    font-size: 12px;
+    letter-spacing: 1px;
 }
 
 .user-identity {
@@ -51,7 +67,6 @@ body {
     left: 0;
     top: var(--header-height);
     z-index: 1020;
-    padding: 2rem 0; /* Espacio de cortesía en los extremos */
 }
 
 .nav-links {
@@ -60,23 +75,24 @@ body {
     align-items: center;
     width: 100%;
     /* Distribuye los iconos con el mismo espacio entre ellos */
-    justify-content: space-evenly; 
+    justify-content: space-evenly;
 }
 
 .nav-icon {
-    width: 55px;
-    height: 55px;
+    width: 65px;
+    height: 65px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 30px;
     text-decoration: none;
     color: var(--verde-stokka);
     transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 12px;
+    border-radius: 15px;
 }
 
-.nav-icon:hover, .nav-icon.active {
+.nav-icon:hover,
+.nav-icon.active {
     background-color: var(--verde-stokka);
     color: white;
     transform: scale(1.05);
@@ -89,8 +105,13 @@ body {
 }
 
 @media (max-width: 991px) {
-    .dashboard-sidebar { display: none; }
-    .dashboard-content { margin-left: 0; }
+    .dashboard-sidebar {
+        display: none;
+    }
+
+    .dashboard-content {
+        margin-left: 0;
+    }
 }
 
 /* ==========================================================================
