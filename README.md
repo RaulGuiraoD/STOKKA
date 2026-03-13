@@ -53,7 +53,7 @@ STOKKA es una aplicación web robusta diseñada para la gestión eficiente de in
 
     - Clonar el repositorio:
 
-        git clone https://github.com/tu-usuario/proyecto-stokka.git
+          git clone https://github.com/tu-usuario/proyecto-stokka.git
 
     - Crear y activar entorno virtual:
 
