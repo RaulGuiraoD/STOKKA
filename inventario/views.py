@@ -151,14 +151,15 @@ def perfil_view(request):
 @login_required
 def editar_perfil_view(request):
     perfil, created = Perfil.objects.get_or_create(user=request.user)
+    
     if request.method == 'POST':
-        # Guardamos datos del usuario
         request.user.first_name = request.POST.get('nombre')
         request.user.last_name = request.POST.get('apellido')
         request.user.email = request.POST.get('email')
-        request.user.telefono = request.POST.get('telefono')
-        request.user.save()
+        request.user.save() 
 
+        perfil.telefono = request.POST.get('telefono')
+        perfil.save() 
 
         return redirect('perfil')
     

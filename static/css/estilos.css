@@ -7,11 +7,6 @@
     --gris-fondo: #F2F4F6; 
 }
 
-body {
-    background-color: var(--gris-fondo);
-    color: #333;
-    font-family: 'Merriweather', serif;
-}
 
 /* --- CLASES DE GESTIÓN DE USUARIOS (NUEVAS) --- */
 

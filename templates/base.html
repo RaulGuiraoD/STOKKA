@@ -6,49 +6,54 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>STOKKA - {% block title %}{% endblock %}</title>
-    
+
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
-    <header class="dashboard-header">
-        <div class="header-left" onclick="location.href='{% url 'index' %}'" style="cursor:pointer;">
+    <header class="dashboard-header fixed-top d-flex align-items-center justify-content-between px-4">
+        <div class="header-left d-flex align-items-center gap-2" onclick="location.href='{% url 'index' %}'"
+            style="cursor:pointer;">
             <img src="{% static 'assets/Logo stokka.png' %}" class="mini-logo" alt="Logo">
-            <span class="brand-name">STOKKA</span>
+            <span class="brand-name d-none d-md-block">STOKKA</span>
         </div>
 
-        <div class="header-center">
-            <div class="search-bar">
-                <input type="text" placeholder="Buscar productos...">
-                <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <div class="header-center flex-grow-1 d-flex justify-content-center px-3">
+            <div class="search-bar d-flex align-items-center px-3 rounded-pill bg-white w-100 shadow-sm"
+                style="max-width: 500px;">
+                <input type="text" class="border-0 w-100 py-1" placeholder="Buscar productos..." style="outline: none;">
+                <button class="border-0 bg-transparent text-success"><i
+                        class="fa-solid fa-magnifying-glass"></i></button>
             </div>
         </div>
 
         <div class="header-right">
-            <div class="user-identity">
-                <div class="user-text">
-                    <span class="user-name">HOLA, {{ user.first_name|upper }}</span>
-                    <span class="user-role">{{ user.get_rol_display|upper }}</span>
+            <div class="user-identity d-flex align-items-center gap-3 px-3 py-1 rounded-pill">
+                <div class="user-text text-end d-none d-sm-block">
+                    <span class="user-name d-block fw-bold small">HOLA, {{ user.first_name|upper }}</span>
+                    <span class="user-role d-block opacity-75 small">{{ user.get_rol_display|upper }}</span>
                 </div>
-                <div class="user-avatar-circle">
+                <div
+                    class="user-avatar-circle shadow-sm overflow-hidden d-flex align-items-center justify-content-center bg-white border border-white border-2">
                     {% if user.perfil.foto %}
-                       <img src="{{ user.perfil.foto.url }}" alt="Avatar">
+                    <img src="{{ user.perfil.foto.url }}" alt="Avatar" class="w-100 h-100 object-fit-cover">
                     {% else %}
-                        <i class="fa-solid fa-circle-user"></i>
+                    <i class="fa-solid fa-circle-user text-secondary fs-4"></i>
                     {% endif %}
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="main-layout">
-        <nav class="dashboard-sidebar">
-            <div class="nav-links">
-                <a href="{% url 'index' %}" class="nav-icon {% if request.resolver_match.url_name == 'index' %}active{% endif %}" title="Home">
+    <div class="d-flex">
+        <nav class="dashboard-sidebar shadow-sm">
+            <div class="nav-links d-flex flex-column align-items-center h-100">
+                <a href="{% url 'index' %}"
+                    class="nav-icon {% if request.resolver_match.url_name == 'index' %}active{% endif %}" title="Home">
                     <i class="fa-solid fa-house"></i>
                 </a>
 
@@ -57,7 +62,9 @@
                 </a>
 
                 {% if user.es_admin_o_dueño %}
-                <a href="{% url 'gestion_usuarios' %}" class="nav-icon {% if request.resolver_match.url_name == 'gestion_usuarios' %}active{% endif %}" title="Gestión Usuarios">
+                <a href="{% url 'gestion_usuarios' %}"
+                    class="nav-icon {% if request.resolver_match.url_name == 'gestion_usuarios' %}active{% endif %}"
+                    title="Gestión Usuarios">
                     <i class="fa-solid fa-users-gear"></i>
                 </a>
                 {% endif %}
@@ -70,17 +77,22 @@
                     <i class="fa-solid fa-pen-to-square"></i>
                 </a>
 
-                <a href="{% url 'perfil' %}" class="nav-icon {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}" title="Ajustes">
+                <a href="{% url 'perfil' %}"
+                    class="nav-icon {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}"
+                    title="Ajustes">
                     <i class="fa-solid fa-gear"></i>
                 </a>
             </div>
         </nav>
 
-        <main class="dashboard-content">
-            {% block content %}{% endblock %}
+        <main class="dashboard-content flex-grow-1">
+            <div class="container-fluid px-4 py-4">
+                {% block content %}{% endblock %}
+            </div>
         </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>
