@@ -4,7 +4,7 @@ from django.contrib.auth import login, authenticate, get_user_model
 from .models import Producto, Perfil, Usuario
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from .forms import RegistroUsuarioForm
+from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm
 
 # Esto detecta automáticamente el Usuario personalizado
 User = get_user_model()
@@ -20,10 +20,10 @@ def admin_required(view_func):
 @admin_required
 def gestion_usuarios(request):
     usuarios = User.objects.all().order_by('id')
-    form = RegistroUsuarioForm() # Siempre inicializamos el form aquí
-
+    
     if request.method == 'POST':
-        form = RegistroUsuarioForm(request.POST)
+        # Pasamos user_request aquí
+        form = RegistroUsuarioForm(request.POST, user_request=request.user)
         if form.is_valid():
             nuevo_usuario = form.save(commit=False)
             nuevo_usuario.set_password(form.cleaned_data['password'])
@@ -31,10 +31,37 @@ def gestion_usuarios(request):
             Perfil.objects.get_or_create(user=nuevo_usuario)
             messages.success(request, f"Usuario {nuevo_usuario.username} creado.")
             return redirect('gestion_usuarios')
+    else:
+        # Y aquí también para el formulario vacío
+        form = RegistroUsuarioForm(user_request=request.user)
 
     return render(request, 'stokka/gestion_usuarios.html', {
         'usuarios': usuarios,
         'form': form
+    })
+
+@login_required
+@admin_required
+def editar_usuario_admin(request, user_id):
+    usuario_a_editar = User.objects.get(id=user_id)
+    
+    # Seguridad extra: Solo el dueño puede editar a otro dueño
+    if usuario_a_editar.es_dueño() and not request.user.es_dueño():
+        messages.error(request, "No tienes permiso para editar al dueño.")
+        return redirect('gestion_usuarios')
+
+    if request.method == 'POST':
+        form = EditarUsuarioAdminForm(request.POST, instance=usuario_a_editar, user_request=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Usuario actualizado correctamente.")
+            return redirect('gestion_usuarios')
+    else:
+        form = EditarUsuarioAdminForm(instance=usuario_a_editar, user_request=request.user)
+    
+    return render(request, 'stokka/editar_usuario_admin.html', {
+        'form': form,
+        'usuario_editado': usuario_a_editar
     })
 
 @login_required

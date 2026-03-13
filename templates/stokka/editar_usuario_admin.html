@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Editar Usuario - STOKKA{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12 d-flex align-items-center justify-content-between">
+            <div>
+                <h2 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-user-pen me-2" style="color: var(--verde-stokka);"></i>
+                    Editar Usuario
+                </h2>
+                <p class="text-muted small">Modificando el perfil de: <strong>{{ usuario_editado.username }}</strong>
+                </p>
+            </div>
+            <a href="{% url 'gestion_usuarios' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                <i class="fa-solid fa-arrow-left me-2"></i>Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase">Nombre de Usuario</label>
+                                {{ form.username }}
+                                {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors
+                                    }}</div>{% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase">Email *</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase">Nombre</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase">Apellido</label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-2">
+                            <div class="p-3 bg-light rounded-3">
+                                <label class="form-label fw-bold small text-uppercase mb-2 text-muted">Asignar Rol en el
+                                    Sistema</label>
+                                {{ form.rol }}
+                                <div class="form-text mt-2">
+                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                    Recuerda que los roles limitan los accesos a las secciones del dashboard.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-end mt-4 pt-3 border-top">
+                            <button type="submit" class="btn btn-dark-stokka rounded-pill px-5 py-2 shadow-sm">
+                                <i class="fa-solid fa-floppy-disk me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilo para los inputs que ya trae Django */
+    .form-control,
+    .form-select {
+        border-radius: 10px;
+        padding: 10px 15px;
+        border: 1px solid #dee2e6;
+        transition: all 0.3s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--verde-stokka);
+        box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1);
+    }
+</style>
+{% endblock %}
