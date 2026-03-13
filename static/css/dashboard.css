@@ -31,7 +31,7 @@ body, input, button, select, textarea {
     max-width: 700px !important; 
     width: 60% !important;        
     height: 45px;                
-    font-size: 1.1rem;
+    font-size: 1rem;
 }
 
 .search-bar input {
@@ -39,12 +39,12 @@ body, input, button, select, textarea {
 }
 
 .brand-name {
-    font-size: 26px;
+    font-size: 22px;
     font-weight: bold;
     letter-spacing: 3px;
 }
 .user-name {
-    font-size: 12px;
+    font-size: 8px;
     letter-spacing: 1px;
 }
 
@@ -119,3 +119,19 @@ body, input, button, select, textarea {
    ========================================================================== */
 
 /* Aquí podrías añadir otros estilos específicos de vistas si los hubiera */
+
+/* --- Títulos y Tipografía --- */
+h1, .h1 { font-size: 1.75rem !important; } /* Tamaño más contenido para h1 */
+h2, .h2 { font-size: 1.5rem !important; }
+h3, .h3 { font-size: 1.25rem !important; }
+
+/* --- Sombra Stokka Global --- */
+.shadow-stokka {
+    box-shadow: 0 10px 30px rgba(0, 61, 0, 0.12) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.shadow-stokka:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px rgba(0, 61, 0, 0.18) !important;
+}

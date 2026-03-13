@@ -1,12 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard - STOKKA{% endblock %}
 
 {% block content %}
-    <h2>Dashboard Principal</h2>
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;">
-        <div style="background: white; height: 150px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
-        <div style="background: white; height: 150px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
-        <div style="background: white; height: 150px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+<div class="container-fluid py-4">
+    <h1 class="h4 mb-4 fw-bold text-dark" style="letter-spacing: 0.5px;">Dashboard Principal</h1>
+
+    <div class="row g-4">
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 d-flex align-items-center justify-content-center" style="min-height: 180px;">
+                <p class="text-muted small text-uppercase fw-bold">Próximamente: Resumen</p>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 d-flex align-items-center justify-content-center" style="min-height: 180px;">
+                <p class="text-muted small text-uppercase fw-bold">Próximamente: Inventario</p>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 d-flex align-items-center justify-content-center" style="min-height: 180px;">
+                <p class="text-muted small text-uppercase fw-bold">Próximamente: Alertas</p>
+            </div>
+        </div>
     </div>
+</div>
 {% endblock %}

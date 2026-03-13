@@ -4,343 +4,133 @@
 {% block title %}Mi Perfil - STOKKA{% endblock %}
 
 {% block content %}
-<div class="perfil-container-figma">
-    <h1 class="perfil-title-figma">Tú perfil</h1>
+<div class="container-fluid py-4" style="max-width: 1000px;">
+    <h1 class="mb-4 fw-bold">Tu perfil</h1>
 
-    <div class="perfil-layout">
-        <aside class="foto-sidebar">
-            <div class="avatar-container-large">
+    <div class="row g-5">
+        <aside class="col-lg-3 d-flex flex-column align-items-center gap-3">
+            <div class="avatar-container-large shadow-stokka">
                 {% if user.perfil.foto %}
                 <img src="{{ user.perfil.foto.url }}" alt="Avatar" class="avatar-image-large">
                 {% else %}
-                <i class="fa-solid fa-user avatar-placeholder-large"></i>
+                <i class="fa-solid fa-user text-secondary opacity-50" style="font-size: 70px;"></i>
                 {% endif %}
             </div>
 
             <form id="fotoForm" method="POST" enctype="multipart/form-data" action="{% url 'cambiar_foto' %}"
-                style="display:none;">
+                class="d-none">
                 {% csrf_token %}
                 <input type="file" name="foto" id="fotoInput" onchange="submitFotoForm()">
             </form>
 
-            <button class="btn-cambiar-foto" onclick="document.getElementById('fotoInput').click();">
+            <button class="btn btn-outline-warning w-100 rounded-3 py-2 text-dark fw-bold"
+                onclick="document.getElementById('fotoInput').click();" style="border-color: var(--amarillo-alerta);">
                 Cambiar foto
             </button>
-            <form method="POST" action="{% url 'eliminar_foto' %}">
+
+            <form method="POST" action="{% url 'eliminar_foto' %}" class="w-100">
                 {% csrf_token %}
-                <button type="submit" class="btn-eliminar">Eliminar foto</button>
+                <button type="submit" class="btn btn-outline-danger w-100 rounded-3 py-2 fw-bold">
+                    Eliminar foto
+                </button>
             </form>
         </aside>
 
-        <main class="info-bloque">
-            <div class="info-item-figma">
-                <div class="info-label-group">
-                    <label class="figma-label">Nombre</label>
-                    <span class="figma-data">{{ user.first_name }} {{ user.last_name }}</span>
-                </div>
-            </div>
+        <main class="col-lg-9">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 bg-white">
 
-            <div class="info-item-figma">
-                <div class="info-label-group">
-                    <label class="figma-label">Correo electrónico</label>
-                    <span class="figma-data">{{ user.email }}</span>
+                <div class="info-item-row">
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-1">Nombre</label>
+                    <span class="fs-5 text-dark">{{ user.get_full_name }}</span>
                 </div>
-            </div>
 
-            <div class="info-item-figma">
-                <div class="info-label-group">
-                    <label class="figma-label">Teléfono</label>
-                    <span class="figma-data">{{ user.perfil.telefono|default:"+34 000-000-000" }}</span>
+                <div class="info-item-row">
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-1">Correo electrónico</label>
+                    <span class="fs-5 text-dark">{{ user.email }}</span>
                 </div>
-            </div>
 
-            <div class="info-item-figma">
-                <div class="info-label-group">
-                    <label class="figma-label">Idioma</label>
-                    <select class="figma-select-read" disabled>
+                <div class="info-item-row">
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-1">Teléfono</label>
+                    <span class="fs-5 text-dark">{{ user.perfil.telefono|default:"+34 000-000-000" }}</span>
+                </div>
+
+                <div class="info-item-row">
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-1">Idioma</label>
+                    <select class="form-select w-auto border-0 bg-light fw-bold" disabled>
                         <option>Español (España)</option>
                     </select>
                 </div>
-            </div>
 
-            <div class="info-item-figma no-border-bottom">
-                <div class="info-label-group">
-                    <label class="figma-label">Cuentas vinculadas</label>
-                    <div class="vinculo-card-figma">
-                        <i class="fa-brands fa-google"></i>
-                        <div class="vinculo-text-group">
-                            <span class="vinculo-user">{{ user.first_name|upper }} {{ user.last_name|upper }}</span>
+                <div class="info-item-row border-0">
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-2">Cuentas vinculadas</label>
+                    <div
+                        class="d-flex align-items-center bg-light p-3 rounded-4 border border-white shadow-sm gap-3">
+                        <i class="fa-brands fa-google fs-3 text-danger"></i>
+                        <div class="flex-grow-1">
+                            <span class="fw-bold d-block">{{ user.first_name|upper }} {{ user.last_name|upper }}</span>
                         </div>
-                        <button class="btn-desvincular" disabled>Desvincular</button>
+                        <button class="btn btn-white btn-sm border rounded-pill shadow-sm"
+                            disabled>Desvincular</button>
                     </div>
                 </div>
-            </div>
 
-            <div class="perfil-main-actions">
-                <form action="{% url 'logout' %}" method="post" style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-figma-logout">
-                        Cerrar Sesión
-                    </button>
-                </form>
+                <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                    <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger px-4 py-2 rounded-3 fw-bold text-uppercase">
+                            Cerrar Sesión
+                        </button>
+                    </form>
 
-                <a href="{% url 'editar_perfil' %}" class="btn-confirmar-stokka">
-                    Editar Perfil
-                </a>
+                    <a href="{% url 'editar_perfil' %}"
+                        class="btn btn-stokka px-4 py-2 rounded-3 fw-bold text-uppercase shadow-sm">
+                        Editar Perfil
+                    </a>
+                </div>
             </div>
         </main>
     </div>
 </div>
 
 <style>
-    :root {
-        --figma-text-color: #333;
-        --figma-label-color: #666;
-        --figma-border-color: #ddd;
-    }
-
-    .perfil-container-figma {
-        width: 100%;
-        max-width: 900px;
-        margin: 0 auto;
-        padding-top: 20px;
-        font-family: 'Merriweather', serif;
-        /* Tu tipografía */
-    }
-
-    .perfil-title-figma {
-        font-size: 32px;
-        color: black;
-        margin-bottom: 30px;
-        text-align: left;
-    }
-
-    .perfil-layout {
-        display: grid;
-        grid-template-columns: 200px 1fr;
-        gap: 40px;
-        align-items: flex-start;
-    }
-
-    /* Foto Sidebar */
-    .foto-sidebar {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 15px;
-    }
-
-    /* Contenedor circular grande del perfil */
+    /* Mantenemos solo lo esencial que no cubre Bootstrap */
     .avatar-container-large {
-        width: 140px;
-        height: 140px;
+        width: 160px;
+        height: 160px;
         border-radius: 50%;
         overflow: hidden;
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #f0f0f0;
-        border: 3px solid white;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        background: #f8f9fa;
+        border: 4px solid white;
     }
 
     .avatar-image-large {
-        width: 100% !important;
-        height: 100% !important;
+        width: 100%;
+        height: 100%;
         object-fit: cover;
-        display: block;
     }
 
-    .avatar-placeholder-large {
-        font-size: 70px;
-        color: #aaa;
+    .info-item-row {
+        border-bottom: 1px solid #f1f1f1;
+        padding: 1.5rem 0;
     }
 
-    /*BOTONES A EDITAR*/
-    .btn-cambiar-foto {
-        background: white;
-        color: black;
-        border: 1px solid var(--amarillo-alerta);
-        border-radius: 10px;
-        padding: 8px 15px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: 0.2s;
-        width: 100%;
-        text-align: center;
-        transition: 0.4;
-    }
-
-    .btn-cambiar-foto:hover {
-        background: var(--amarillo-alerta);
-    }
-
-    .btn-eliminar {
-        background: white;
-        color: black;
-        border: 1px solid var(--rojo-alerta);
-        border-radius: 10px;
-        padding: 8px 15px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: 0.2s;
-        width: 100%;
-        text-align: center;
-        margin-top: -10px;
-        transition: 0.4;
-    }
-
-    .btn-eliminar:hover {
-        background: var(--rojo-alerta);
-        color: white;
-
-    }
-
-    /* Info Bloque */
-    .info-bloque {
-        background: white;
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        display: flex;
-        flex-direction: column;
-    }
-
-    .info-item-figma {
-        border-bottom: 1px solid var(--figma-border-color);
-        padding: 20px 0;
-    }
-
-    .info-item-figma:first-child {
+    .info-item-row:first-child {
         padding-top: 0;
     }
 
-    .no-border-bottom {
-        border-bottom: none;
-    }
-
-    .figma-label {
-        font-size: 13px;
-        color: var(--figma-label-color);
-        font-weight: bold;
-        display: block;
-        margin-bottom: 8px;
-    }
-
-    .figma-data {
-        font-size: 15px;
-        color: var(--figma-text-color);
-        display: block;
-    }
-
-    .figma-select-read {
-        width: 100%;
-        max-width: 300px;
-        padding: 10px;
-        border-radius: 10px;
-        border: 1px solid #ddd;
-        background: white;
-        font-size: 14px;
-        appearance: none;
-        color: var(--figma-text-color);
-    }
-
-    /* Vinculo Card */
-    .vinculo-card-figma {
-        display: flex;
-        align-items: center;
-        background: #f8f8f8;
-        border-radius: 15px;
-        padding: 15px;
-        border: 1px solid #eee;
-        gap: 15px;
-        margin-top: 10px;
-    }
-
-    .vinculo-icon {
-        width: 30px;
-    }
-
-    .vinculo-text-group {
-        flex-grow: 1;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .vinculo-user {
-        font-size: 15px;
-        color: black;
-    }
-
-    .btn-desvincular {
-        background: white;
-        color: black;
-        border: 1px solid var(--verde-secundario);
-        border-radius: 10px;
-        padding: 8px 15px;
-        font-size: 13px;
-        cursor: pointer;
-        transition: 0.2s;
-        width: 120px;
-        text-align: center;
-        transition: 0.3;
-    }
-
-    .btn-desvincular:hover {
-        background-color: var(--verde-secundario);
+    /* Botón personalizado para mantener tu color verde */
+    .btn-stokka {
+        background-color: var(--verde-stokka);
         color: white;
+        border: none;
     }
 
-    /* Contenedor de acciones: Uno a cada punta */
-    .perfil-main-actions {
-        display: flex;
-        justify-content: space-between;
-        /* LA CLAVE: separa los elementos al máximo */
-        align-items: center;
-        margin-top: 30px;
-        border-top: 1px solid #eee;
-        padding-top: 20px;
-    }
-
-    /* Estilo para el botón Logout (Izquierda) */
-    .btn-figma-logout {
-        background: white;
-        color: var(--rojo-alerta);
-        border: 1px solid var(--rojo-alerta);
-        padding: 12px 30px;
-        border-radius: 10px;
-        font-weight: bold;
-        text-transform: uppercase;
-        cursor: pointer;
-        font-size: 14px;
-        transition: 0.3s;
-        font-family: 'Merriweather', serif;
-    }
-
-    .btn-figma-logout:hover {
-        background-color: var(--rojo-alerta);
+    .btn-stokka:hover {
+        background-color: #005000;
         color: white;
-    }
-
-    /* Estilo para el botón Editar (Derecha) */
-    .btn-confirmar-stokka {
-        background: var(--verde-stokka);
-        color: white;
-        border: 1px solid var(--verde-stokka);
-        padding: 12px 30px;
-        border-radius: 10px;
-        font-weight: bold;
-        text-transform: uppercase;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 14px;
-        transition: 0.3s;
-        font-family: 'Merriweather', serif;
-        display: inline-block;
-    }
-
-    .btn-confirmar-stokka:hover {
-        box-shadow: 0 4px 10px rgba(0, 61, 0, 0.2);
     }
 </style>
 
