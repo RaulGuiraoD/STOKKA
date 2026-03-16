@@ -55,14 +55,6 @@ class EditarUsuarioAdminForm(forms.ModelForm):
         user_request = kwargs.pop('user_request', None)
         super().__init__(*args, **kwargs)
         
-        if self.instance:   #El Dueño Primario (ID 1) es el único que puede editar a otros Dueños
-            if self.instance.id == 1:
-                self.fields['rol'].disabled = True  #El Dueño ID 1 es inamovible, bloqueamos su rol SIEMPRE
-            elif user_request and user_request.id == 1:
-                self.fields['rol'].disabled = False # Si el que navega es el ID 1, puede cambiarle el rol a CUALQUIERA (incluyendo otros dueños)
-            elif self.instance.es_dueño():      
-                self.fields['rol'].disabled = True   # Para cualquier otro caso, si el editado es dueño, se bloquea el rol
-        
         if self.instance and user_request:
             # REGLA: No puedes cambiar tu propio rol (evita errores 403 y pérdida de acceso)
             if self.instance.id == user_request.id:
