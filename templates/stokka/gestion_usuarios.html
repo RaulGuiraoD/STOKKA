@@ -56,19 +56,24 @@
                         </div>
 
                         <div class="col-12 col-md-2 d-flex gap-2 justify-content-center align-items-end mt-3 mt-md-0">
+
+                            {% if request.user.id == 1 or u.rol != 'dueño' %}
                             <a href="{% url 'editar_usuario_admin' u.id %}"
                                 class="btn btn-sm btn-outline-warning rounded-3 px-3 fw-bold">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
+                            {% endif %}
 
-                            {% if user.es_dueño and u.id != user.id %}
-                            <a href="{% url 'eliminar_usuario' u.id %}"
-                                onclick="return confirm('¿Estás seguro de que quieres eliminar a este usuario?')"
-                                class="btn btn-sm btn-outline-danger rounded-3 px-3 fw-bold" title="Dar de baja">
+                            {% if u.id != 1 and u.id != request.user.id %}
+                            {# El ID 1 puede borrar a cualquier dueño nuevo. Otros dueños no pueden borrar dueños #}
+                            {% if request.user.id == 1 or u.rol != 'dueño' %}
+                            {% if request.user.es_dueño or u.rol == 'empleado' %}
+                            <a href="{% url 'eliminar_usuario' u.id %}" onclick="return confirm('¿Eliminar usuario?')"
+                                class="btn btn-sm btn-outline-danger rounded-3 px-3 fw-bold">
                                 <i class="fa-solid fa-user-minus"></i>
                             </a>
-                            {% else %}
-                            <div style="width: 38px;" class="d-none d-md-block"></div>
+                            {% endif %}
+                            {% endif %}
                             {% endif %}
                         </div>
                     </div>
