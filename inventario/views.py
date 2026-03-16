@@ -11,6 +11,7 @@ from django.contrib.auth.hashers import check_password
 # Esto detecta automáticamente el Usuario personalizado
 User = get_user_model()
 
+#Permisos de administrador
 def admin_required(view_func):
     def _wrapped_view_func(request, *args, **kwarsg):
         if request.user.is_authenticated and (request.user.es_admin_o_dueño()):
@@ -18,6 +19,7 @@ def admin_required(view_func):
         raise PermissionDenied
     return _wrapped_view_func
 
+# LÓGICA DE GESTIÓN DE USUARIOS
 @login_required
 @admin_required
 def gestion_usuarios(request):
@@ -42,6 +44,7 @@ def gestion_usuarios(request):
         'form': form
     })
 
+# LÓGICA DE GESTIÓN DE USUARIOS -> EDITAR USUARIOS
 @login_required
 @admin_required
 def editar_usuario_admin(request, user_id):
@@ -97,6 +100,7 @@ def editar_usuario_admin(request, user_id):
         'usuario_editado': usuario_a_editar
     })
 
+# LÓGICA DE GESTIÓN DE USUARIOS -> ELIMINAR USUARIO
 @login_required
 @admin_required
 def eliminar_usuario(request, user_id):
@@ -125,11 +129,15 @@ def eliminar_usuario(request, user_id):
     messages.success(request, "Usuario eliminado.")
     return redirect('gestion_usuarios')
 
+
+# LÓGICA DEL INDEX 
 @login_required
 def index(request):
     productos = Producto.objects.all()
     return render(request, 'stokka/index.html', {'productos': productos})
 
+
+# LÓGICA DEL LOGIN Y REGISTRO 
 def login_view(request):
     if request.method == 'POST':
         email_ingresado = request.POST.get('username') # Asumimos que meten el email en el campo 'usuario'
@@ -211,13 +219,16 @@ def registro_view(request):
             
     return render(request, 'registration/registro.html')
 
-#Funciones del PERFIL
+
+# LÓGICA DEL PERFIL
+# LÓGICA DE LA VISTA DEL PERFIL
 @login_required
 def perfil_view(request):
     # Aseguramos que el objeto perfil exista para pasárselo al template
     perfil, created = Perfil.objects.get_or_create(user=request.user)
     return render(request, 'stokka/perfil.html', {'perfil': perfil})
 
+# LÓGICA DE EDITAR PERFIL
 @login_required
 def editar_perfil_view(request):
     perfil = request.user.perfil
@@ -260,6 +271,8 @@ def editar_perfil_view(request):
     
     return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
 
+
+# LÓGICA DEL CAMBIO DE FOTO
 @login_required
 def cambiar_foto(request):
     if request.method == 'POST' and request.FILES.get('foto'):
@@ -276,6 +289,7 @@ def cambiar_foto(request):
             
     return redirect('perfil')
 
+# LÓGICA DE LA ELIMINACIÓN DE LA FOTO
 @login_required
 def eliminar_foto(request):
     if request.method == 'POST':
