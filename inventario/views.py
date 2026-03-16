@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login, authenticate, get_user_model, update_session_auth_hash
 from .models import Producto, Perfil, Usuario
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.core.exceptions import PermissionDenied
 from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm
 from django.contrib.auth.hashers import check_password
@@ -264,7 +265,15 @@ def cambiar_foto(request):
     if request.method == 'POST' and request.FILES.get('foto'):
         perfil, created = Perfil.objects.get_or_create(user=request.user)
         perfil.foto = request.FILES['foto']
-        perfil.save()
+        
+        try:
+            perfil.full_clean() # Esto dispara el validador de los 2MB
+            perfil.save()
+            messages.success(request, "Foto de perfil actualizada.")
+        except ValidationError as e:
+            # e.message_dict['foto'][0] suele traer el texto del error
+            messages.error(request, "Error: La imagen es demasiado pesada (máximo 2MB).")
+            
     return redirect('perfil')
 
 @login_required

@@ -1,6 +1,9 @@
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser
+from PIL import Image
+import os
 from django.conf import settings
 
 class Usuario(AbstractUser):
@@ -35,10 +38,40 @@ class Producto(models.Model):
     def id_formateado(self):
         return f"{self.id:04d}"
 
+
+def validar_tamano_foto(value):
+    limit = 2 * 1024 * 1024  #2MB
+    if value.size > limit:
+        raise ValidationError('La imagen es demasiado pesada (máximo 2MB).')
+    
 class Perfil(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     telefono = models.CharField(max_length=15, blank=True, null=True)
-    foto = models.ImageField(upload_to='perfiles/', blank=True, null=True)
+    foto = models.ImageField(
+        upload_to='perfiles/', 
+        blank=True, 
+        null=True,
+        validators=[validar_tamano_foto] # Aplicamos el validador
+    )
+
+    def save(self, *args, **kwargs):
+        # Primero guardamos para tener el archivo en el sistema
+        super().save(*args, **kwargs)
+
+        if self.foto:
+            img = Image.open(self.foto.path)
+
+            # 1. Si es muy grande, redimensionamos a un tamaño lógico para avatar (400x400)
+            if img.height > 400 or img.width > 400:
+                output_size = (400, 400)
+                img.thumbnail(output_size, Image.LANCZOS)
+            
+            # 2. Convertir a RGB si es necesario (evita errores con PNG transparentes al pasar a JPEG)
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+
+            # 3. Comprimir y sobreescribir como JPEG para ahorrar espacio
+            img.save(self.foto.path, "JPEG", quality=80, optimize=True)
 
     def __str__(self):
         return f"Perfil de {self.user.username}"
