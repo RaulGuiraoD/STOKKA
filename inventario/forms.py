@@ -60,6 +60,7 @@ class EditarUsuarioAdminForm(forms.ModelForm):
             if self.instance.id == user_request.id:
                 self.fields['rol'].disabled = True
                 self.fields['rol'].help_text = "No puedes cambiar tu propio rol para evitar bloqueos de acceso."
+                
             
             # REGLA: El Dueño Primario (ID 1) es inamovible
             if self.instance.id == 1:
