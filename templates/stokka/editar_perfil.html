@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="container-fluid py-4" style="max-width: 800px;">
-    <h1 class="mb-4 fw-bold">Editar Información</h1>
+    <h1 class="mb-4 fw-bold" style="color: var(--verde-stokka);">Editar Información</h1>
     
     <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 bg-white">
         <form method="POST">
@@ -42,13 +42,36 @@
                                class="form-control form-control-lg border-light-subtle rounded-3 fs-6 bg-light shadow-focus-stokka">
                     </div>
                 </div>
+
+                <div class="col-12 mt-4">
+                    <div class="p-4 rounded-4 border-start border-4 shadow-sm" style="background-color: var(--verde-stokka-light); border-color: var(--verde-stokka) !important;">
+                        <h5 class="fw-bold mb-3" style="color: var(--verde-stokka);">
+                            <i class="fa-solid fa-lock me-2"></i>Seguridad de la cuenta
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="small text-uppercase fw-bold text-muted d-block mb-2">Nueva Contraseña</label>
+                                <input type="password" name="password" placeholder="Mínimo 8 caracteres"
+                                       class="form-control border-light-subtle rounded-3 bg-white shadow-focus-stokka">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-uppercase fw-bold text-muted d-block mb-2">Repetir Contraseña</label>
+                                <input type="password" name="confirm_password" placeholder="Confirma tu clave"
+                                       class="form-control border-light-subtle rounded-3 bg-white shadow-focus-stokka">
+                            </div>
+                        </div>
+                        <small class="text-muted mt-3 d-block italic">
+                            <i class="fa-solid fa-circle-info me-1"></i> Deja estos campos vacíos si no deseas cambiar tu contraseña.
+                        </small>
+                    </div>
+                </div>
             </div>
 
             <div class="d-flex justify-content-end align-items-center mt-5 pt-4 border-top gap-3">
-                <a href="{% url 'perfil' %}" class="btn btn-outline-danger px-4 py-2 rounded-3 fw-bold text-uppercase">
+                <a href="{% url 'perfil' %}" class="btn btn-cancelar-stokka px-4 py-2 rounded-3 fw-bold text-uppercase small">
                     Cancelar
                 </a>
-                <button type="submit" class="btn btn-stokka px-5 py-2 rounded-3 fw-bold text-uppercase">
+                <button type="submit" class="btn btn-stokka px-5 py-2 rounded-3 fw-bold text-uppercase shadow-sm">
                     Guardar Cambios
                 </button>
             </div>
@@ -57,18 +80,38 @@
 </div>
 
 <style>
-    .btn-stokka {
-        background-color: var(--verde-stokka);
-        color: white;
-        border: none;
-        transition: 0.3s;
+    /* Botón Cancelar con tu rojo-alerta */
+    .btn-cancelar-stokka {
+        color: var(--rojo-alerta);
+        border: 2px solid var(--rojo-alerta);
+        background: transparent;
+        transition: all 0.3s ease;
+    }
 
+    .btn-cancelar-stokka:hover {
+        background-color: var(--rojo-alerta);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Mejora del botón Stokka para este form */
+    .btn-stokka {
+        background-color: var(--verde-stokka) !important;
+        color: white !important;
+        border: none;
+        transition: all 0.3s ease;
     }
 
     .btn-stokka:hover {
-        background-color: #005000;
-        color: white;
+        filter: brightness(1.2);
         transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 61, 0, 0.2) !important;
+    }
+
+    /* Estilo para los inputs focus */
+    .shadow-focus-stokka:focus {
+        border-color: var(--verde-stokka) !important;
+        box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
     }
 </style>
 {% endblock %}

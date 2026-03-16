@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
 
 User = get_user_model()
 
@@ -38,7 +39,26 @@ class RegistroUsuarioForm(forms.ModelForm):
             raise forms.ValidationError("Las contraseñas no coinciden")
         return cleaned_data
     
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        usuario_id = self.instance.id if self.instance else None
+        if User.objects.filter(email=email).exclude(id=usuario_id).exists():
+            raise forms.ValidationError("Este email ya está en uso por otro usuario.")
+        return email
+    
 class EditarUsuarioAdminForm(forms.ModelForm):
+
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Nueva contraseña'}),
+        required=False,
+        label="Nueva contraseña"
+    )
+    confirm_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Repite la contraseña'}),
+        required=False,
+        label="Confirmar Nueva contraseña"
+    )
+
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
     class Meta:
         model = User
@@ -73,9 +93,26 @@ class EditarUsuarioAdminForm(forms.ModelForm):
         if user_request and not user_request.es_dueño():
             self.fields['rol'].choices = [c for c in User.ROL_CHOICES if c[0] != 'dueño']
 
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        # 1. Validación: Coincidencia de campos
+        if password or confirm_password:
+            if password != confirm_password:
+                self.add_error('confirm_password', "Las contraseñas no coinciden.")
+
+        # 2. Validación: Diferente a la actual
+        if password and self.instance.pk:
+            if check_password(password, self.instance.password):
+                self.add_error('password', "La nueva contraseña debe ser diferente a la que está en uso.")
+    
+        return cleaned_data
+
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        usuario_id = self.instance.id
+        usuario_id = self.instance.id if self.instance else None
         if User.objects.filter(email=email).exclude(id=usuario_id).exists():
             raise forms.ValidationError("Este email ya está en uso por otro usuario.")
         return email

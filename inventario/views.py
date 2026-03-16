@@ -1,10 +1,11 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, authenticate, get_user_model
+from django.contrib.auth import login, authenticate, get_user_model, update_session_auth_hash
 from .models import Producto, Perfil, Usuario
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm
+from django.contrib.auth.hashers import check_password
 
 # Esto detecta automáticamente el Usuario personalizado
 User = get_user_model()
@@ -43,25 +44,53 @@ def gestion_usuarios(request):
 @login_required
 @admin_required
 def editar_usuario_admin(request, user_id):
-    usuario_a_editar = User.objects.get(id=user_id)
+    # Usamos get_object_or_404 por seguridad
+    usuario_a_editar = get_object_or_404(User, id=user_id)
     
-    # Seguridad extra: Solo el dueño puede editar a otro dueño
-    if usuario_a_editar.es_dueño() and not request.user.es_dueño():
-        messages.error(request, "No tienes permiso para editar al dueño.")
+    # --- BLOQUE DE SEGURIDAD DE ACCESO ---
+    # 1. Un Admin NO puede editar al Dueño Primario (ID 1)
+    if usuario_a_editar.id == 1 and request.user.id != 1:
+        messages.error(request, "El Dueño Fundador es intocable.")
+        return redirect('gestion_usuarios')
+    
+    # 2. Solo el Dueño puede editar a otros usuarios con rol 'dueño'
+    if usuario_a_editar.rol == 'dueño' and not request.user.es_dueño():
+        messages.error(request, "No tienes permisos para editar perfiles de nivel Dueño.")
         return redirect('gestion_usuarios')
 
+    # --- PROCESAMIENTO DEL FORMULARIO ---
     if request.method == 'POST':
         form = EditarUsuarioAdminForm(request.POST, instance=usuario_a_editar, user_request=request.user)
+        
         if form.is_valid():
-            if usuario_a_editar.id == request.user.id:
-                form.cleaned_data['rol'] = request.user.rol 
+            usuario = form.save(commit=False)
+            nueva_clave = form.cleaned_data.get('password')
             
-            form.save()
-            messages.success(request, "Usuario actualizado correctamente.")
+            # Gestión de Contraseña
+            if nueva_clave:
+                usuario.set_password(nueva_clave)
+                # Si el admin se edita a sí mismo, mantenemos la sesión activa
+                if usuario.id == request.user.id:
+                    update_session_auth_hash(request, usuario)
+            
+            # Protección de roles (Auto-degradación e ID 1)
+            if usuario.id == request.user.id:
+                usuario.rol = request.user.rol
+            if usuario.id == 1:
+                usuario.rol = 'dueño'
+
+            usuario.save()
+            messages.success(request, f"Usuario {usuario.username} actualizado con éxito.")
             return redirect('gestion_usuarios')
+        else:
+            # Si el formulario no es válido, mandamos los errores a los mensajes flash superiores
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{error}")
+            # Importante: No redirigimos aquí, dejamos que baje al render final para mostrar el form con errores
     else:
         form = EditarUsuarioAdminForm(instance=usuario_a_editar, user_request=request.user)
-    
+        
     return render(request, 'stokka/editar_usuario_admin.html', {
         'form': form,
         'usuario_editado': usuario_a_editar
@@ -190,17 +219,42 @@ def perfil_view(request):
 
 @login_required
 def editar_perfil_view(request):
-    perfil, created = Perfil.objects.get_or_create(user=request.user)
-    
+    perfil = request.user.perfil
     if request.method == 'POST':
-        request.user.first_name = request.POST.get('nombre')
-        request.user.last_name = request.POST.get('apellido')
-        request.user.email = request.POST.get('email')
-        request.user.save() 
+        nombre = request.POST.get('nombre')
+        apellido = request.POST.get('apellido')
+        email = request.POST.get('email')
+        telefono = request.POST.get('telefono')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if password:
+            if check_password(password, request.user.password):
+                messages.error(request, "La nueva contraseña debe ser diferente a la actual.")
+                return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
+            
+            if password != confirm_password:
+                messages.error(request, "Las nuevas contraseñas no coinciden.")
+                return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
+            
+            # Si pasa las validaciones, la preparamos
+            request.user.set_password(password)
+            # No guardamos aún, lo haremos al final con el resto de datos
 
-        perfil.telefono = request.POST.get('telefono')
-        perfil.save() 
+        # Actualizamos el resto de campos
+        request.user.first_name = nombre
+        request.user.last_name = apellido
+        request.user.email = email
+        perfil.telefono = telefono
+        
+        request.user.save()
+        perfil.save()
 
+        # Si hubo cambio de contraseña, actualizamos sesión
+        if password:
+            update_session_auth_hash(request, request.user)
+
+        messages.success(request, "Perfil actualizado con éxito.")
         return redirect('perfil')
     
     return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
