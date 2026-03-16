@@ -53,6 +53,9 @@ def editar_usuario_admin(request, user_id):
     if request.method == 'POST':
         form = EditarUsuarioAdminForm(request.POST, instance=usuario_a_editar, user_request=request.user)
         if form.is_valid():
+            if usuario_a_editar.id == request.user.id:
+                form.cleaned_data['rol'] = request.user.rol 
+            
             form.save()
             messages.success(request, "Usuario actualizado correctamente.")
             return redirect('gestion_usuarios')
@@ -67,19 +70,29 @@ def editar_usuario_admin(request, user_id):
 @login_required
 @admin_required
 def eliminar_usuario(request, user_id):
-    # Evitar que un usuario se elimine a sí mismo
-    if request.user.id == user_id:
-        messages.error(request, "No puedes darte de baja a ti mismo.")
+    usuario_a_eliminar = User.objects.get(id=user_id)
+
+    # 1. El Dueño Primario (ID 1) es el ÚNICO inmortal
+    if usuario_a_eliminar.id == 1:
+        messages.error(request, "El Dueño fundacional no puede ser eliminado.")
         return redirect('gestion_usuarios')
-    
-    usuario = User.objects.get(id=user_id)
-    # Solo el dueño puede eliminar a otros admins
-    if usuario.rol == 'dueño':
-        messages.error(request, "No se puede eliminar al dueño del sistema.")
-    else:
-        usuario.delete()
-        messages.success(request, "Usuario eliminado correctamente.")
-        
+
+    # 2. Solo el Dueño Primario (ID 1) puede eliminar a otros usuarios con rol 'dueño'
+    if usuario_a_eliminar.rol == 'dueño' and request.user.id != 1:
+        messages.error(request, "Solo el Dueño primario puede eliminar a otros usuarios con rango de Dueño.")
+        return redirect('gestion_usuarios')
+
+    # 3. El resto de reglas se mantienen
+    if request.user.id == user_id:
+        messages.error(request, "No puedes eliminarte a ti mismo.")
+        return redirect('gestion_usuarios')
+
+    if usuario_a_eliminar.rol == 'admin' and not request.user.es_dueño():
+        messages.error(request, "Permisos insuficientes para eliminar administradores.")
+        return redirect('gestion_usuarios')
+
+    usuario_a_eliminar.delete()
+    messages.success(request, "Usuario eliminado.")
     return redirect('gestion_usuarios')
 
 @login_required
