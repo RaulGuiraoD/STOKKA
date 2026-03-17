@@ -31,13 +31,24 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     #Rutas de la aplicacion
+    #Perfil usuario
     path('perfil/', views.perfil_view, name='perfil'),
     path('perfil/editar/', views.editar_perfil_view, name='editar_perfil'),
     path('perfil/cambiar-foto/', views.cambiar_foto, name='cambiar_foto'),
     path('perfil/eliminar-foto/', views.eliminar_foto, name='eliminar_foto'),
+    #Gestión usuario administración
     path('gestion-usuarios/', views.gestion_usuarios, name='gestion_usuarios'),
     path('eliminar-usuario/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),
     path('gestion-usuarios/editar/<int:user_id>/', views.editar_usuario_admin, name='editar_usuario_admin'),
+    #Gestión Inventario
+    path('inventario/', views.inventario_view, name='inventario'),
+    path('inventario/añadir/', views.añadir_producto, name='añadir_producto'),
+    path('inventario/editar/<int:pk>/', views.editar_producto, name='editar_producto'),
+    path('inventario/eliminar/<int:pk>/', views.eliminar_producto, name='eliminar_producto'),
+
+    path('inventario/stock/subir/<int:pk>/', views.aumentar_stock, name='aumentar_stock'),
+    path('inventario/stock/bajar/<int:pk>/', views.disminuir_stock, name='disminuir_stock'),
+
 ]
 
 # Esto es para que se vean el Logo y las Facturas en desarrollo

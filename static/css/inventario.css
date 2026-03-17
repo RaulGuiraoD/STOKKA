@@ -1,0 +1,228 @@
+/* Blindaje de colores estilo semáforo (Inunda toda la fila) */
+.fila-stokka td {
+    transition: background 0.2s;
+    border-color: rgba(0, 0, 0, 0.03) !important;
+}
+
+.fila-stokka.stokka-ok td {
+    background-color: var(--verde-secundario) !important;
+    color: black !important;
+}
+
+.fila-stokka.stokka-aviso td {
+    background-color: var(--amarillo-alerta) !important;
+    color: black !important;
+}
+
+.fila-stokka.stokka-critico td {
+    background-color: var(--rojo-alerta) !important;
+    color: white !important;
+}
+
+/* Ajuste contraste texto descriptivo */
+.stokka-ok .desc-text,
+.stokka-critico .desc-text {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.stokka-aviso .desc-text {
+    color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.stokka-ok .text-muted,
+.stokka-critico .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Hover suave para filas coloreadas */
+.table-custom tbody tr:hover td {
+    filter: brightness(0.93);
+}
+
+#main-content {
+    transition: all 0.35s ease-in-out;
+}
+
+/* Botones de filtro activos con tus colores oficiales */
+.active-critico {
+    background-color: var(--rojo-alerta) !important;
+    color: white !important;
+    border-color: var(--rojo-alerta) !important;
+}
+
+.active-aviso {
+    background-color: var(--amarillo-alerta) !important;
+    color: black !important;
+    border-color: var(--amarillo-alerta) !important;
+}
+
+/* Botones ajuste stock estilo Cardmarket */
+.btn-adjust-stock {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+    color: var(--verde-stokka);
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 1.1rem;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    transition: 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-adjust-stock:hover {
+    background-color: #f8f9fa;
+    color: black;
+    transform: translateY(-1px);
+}
+
+.stokka-critico .btn-adjust-stock,
+.stokka-ok .btn-adjust-stock {
+    color: var(--verde-stokka);
+}
+
+.stock-number {
+    font-size: 1.25rem;
+    font-weight: 800;
+    min-width: 35px;
+    text-align: center;
+}
+
+/* Utilidades generales */
+.uppercase {
+    text-transform: uppercase;
+}
+
+.transition-all {
+    transition: all 0.3s ease;
+}
+
+.btn-white {
+    background-color: white;
+    border: 1px solid #dee2e6;
+}
+
+.btn-white:hover {
+    background-color: #f8f9fa;
+}
+
+/* Estilos para inputs automáticos de Django en modales */
+.modal-body input,
+.modal-body textarea,
+.modal-body select {
+    display: block;
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.modal-body input:focus,
+.modal-body textarea:focus {
+    border-color: var(--verde-secundario) !important;
+    box-shadow: 0 0 0 0.25rem rgba(28, 163, 0, 0.1) !important;
+    outline: none;
+}
+
+
+#main-content {
+    min-width: 0;
+    flex: 1;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+#sidebar-filtros {
+    width: 0;
+    min-width: 0;
+    overflow: hidden;
+    flex-shrink: 0;
+    align-self: flex-start;
+    height: fit-content;
+    transition: width .35s ease, opacity .35s ease;
+    opacity: 0;
+    visibility: hidden;
+}
+
+#sidebar-filtros.active {
+    width: 300px;
+    opacity: 1;
+    visibility: visible;
+    margin-right: 20px;
+}
+
+#main-content {
+    min-width: 0;
+}
+
+.table-responsive {
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.modal {
+    padding-right: 0 !important;
+}
+
+body.modal-open {
+    padding-right: 0 !important;
+    overflow: hidden;
+}
+
+.modal-backdrop {
+    --bs-backdrop-zindex: 1040;
+}
+
+.modal-dialog {
+    margin-top: 5vh;
+}
+
+.form-range::-webkit-slider-thumb {
+    background: var(--verde-stokka);
+}
+
+.form-range::-moz-range-thumb {
+    background: var(--verde-stokka);
+}
+
+.form-range {
+    accent-color: var(--verde-stokka);
+}
+
+/* Indicadores de ordenación */
+.sortable {
+    position: relative;
+    padding-right: 20px !important;
+}
+
+.sortable::after {
+    content: '\f0dc';
+    /* Icono de flechas arriba/abajo FontAwesome */
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 8px;
+    opacity: 0.3;
+    font-size: 0.7rem;
+}
+
+.sortable.asc::after {
+    content: '\f0de';
+    opacity: 1;
+    color: var(--verde-stokka);
+}
+
+.sortable.desc::after {
+    content: '\f0dd';
+    opacity: 1;
+    color: var(--verde-stokka);
+}

@@ -5,8 +5,10 @@ from .models import Producto, Perfil, Usuario
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.core.exceptions import PermissionDenied
-from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm
+from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm, ProductoForm
 from django.contrib.auth.hashers import check_password
+
+from django.db import models
 
 # Esto detecta automáticamente el Usuario personalizado
 User = get_user_model()
@@ -297,3 +299,84 @@ def eliminar_foto(request):
         perfil.foto.delete()
         perfil.save()   
     return redirect('perfil')
+
+# LÓGICA DEL INVENTARIO
+@login_required
+def inventario_view(request):
+    filtro = request.GET.get('filtro')
+    query = request.GET.get('q')
+    producto = Producto.objects.all().order_by('nombre')
+
+    if query:
+        producto = producto.filter(
+            models.Q(nombre__icontains=query) | 
+            models.Q(referencia__icontains=query)
+        )
+
+    if filtro == 'critico':
+        producto = [p for p in producto if p.semaforo == "critico"]
+    elif filtro == 'aviso':
+        producto = [p for p in producto if p.semaforo == "aviso"]
+
+    # formulario vacio que usará el modal de "Añadir"
+    form_añadir = ProductoForm()
+
+    return render(request, 'stokka/inventario.html', {
+        'productos': producto,
+        'filtro_actual': filtro,
+        'query_actual': query,
+        'form_añadir': form_añadir
+    })
+
+@login_required
+def añadir_producto(request):
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Producto añadido correctamente")
+            return redirect('inventario') 
+    else:
+        form = ProductoForm()
+    return render(request, 'stokka/form_producto.html', {'form':form, 'titulo': 'Añadir producto'})
+
+@login_required
+def eliminar_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if request.method == 'POST':
+        producto.delete()
+        messages.success(request, "Producto eliminado.")
+        return redirect('inventario')
+    return render(request, 'stokka/comfirmar_eliminar.html', {'producto': producto})
+
+@login_required
+def editar_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES, instance=producto)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Producto {producto.nombre} actualizado.")
+            return redirect('inventario')
+    else:
+        form = ProductoForm(instance=producto)
+    
+    return render(request, 'stokka/form_producto.html', {
+        'form': form,
+        'producto': producto,
+        'titulo': 'Editar Producto'
+    })
+@login_required
+def aumentar_stock(request, pk):
+    producto = get_object_or_404 (Producto, pk=pk)
+    producto.stock_actual += 1
+    producto.save()
+    return redirect ('inventario')
+
+@login_required
+def disminuir_stock(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if producto.stock_actual > 0:
+        producto.stock_actual -= 1
+        producto.save()
+    return redirect('inventario')

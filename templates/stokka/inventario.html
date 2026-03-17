@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inventario - STOKKA{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+    <!-- CABECERA DE ACCIONES -->
+    <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+        <button class="btn btn-stokka shadow-stokka" onclick="toggleFiltros()">
+            <i class="fa-solid fa-filter me-2"></i> FILTROS
+        </button>
+        <div class="d-flex gap-2">
+            <button class="btn btn-stokka shadow-stokka" data-bs-toggle="modal" data-bs-target="#modalAñadir"
+                style="background-color: var(--verde-secundario) !important;">
+                <i class="fa-solid fa-plus me-2"></i> NUEVO PRODUCTO
+            </button>
+        </div>
+    </div>
+
+    <div class="d-flex position-relative">
+        <!-- SIDEBAR DE FILTROS -->
+        <aside id="sidebar-filtros"
+            class="{% if filtro_actual or query_actual %}active{% endif %} shadow-stokka rounded-4 bg-white border-0">
+            <div class="p-4" style="min-width:280px;">
+                <h5 class="fw-bold mb-4" style="color: var(--verde-stokka);">
+                    Buscador Avanzado
+                </h5>
+                <form method="GET" action="{% url 'inventario' %}" id="form-filtros">
+                    {% if filtro_actual %}
+                    <input type="hidden" name="filtro" value="{{ filtro_actual }}">
+                    {% endif %}
+                    
+                    <!-- Búsqueda por Texto -->
+                    <div class="mb-4">
+                        <label class="small text-muted fw-bold text-uppercase">Nombre o Referencia</label>
+                        <div class="d-flex mt-1 gap-2">
+                            <input type="text" name="q" class="form-control shadow-focus-stokka" placeholder="Buscar..."
+                                value="{{ query_actual|default:'' }}">
+                            <button class="btn btn-stokka px-3" type="submit">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Rápidos (Semaforización) -->
+                    <div class="mb-4">
+                        <label class="small text-muted fw-bold text-uppercase d-block mb-2">Estado del Stock</label>
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'inventario' %}{% if query_actual %}?q={{ query_actual }}{% endif %}"
+                                class="btn btn-sm fw-bold rounded-3 {% if not filtro_actual %}btn-stokka{% else %}btn-outline-secondary{% endif %}">
+                                VER TODO
+                            </a>
+                            <a href="{% url 'inventario' %}?filtro=critico{% if query_actual %}&q={{ query_actual }}{% endif %}"
+                                class="btn btn-sm fw-bold btn-outline-danger rounded-3 {% if filtro_actual == 'critico' %}active-critico{% endif %}">
+                                CRÍTICOS
+                            </a>
+                            <a href="{% url 'inventario' %}?filtro=aviso{% if query_actual %}&q={{ query_actual }}{% endif %}"
+                                class="btn btn-sm fw-bold btn-outline-warning rounded-3 {% if filtro_actual == 'aviso' %}active-aviso{% endif %}">
+                                CUIDADO
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Slider de Stock (JS) -->
+                    <div class="mt-4">
+                        <label class="small text-muted fw-bold text-uppercase d-block mb-2">Stock Máximo</label>
+                        <input type="range" id="stockRange" min="0" max="800" value="0" class="form-range">
+                        <div class="small text-muted mt-2">
+                            Mostrar stock menor a: <strong id="stockValue" class="text-dark">0</strong>
+                        </div>
+                    </div>
+
+                    {% if filtro_actual or query_actual %}
+                    <div class="text-center mt-4 pt-3 border-top">
+                        <a href="{% url 'inventario' %}" class="small text-muted text-decoration-none">
+                            <i class="fa-solid fa-rotate-left me-1"></i> Limpiar filtros
+                        </a>
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </aside>
+
+        <!-- CONTENIDO PRINCIPAL (TABLA) -->
+        <main id="main-content" class="flex-grow-1 transition-all">
+            <div class="card shadow-stokka border-0 rounded-4 overflow-hidden bg-white">
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0 table-custom border-0" id="tabla-inventario">
+                        <thead style="background-color: var(--gris-fondo);">
+                            <tr>
+                                <th class="ps-4 py-3 border-0 text-muted small uppercase sortable">ID</th>
+                                <th class="border-0 text-muted small uppercase sortable">FACTURA / REF</th>
+                                <th class="border-0 text-muted small uppercase sortable">PRODUCTO</th>
+                                <th class="border-0 text-muted small uppercase text-center sortable">STOCK</th>
+                                <th class="border-0 text-muted small uppercase text-center">ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in productos %}
+                            <tr class="fila-stokka {% if p.semaforo == 'critico' %}stokka-critico {% elif p.semaforo == 'aviso' %}stokka-aviso {% else %}stokka-ok{% endif %}">
+                                <td class="ps-4 fw-bold">#{{ p.id_formateado }}</td>
+                                <td>
+                                    <span class="badge bg-white text-dark border fw-normal px-2 py-1 rounded-2">
+                                        {{ p.referencia|default:"S-REF-01" }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ p.nombre }}</div>
+                                    <small class="desc-text">{{ p.descripcion|truncatechars:50 }}</small>
+                                </td>
+                                <td style="width: 160px;">
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <a href="{% url 'disminuir_stock' p.pk %}" class="btn-adjust-stock shadow-sm">-</a>
+                                        <span class="stock-number mx-1">{{ p.stock_actual }}</span>
+                                        <a href="{% url 'aumentar_stock' p.pk %}" class="btn-adjust-stock shadow-sm">+</a>
+                                    </div>
+                                </td>
+                                <td class="text-center pe-4">
+                                    <div class="btn-group bg-white rounded-3 shadow-sm border overflow-hidden">
+                                        <a href="{% url 'editar_producto' p.pk %}" class="btn btn-sm btn-white px-3 py-2 border-end" title="Editar">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-white px-3 py-2 text-danger"
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#modalEliminarUnico"
+                                            data-nombre="{{ p.nombre }}" 
+                                            data-url="{% url 'eliminar_producto' p.pk %}"
+                                            title="Eliminar">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 text-muted">
+                                    <i class="fa-solid fa-box-open d-block fs-1 mb-2 opacity-25"></i>
+                                    No hay productos que coincidan con los criterios.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- MODAL ÚNICO DE ELIMINACIÓN (FUERA DEL BUCLE) -->
+<div class="modal fade" id="modalEliminarUnico" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-stokka rounded-4">
+            <div class="modal-body p-4 text-center">
+                <div class="mb-3"><i class="fa-solid fa-trash-can text-danger fs-1"></i></div>
+                <h5 class="fw-bold">¿Eliminar producto?</h5>
+                <p class="text-muted small">Estás a punto de borrar <strong id="modalProductoNombre"></strong>. Esta acción es irreversible.</p>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <button type="button" class="btn btn-light rounded-3 px-4 fw-bold" data-bs-dismiss="modal">CANCELAR</button>
+                    <form method="POST" action="" id="formEliminar">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger rounded-3 px-4 fw-bold">ELIMINAR AHORA</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL AÑADIR PRODUCTO -->
+<div class="modal fade" id="modalAñadir" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered shadow-stokka">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header bg-stokka-dueno text-white border-0 py-3 rounded-top-4">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-box me-2"></i>Nuevo Producto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{% url 'añadir_producto' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        {% for field in form_añadir %}
+                        <div class="col-{% if field.name == 'descripcion' or field.name == 'nombre' %}12{% else %}6{% endif %}">
+                            <label class="small text-muted fw-bold">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                            <div class="text-danger small">{{ field.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">CERRAR</button>
+                    <button type="submit" class="btn btn-stokka px-4">GUARDAR PRODUCTO</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- ENLACE AL ARCHIVO JAVASCRIPT -->
+<script src="{% static 'js/inventario.js' %}"></script>
+
+{% endblock %}

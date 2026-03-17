@@ -24,6 +24,7 @@ class Usuario(AbstractUser):
 # 2. Los demás modelos
 class Producto(models.Model):
     nombre = models.CharField(max_length=100, verbose_name="Nombre del Producto")
+    referencia = models.CharField(max_length=50, blank=True, null=True, verbose_name="Referencia/SKU")
     descripcion = models.TextField(blank=True, verbose_name="Descripción Breve")
     stock_actual = models.PositiveIntegerField(default=0, verbose_name="Stock Disponible")
     umbrales_amarillo = models.PositiveIntegerField(verbose_name= "Aviso", default=10) # Añadido default para evitar errores
@@ -37,6 +38,15 @@ class Producto(models.Model):
     @property
     def id_formateado(self):
         return f"{self.id:04d}"
+
+    @property
+    def semaforo(self):
+        if self.stock_actual <= self.umbrales_rojo:
+            return "critico"    # Rojo
+        elif self.stock_actual <= self.umbrales_amarillo:
+            return "aviso"      #Amarillo
+        return "ok"             #Verde
+
 
 
 def validar_tamano_foto(value):

@@ -11,6 +11,7 @@
 
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/inventario.css' %}">
 
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap"
         rel="stylesheet">
@@ -88,7 +89,7 @@
                     <i class="fa-solid fa-house"></i>
                 </a>
 
-                <a href="#" class="nav-icon" title="Inventario">
+                <a href="{% url 'inventario' %}" class="nav-icon {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}" title="Inventario">
                     <i class="fa-solid fa-file-circle-plus"></i>
                 </a>
 

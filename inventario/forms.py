@@ -1,4 +1,5 @@
 from django import forms
+from .models import Producto
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 
@@ -116,3 +117,13 @@ class EditarUsuarioAdminForm(forms.ModelForm):
         if User.objects.filter(email=email).exclude(id=usuario_id).exists():
             raise forms.ValidationError("Este email ya está en uso por otro usuario.")
         return email
+    
+# LÓGICA DEL FORMULARIO PARA LOS PRODUCTOS
+class ProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = ['nombre', 'referencia', 'descripcion', 'stock_actual', 'umbrales_amarillo', 'umbrales_rojo', 'factura']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'placeholder': 'Ej: Lápices'}),
+            'descripcion': forms.Textarea(attrs={'rows':2}),
+        }
