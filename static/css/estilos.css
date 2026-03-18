@@ -59,6 +59,7 @@
 }
 
 /* --- OTRAS CLASES EXISTENTES --- */
+/*
 .fila-critica {
     background-color: rgba(193, 13, 0, 0.1) !important; 
     border-left: 5px solid var(--rojo-alerta);
@@ -68,7 +69,7 @@
     background-color: rgba(245, 201, 7, 0.1) !important;
     border-left: 5px solid var(--amarillo-alerta);
 }
-
+*/
 
 /* --- SOMBRA VERDE STOKKA --- */
 .shadow-stokka {

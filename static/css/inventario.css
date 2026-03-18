@@ -5,18 +5,33 @@
 }
 
 .fila-stokka.stokka-ok td {
-    background-color: rgba(28, 163, 0, 0.1) !important;
-    color: inherit !important;
+    background-color: var(--verde-secundario) !important;
+    color: black !important;
 }
 
 .fila-stokka.stokka-aviso td {
-    background-color: rgba(245, 201, 7, 0.1) !important;
-    color: inherit !important;
+    background-color: var(--amarillo-alerta) !important;
+    color: black !important;
 }
 
 .fila-stokka.stokka-critico td {
-    background-color: rgba(193, 13, 0, 0.1) !important;
-    color: inherit !important;
+    background-color: var(--rojo-alerta) !important;
+    color: white !important;
+}
+
+/* Ajuste contraste texto descriptivo */
+.stokka-ok .desc-text,
+.stokka-critico .desc-text {
+    color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.stokka-aviso .desc-text {
+    color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.stokka-ok .text-muted,
+.stokka-critico .text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
 }
 
 /* Hover suave para filas coloreadas */

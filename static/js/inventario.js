@@ -2,8 +2,8 @@
 function toggleFiltros() {
     const sidebar = document.getElementById('sidebar-filtros');
     const main = document.getElementById('main-content');
-    sidebar?.classList.toggle('active');
-    main?.classList.toggle('sidebar-active');
+    if (sidebar) sidebar.classList.toggle('active');
+    if (main) main.classList.toggle('sidebar-active');
 }
 
 // Función auxiliar para obtener el CSRF Token (necesario para fetch POST en Django)
@@ -151,6 +151,9 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         const stop = () => { clearTimeout(timer); clearInterval(interval); };
+
+        // Evitar el salto de página del href="#" interceptando el evento click
+        btn.addEventListener('click', (e) => e.preventDefault());
 
         btn.addEventListener('mousedown', start);
         btn.addEventListener('mouseup', stop);
