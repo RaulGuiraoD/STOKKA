@@ -2,8 +2,8 @@
 function toggleFiltros() {
     const sidebar = document.getElementById('sidebar-filtros');
     const main = document.getElementById('main-content');
-    if (sidebar) sidebar.classList.toggle('active');
-    if (main) main.classList.toggle('sidebar-active');
+    sidebar?.classList.toggle('active');
+    main?.classList.toggle('sidebar-active');
 }
 
 // Función auxiliar para obtener el CSRF Token (necesario para fetch POST en Django)

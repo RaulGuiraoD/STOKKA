@@ -182,7 +182,7 @@
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         {% for field in form_añadir %}
-                        <div class="col-{% if field.name == 'descripcion' or field.name == 'nombre' %}12{% else %}6{% endif %}">
+                        <div class="col-{% if field.name == 'descripcion' or field.name == 'nombre' or field.name == 'foto' %}12{% else %}6{% endif %}">
                             <label class="small text-muted fw-bold">{{ field.label }}</label>
                             {{ field }}
                             {% if field.errors %}
