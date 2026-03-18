@@ -8,7 +8,7 @@
 
     <!-- CABECERA DE ACCIONES -->
     <div class="d-flex justify-content-between align-items-center mb-4 px-2">
-        <button class="btn btn-stokka shadow-stokka" onclick="toggleFiltros()">
+        <button class="btn btn-stokka shadow-stokka px-4 fw-bold" type="button" onclick="toggleFiltros()">
             <i class="fa-solid fa-filter me-2"></i> FILTROS
         </button>
         <div class="d-flex gap-2">
@@ -99,7 +99,7 @@
                         </thead>
                         <tbody>
                             {% for p in productos %}
-                            <tr class="fila-stokka {% if p.semaforo == 'critico' %}stokka-critico {% elif p.semaforo == 'aviso' %}stokka-aviso {% else %}stokka-ok{% endif %}">
+                            <tr id="producto-row-{{ p.pk }}" class="fila-stokka {% if p.semaforo == 'critico' %}stokka-critico {% elif p.semaforo == 'aviso' %}stokka-aviso {% else %}stokka-ok{% endif %}">
                                 <td class="ps-4 fw-bold">#{{ p.id_formateado }}</td>
                                 <td>
                                     <span class="badge bg-white text-dark border fw-normal px-2 py-1 rounded-2">
@@ -112,9 +112,9 @@
                                 </td>
                                 <td style="width: 160px;">
                                     <div class="d-flex align-items-center justify-content-center gap-2">
-                                        <a href="{% url 'disminuir_stock' p.pk %}" class="btn-adjust-stock shadow-sm">-</a>
-                                        <span class="stock-number mx-1">{{ p.stock_actual }}</span>
-                                        <a href="{% url 'aumentar_stock' p.pk %}" class="btn-adjust-stock shadow-sm">+</a>
+                                        <a href="#" onclick="ajustarStock(event, '{% url 'disminuir_stock' p.pk %}', {{ p.pk }})" class="btn-adjust-stock shadow-sm">-</a>
+                                        <span id="stock-val-{{ p.pk }}" class="stock-number mx-1">{{ p.stock_actual }}</span>
+                                        <a href="#" onclick="ajustarStock(event, '{% url 'aumentar_stock' p.pk %}', {{ p.pk }})" class="btn-adjust-stock shadow-sm">+</a>
                                     </div>
                                 </td>
                                 <td class="text-center pe-4">
@@ -203,5 +203,35 @@
 
 <!-- ENLACE AL ARCHIVO JAVASCRIPT -->
 <script src="{% static 'js/inventario.js' %}"></script>
+
+<script>
+    function ajustarStock(event, url, productId) {
+        event.preventDefault(); // Evita que el enlace recargue la página o navegue
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.stock_actual !== undefined) {
+                // 1. Actualizar el número en pantalla
+                document.getElementById('stock-val-' + productId).innerText = data.stock_actual;
+                
+                // 2. Actualizar el color de la fila (Semáforo)
+                const row = document.getElementById('producto-row-' + productId);
+                row.classList.remove('stokka-critico', 'stokka-aviso', 'stokka-ok');
+                
+                if (data.semaforo === 'critico') row.classList.add('stokka-critico');
+                else if (data.semaforo === 'aviso') row.classList.add('stokka-aviso');
+                else row.classList.add('stokka-ok');
+            }
+        })
+        .catch(error => console.error('Error al actualizar stock:', error));
+    }
+</script>
 
 {% endblock %}

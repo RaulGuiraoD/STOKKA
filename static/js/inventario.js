@@ -19,10 +19,11 @@ document.addEventListener("DOMContentLoaded", function () {
         if (valueLabel) valueLabel.innerText = limit;
 
         rows.forEach(row => {
-            // Buscamos en la celda 1 (Ref) y 2 (Nombre)
-            const ref = row.cells[1].innerText.toLowerCase();
-            const nombre = row.cells[2].innerText.toLowerCase();
-            const stock = parseInt(row.querySelector(".stock-number").innerText);
+            // Buscamos en la celda 1 (Ref) y 2 (Nombre). Verificamos existencia de celdas.
+            const ref = row.cells[1] ? row.cells[1].innerText.toLowerCase() : "";
+            const nombre = row.cells[2] ? row.cells[2].innerText.toLowerCase() : "";
+            const stockElement = row.querySelector(".stock-number");
+            const stock = stockElement ? parseInt(stockElement.innerText) : 0;
 
             const coincideTexto = nombre.includes(term) || ref.includes(term);
             const coincideStock = (limit === 0) || (stock <= limit);

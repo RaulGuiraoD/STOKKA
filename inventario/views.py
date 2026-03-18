@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.contrib.auth import login, authenticate, get_user_model, update_session_auth_hash
 from .models import Producto, Perfil, Usuario
 from django.contrib import messages
@@ -368,15 +369,27 @@ def editar_producto(request, pk):
     })
 @login_required
 def aumentar_stock(request, pk):
-    producto = get_object_or_404 (Producto, pk=pk)
-    producto.stock_actual += 1
-    producto.save()
-    return redirect ('inventario')
+    if request.method == 'POST':
+        producto = get_object_or_404(Producto, pk=pk)
+        producto.stock_actual += 1
+        producto.save()
+        
+        # Respuesta AJAX para evitar recarga
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'stock_actual': producto.stock_actual, 'semaforo': producto.semaforo})
+            
+    return redirect('inventario')
 
 @login_required
 def disminuir_stock(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
-    if producto.stock_actual > 0:
-        producto.stock_actual -= 1
-        producto.save()
+    if request.method == 'POST':
+        producto = get_object_or_404(Producto, pk=pk)
+        if producto.stock_actual > 0:
+            producto.stock_actual -= 1
+            producto.save()
+            
+        # Respuesta AJAX para evitar recarga
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'stock_actual': producto.stock_actual, 'semaforo': producto.semaforo})
+            
     return redirect('inventario')
