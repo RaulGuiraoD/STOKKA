@@ -6,6 +6,22 @@ function toggleFiltros() {
     if (main) main.classList.toggle('sidebar-active');
 }
 
+// Función auxiliar para obtener el CSRF Token (necesario para fetch POST en Django)
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 document.addEventListener("DOMContentLoaded", function () {
     const searchInput = document.querySelector("input[name='q']");
     const stockSlider = document.getElementById("stockRange");
@@ -74,4 +90,73 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('formEliminar').setAttribute('action', url);
         });
     }
+
+    // --- CONTROL DE STOCK CONTINUO (CLICK & HOLD) ---
+    const stockButtons = document.querySelectorAll('.btn-adjust-stock');
+
+    // Función interna para realizar la petición
+    function realizarAjuste(url, productId) {
+        // 1. Obtenemos el token CSRF de las cookies. Esta es la parte CRÍTICA.
+        const csrftoken = getCookie('csrftoken');
+
+        // 2. Verificamos que el token exista. Si no, la petición POST fallará.
+        if (!csrftoken) {
+            console.error("Error de CSRF: No se encontró el token. Asegúrate de que las cookies están habilitadas en el navegador.");
+            return; // Detenemos la función si no hay token.
+        }
+        
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.stock_actual !== undefined) {
+                // 3. Actualizar el número en la UI
+                const valSpan = document.getElementById('stock-val-' + productId);
+                if(valSpan) valSpan.innerText = data.stock_actual;
+                
+                // 4. Actualizar el color de la fila (semáforo)
+                const row = document.getElementById('producto-row-' + productId);
+                if(row) {
+                    row.classList.remove('stokka-critico', 'stokka-aviso', 'stokka-ok');
+                    if (data.semaforo === 'critico') row.classList.add('stokka-critico');
+                    else if (data.semaforo === 'aviso') row.classList.add('stokka-aviso');
+                    else row.classList.add('stokka-ok');
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error al actualizar stock:', error);
+            console.error('La petición a la URL', url, 'ha fallado. Revisa la respuesta del servidor en la pestaña "Red" de las herramientas de desarrollador del navegador.');
+        });
+    }
+
+    stockButtons.forEach(btn => {
+        let timer;
+        let interval;
+        const url = btn.dataset.url;
+        const pk = btn.dataset.pk;
+
+        const start = (e) => {
+            e.preventDefault();
+            realizarAjuste(url, pk); // Ejecutar inmediatamente al pulsar
+            // Si se mantiene presionado 500ms, repetir cada 150ms
+            timer = setTimeout(() => {
+                interval = setInterval(() => realizarAjuste(url, pk), 150);
+            }, 500);
+        };
+
+        const stop = () => { clearTimeout(timer); clearInterval(interval); };
+
+        btn.addEventListener('mousedown', start);
+        btn.addEventListener('mouseup', stop);
+        btn.addEventListener('mouseleave', stop);
+        // Soporte táctil
+        btn.addEventListener('touchstart', start);
+        btn.addEventListener('touchend', stop);
+    });
 });
