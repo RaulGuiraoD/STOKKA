@@ -6,7 +6,7 @@ function toggleFiltros() {
     if (main) main.classList.toggle('sidebar-active');
 }
 
-// Función auxiliar para obtener el CSRF Token (necesario para fetch POST en Django)
+// Función auxiliar para obtener el CSRF Token
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -70,7 +70,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (valueLabel) valueLabel.innerText = limit;
 
         rows.forEach(row => {
-            // Buscamos en la celda 1 (Ref) y 2 (Nombre). Verificamos existencia de celdas.
             const ref = row.cells[1] ? row.cells[1].innerText.toLowerCase() : "";
             const nombre = row.cells[2] ? row.cells[2].innerText.toLowerCase() : "";
             const stockElement = row.querySelector(".stock-number");
@@ -91,29 +90,51 @@ document.addEventListener("DOMContentLoaded", function () {
     if (stockSlider) stockSlider.addEventListener("input", aplicarFiltros);
 
     // --- ORDENACIÓN VISUAL ---
-    document.querySelectorAll(".sortable").forEach((header, index) => {
+    document.querySelectorAll(".sortable").forEach((header) => {
         header.addEventListener("click", () => {
             const tbody = header.closest("table").querySelector("tbody");
-            const rowsArray = Array.from(tbody.querySelectorAll("tr"));
+            const rowsArray = Array.from(tbody.querySelectorAll("tr:not(.empty-row)"));
+            const index = Array.from(header.parentElement.children).indexOf(header);
+
+            // Alternar estado
             const isAsc = header.classList.contains("asc");
-
-            // Limpiar clases
             header.parentElement.querySelectorAll('.sortable').forEach(h => h.classList.remove('asc', 'desc'));
-
             header.classList.add(isAsc ? "desc" : "asc");
 
             rowsArray.sort((a, b) => {
-                const A = a.cells[index].innerText.trim();
-                const B = b.cells[index].innerText.trim();
-                return isAsc ? B.localeCompare(A, undefined, { numeric: true }) :
-                    A.localeCompare(B, undefined, { numeric: true });
+                let valA, valB;
+
+                // --- LÓGICA ESPECIAL PARA STOCK ---
+                // Si la columna es la de stock (usualmente la 4 o 5, buscamos por clase mejor)
+                const stockA = a.querySelector('.stock-number');
+                const stockB = b.querySelector('.stock-number');
+
+                // Si estamos pulsando en la columna que contiene el stock
+                if (header.innerText.toLowerCase().includes('stock') && stockA && stockB) {
+                    valA = parseInt(stockA.innerText);
+                    valB = parseInt(stockB.innerText);
+                }
+                // --- LÓGICA PARA ID (#) ---
+                else if (header.innerText.toLowerCase().includes('id') || header.innerText.includes('#')) {
+                    valA = parseInt(a.cells[index].innerText.replace('#', '').trim());
+                    valB = parseInt(b.cells[index].innerText.replace('#', '').trim());
+                }
+                // --- LÓGICA PARA TEXTO (Nombre, Ref) ---
+                else {
+                    valA = a.cells[index].innerText.trim().toLowerCase();
+                    valB = b.cells[index].innerText.trim().toLowerCase();
+                    return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                }
+
+                // Comparación numérica (para ID y Stock)
+                return isAsc ? valA - valB : valB - valA;
             });
 
             rowsArray.forEach(tr => tbody.appendChild(tr));
         });
     });
 
-    // --- MODAL DE ELIMINACIÓN INTELIGENTE ---
+    // --- MODAL DE ELIMINACIÓN ---
     const modalEliminar = document.getElementById('modalEliminarUnico');
     if (modalEliminar) {
         modalEliminar.addEventListener('show.bs.modal', function (event) {
@@ -126,19 +147,34 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // --- CONTROL DE STOCK CONTINUO (CLICK & HOLD) ---
+    // --- LÓGICA PARA CARGAR EL MODAL DE EDICIÓN ---
+    const contenedorFormEditar = document.getElementById('contenedor-form-editar');
+    document.querySelectorAll('.btn-editar-modal').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const url = this.getAttribute('data-url');
+
+            contenedorFormEditar.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-success"></div></div>';
+
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(response => response.text())
+                .then(html => {
+                    contenedorFormEditar.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    contenedorFormEditar.innerHTML = '<div class="alert alert-danger m-3">Error al cargar el formulario.</div>';
+                });
+        });
+    });
+
+    // --- CONTROL DE STOCK CONTINUO ---
     const stockButtons = document.querySelectorAll('.btn-adjust-stock');
 
-    // Función interna para realizar la petición
     function realizarAjuste(url, productId) {
-        // 1. Obtenemos el token CSRF de las cookies. Esta es la parte CRÍTICA.
         const csrftoken = getCookie('csrftoken');
-
-        // 2. Verificamos que el token exista. Si no, la petición POST fallará.
-        if (!csrftoken) {
-            console.error("Error de CSRF: No se encontró el token. Asegúrate de que las cookies están habilitadas en el navegador.");
-            return; // Detenemos la función si no hay token.
-        }
+        if (!csrftoken) return;
 
         fetch(url, {
             method: 'POST',
@@ -150,11 +186,9 @@ document.addEventListener("DOMContentLoaded", function () {
             .then(response => response.json())
             .then(data => {
                 if (data.stock_actual !== undefined) {
-                    // 3. Actualizar el número en la UI
                     const valSpan = document.getElementById('stock-val-' + productId);
                     if (valSpan) valSpan.innerText = data.stock_actual;
 
-                    // 4. Actualizar el color de la fila (semáforo)
                     const row = document.getElementById('producto-row-' + productId);
                     if (row) {
                         row.classList.remove('stokka-critico', 'stokka-aviso', 'stokka-ok');
@@ -164,10 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 }
             })
-            .catch(error => {
-                console.error('Error al actualizar stock:', error);
-                console.error('La petición a la URL', url, 'ha fallado. Revisa la respuesta del servidor en la pestaña "Red" de las herramientas de desarrollador del navegador.');
-            });
+            .catch(error => console.error('Error al actualizar stock:', error));
     }
 
     stockButtons.forEach(btn => {
@@ -178,8 +209,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const start = (e) => {
             e.preventDefault();
-            realizarAjuste(url, pk); // Ejecutar inmediatamente al pulsar
-            // Si se mantiene presionado 500ms, repetir cada 150ms
+            realizarAjuste(url, pk);
             timer = setTimeout(() => {
                 interval = setInterval(() => realizarAjuste(url, pk), 150);
             }, 500);
@@ -187,13 +217,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const stop = () => { clearTimeout(timer); clearInterval(interval); };
 
-        // Evitar el salto de página del href="#" interceptando el evento click
         btn.addEventListener('click', (e) => e.preventDefault());
-
         btn.addEventListener('mousedown', start);
         btn.addEventListener('mouseup', stop);
         btn.addEventListener('mouseleave', stop);
-        // Soporte táctil
         btn.addEventListener('touchstart', start);
         btn.addEventListener('touchend', stop);
     });

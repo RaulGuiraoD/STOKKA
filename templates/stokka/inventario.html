@@ -146,7 +146,10 @@
                                     <div class="btn-group bg-white rounded-3 shadow-sm border overflow-hidden">
                                         <!-- Busca esta parte en tu bucle for p in productos -->
                                         <button class="btn btn-sm btn-white px-3 py-2 border-end btn-editar-modal"
-                                            data-url="{% url 'editar_producto' p.pk %}" title="Editar">
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#modalEditar"
+                                            data-url="{% url 'editar_producto' p.pk %}" 
+                                            title="Editar">
                                             <i class="fa-solid fa-pen"></i>
                                         </button>
                                         <button class="btn btn-sm btn-white px-3 py-2 text-danger"
