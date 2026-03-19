@@ -306,7 +306,7 @@ def eliminar_foto(request):
 def inventario_view(request):
     filtro = request.GET.get('filtro')
     query = request.GET.get('q')
-    producto = Producto.objects.all().order_by('nombre')
+    producto = Producto.objects.all().order_by('-fecha_registro')
 
     if query:
         producto = producto.filter(
@@ -349,6 +349,17 @@ def eliminar_producto(request, pk):
         messages.success(request, "Producto eliminado.")
         return redirect('inventario')
     return render(request, 'stokka/comfirmar_eliminar.html', {'producto': producto})
+
+@login_required
+def eliminar_masivo(request):
+    if request.method == 'POST':
+        ids_raw = request.POST.get('ids', '')
+        if ids_raw:
+            ids_list = ids_raw.split(',')
+            # Eliminamos todos los productos cuyos IDs estén en la lista
+            Producto.objects.filter(id__in=ids_list).delete()
+            messages.success(request, f"Se han eliminado {len(ids_list)} productos correctamente.")
+    return redirect('inventario')
 
 @login_required
 def editar_producto(request, pk):

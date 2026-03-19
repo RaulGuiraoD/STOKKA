@@ -48,6 +48,7 @@ urlpatterns = [
 
     path('inventario/stock/subir/<int:pk>/', views.aumentar_stock, name='aumentar_stock'),
     path('inventario/stock/bajar/<int:pk>/', views.disminuir_stock, name='disminuir_stock'),
+    path('inventario/eliminar-masivo/', views.eliminar_masivo, name='eliminar_masivo'),
 
 ]
 

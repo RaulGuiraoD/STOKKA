@@ -28,6 +28,41 @@ document.addEventListener("DOMContentLoaded", function () {
     const valueLabel = document.getElementById("stockValue");
     const rows = document.querySelectorAll("#tabla-inventario tbody tr:not(.empty-row)");
 
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.checkbox-producto');
+    const btnMasivo = document.getElementById('btn-eliminar-masivo');
+    const countSpan = document.getElementById('count-seleccionados');
+
+    function actualizarBotón() {
+        const seleccionados = document.querySelectorAll('.checkbox-producto:checked').length;
+        if (seleccionados > 0) {
+            btnMasivo.classList.remove('d-none');
+            countSpan.textContent = seleccionados;
+        } else {
+            btnMasivo.classList.add('d-none');
+            selectAll.checked = false;
+        }
+        checkboxes.forEach(cb => {
+            const row = cb.closest('tr');
+            if (cb.checked) {
+                row.classList.add('fila-seleccionada');
+            } else {
+                row.classList.remove('fila-seleccionada');
+            }
+        });
+    }
+
+    // Seleccionar/Deseleccionar todos
+    selectAll.addEventListener('change', function () {
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        actualizarBotón();
+    });
+
+    // Evento para cada checkbox individual
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', actualizarBotón);
+    });
+
     // --- FILTROS UNIFICADOS ---
     function aplicarFiltros() {
         const term = searchInput.value.toLowerCase();
@@ -64,14 +99,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
             // Limpiar clases
             header.parentElement.querySelectorAll('.sortable').forEach(h => h.classList.remove('asc', 'desc'));
-            
+
             header.classList.add(isAsc ? "desc" : "asc");
 
             rowsArray.sort((a, b) => {
                 const A = a.cells[index].innerText.trim();
                 const B = b.cells[index].innerText.trim();
-                return isAsc ? B.localeCompare(A, undefined, {numeric: true}) : 
-                               A.localeCompare(B, undefined, {numeric: true});
+                return isAsc ? B.localeCompare(A, undefined, { numeric: true }) :
+                    A.localeCompare(B, undefined, { numeric: true });
             });
 
             rowsArray.forEach(tr => tbody.appendChild(tr));
@@ -91,32 +126,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // --- MODAL DE EDITAR INTELIGENTE ---
-    const modalEditar = new bootstrap.Modal(document.getElementById('modalEditar'));
-    const contenedorForm = document.getElementById('contenedor-form-editar');
-
-    document.querySelectorAll('.btn-editar-modal').forEach(boton => {
-        boton.addEventListener('click', function() {
-            const url = this.getAttribute('data-url');
-            
-            // 1. Mostrar el modal con el spinner
-            modalEditar.show();
-            contenedorForm.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-success"></div></div>';
-
-            // 2. Cargar el HTML del formulario mediante Fetch
-            fetch(url, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.text())
-            .then(html => {
-                contenedorForm.innerHTML = html;
-            })
-            .catch(error => {
-                contenedorForm.innerHTML = '<div class="alert alert-danger m-3">Error al cargar el formulario.</div>';
-            });
-        });
-    });
-
     // --- CONTROL DE STOCK CONTINUO (CLICK & HOLD) ---
     const stockButtons = document.querySelectorAll('.btn-adjust-stock');
 
@@ -130,7 +139,7 @@ document.addEventListener("DOMContentLoaded", function () {
             console.error("Error de CSRF: No se encontró el token. Asegúrate de que las cookies están habilitadas en el navegador.");
             return; // Detenemos la función si no hay token.
         }
-        
+
         fetch(url, {
             method: 'POST',
             headers: {
@@ -138,27 +147,27 @@ document.addEventListener("DOMContentLoaded", function () {
                 'X-Requested-With': 'XMLHttpRequest'
             },
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.stock_actual !== undefined) {
-                // 3. Actualizar el número en la UI
-                const valSpan = document.getElementById('stock-val-' + productId);
-                if(valSpan) valSpan.innerText = data.stock_actual;
-                
-                // 4. Actualizar el color de la fila (semáforo)
-                const row = document.getElementById('producto-row-' + productId);
-                if(row) {
-                    row.classList.remove('stokka-critico', 'stokka-aviso', 'stokka-ok');
-                    if (data.semaforo === 'critico') row.classList.add('stokka-critico');
-                    else if (data.semaforo === 'aviso') row.classList.add('stokka-aviso');
-                    else row.classList.add('stokka-ok');
+            .then(response => response.json())
+            .then(data => {
+                if (data.stock_actual !== undefined) {
+                    // 3. Actualizar el número en la UI
+                    const valSpan = document.getElementById('stock-val-' + productId);
+                    if (valSpan) valSpan.innerText = data.stock_actual;
+
+                    // 4. Actualizar el color de la fila (semáforo)
+                    const row = document.getElementById('producto-row-' + productId);
+                    if (row) {
+                        row.classList.remove('stokka-critico', 'stokka-aviso', 'stokka-ok');
+                        if (data.semaforo === 'critico') row.classList.add('stokka-critico');
+                        else if (data.semaforo === 'aviso') row.classList.add('stokka-aviso');
+                        else row.classList.add('stokka-ok');
+                    }
                 }
-            }
-        })
-        .catch(error => {
-            console.error('Error al actualizar stock:', error);
-            console.error('La petición a la URL', url, 'ha fallado. Revisa la respuesta del servidor en la pestaña "Red" de las herramientas de desarrollador del navegador.');
-        });
+            })
+            .catch(error => {
+                console.error('Error al actualizar stock:', error);
+                console.error('La petición a la URL', url, 'ha fallado. Revisa la respuesta del servidor en la pestaña "Red" de las herramientas de desarrollador del navegador.');
+            });
     }
 
     stockButtons.forEach(btn => {
@@ -188,4 +197,10 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.addEventListener('touchstart', start);
         btn.addEventListener('touchend', stop);
     });
+});
+
+document.getElementById('formEliminarMasivo').addEventListener('submit', function (e) {
+    const seleccionados = Array.from(document.querySelectorAll('.checkbox-producto:checked'))
+        .map(cb => cb.value);
+    document.getElementById('input-ids-masivo').value = seleccionados.join(',');
 });

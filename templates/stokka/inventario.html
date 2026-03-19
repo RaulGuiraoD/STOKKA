@@ -12,6 +12,9 @@
             <i class="fa-solid fa-filter me-2"></i> FILTROS
         </button>
         <div class="d-flex gap-2">
+            <button id="btn-eliminar-masivo" class="btn btn-danger shadow-stokka d-none" data-bs-toggle="modal" data-bs-target="#modalEliminarMasivo">
+                <i class="fa-solid fa-trash-can me-2"></i> ELIMINAR (<span id="count-seleccionados">0</span>)
+            </button>
             <button class="btn btn-stokka shadow-stokka" data-bs-toggle="modal" data-bs-target="#modalAñadir"
                 style="background-color: var(--verde-secundario) !important;">
                 <i class="fa-solid fa-plus me-2"></i> NUEVO PRODUCTO
@@ -90,7 +93,12 @@
                     <table class="table align-middle mb-0 table-custom border-0" id="tabla-inventario">
                         <thead style="background-color: var(--gris-fondo);">
                             <tr>
-                                <th class="ps-4 py-3 border-0 text-muted small uppercase sortable">ID</th>
+                                <th class="ps-4 py-3 border-0 text-muted" style="width: 40px;">
+                                    <div class="form-check">
+                                        <input class="form-check-input shadow-none" type="checkbox" id="selectAll">
+                                    </div>
+                                </th>
+                                <th class="py-3 border-0 text-muted small uppercase sortable">ID</th>
                                 <th class="border-0 text-muted small uppercase sortable">FACTURA / REF</th>
                                 <th class="border-0 text-muted small uppercase sortable">PRODUCTO</th>
                                 <th class="border-0 text-muted small uppercase sortable">REGISTRO</th>
@@ -102,6 +110,11 @@
                             {% for p in productos %}
                             <tr id="producto-row-{{ p.pk }}"
                                 class="fila-stokka {% if p.semaforo == 'critico' %}stokka-critico{% elif p.semaforo == 'aviso' %}stokka-aviso{% else %}stokka-ok{% endif %}">
+                                <td class="ps-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input checkbox-producto shadow-none" type="checkbox" value="{{ p.pk }}">
+                                    </div>
+                                </td>
                                 <td class="ps-4 fw-bold">#{{ p.id_formateado }}</td>
                                 <td>
                                     <span class="badge bg-white text-dark border fw-normal px-2 py-1 rounded-2">
@@ -147,7 +160,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center py-5 text-muted">
+                                <td colspan="7" class="text-center py-5 text-muted">
                                     <i class="fa-solid fa-box-open d-block fs-1 mb-2 opacity-25"></i>
                                     No hay productos que coincidan con los criterios.
                                 </td>
@@ -178,6 +191,27 @@
                         <button type="submit" class="btn btn-danger rounded-3 px-4 fw-bold">ELIMINAR AHORA</button>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE ELIMINACIÓN MASIVO -->
+<div class="modal fade" id="modalEliminarMasivo" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-stokka rounded-4">
+            <div class="modal-body p-4 text-center">
+                <i class="fa-solid fa-triangle-exclamation text-danger fs-1 mb-3"></i>
+                <h5 class="fw-bold">¿Eliminar productos seleccionados?</h5>
+                <p class="text-muted small">Esta acción eliminará todos los productos marcados de forma permanente.</p>
+                <form method="POST" action="{% url 'eliminar_masivo' %}" id="formEliminarMasivo">
+                    {% csrf_token %}
+                    <input type="hidden" name="ids" id="input-ids-masivo">
+                    <div class="d-flex justify-content-center gap-2 mt-4">
+                        <button type="button" class="btn btn-light rounded-3 px-4 fw-bold" data-bs-dismiss="modal">CANCELAR</button>
+                        <button type="submit" id="confirmar-borrado-masivo" class="btn btn-danger rounded-3 px-4 fw-bold">SÍ, ELIMINAR</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
