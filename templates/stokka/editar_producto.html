@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ titulo }} - STOKKA{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- CABECERA CON RETORNO -->
+            <div class="d-flex align-items-center mb-4">
+                <a href="{% url 'inventario' %}" class="btn btn-light rounded-circle shadow-sm me-3">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <h2 class="fw-bold mb-0" style="color: var(--verde-stokka);">{{ titulo }}</h2>
+            </div>
+
+            <!-- TARJETA DEL FORMULARIO -->
+            <div class="card shadow-stokka border-0 rounded-4 overflow-hidden bg-white">
+                <div class="card-header bg-stokka-dueno text-white border-0 py-3">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fa-solid {% if 'Editar' in titulo %}fa-pen-to-square{% else %}fa-plus{% endif %} me-2"></i>
+                        Información del Producto
+                    </h5>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data" class="p-4">
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        {% for field in form %}
+                        <div class="col-{% if field.name == 'descripcion' or field.name == 'nombre' or field.name == 'foto' %}12{% else %}6{% endif %}">
+                            <label class="small text-muted fw-bold text-uppercase mb-1" for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                            </label>
+                            
+                            {# Renderizado del campo con clases de estilo STOKKA #}
+                            {{ field }}
+
+                            {% if field.help_text %}
+                            <div class="form-text small opacity-75">{{ field.help_text }}</div>
+                            {% endif %}
+                            
+                            {% if field.errors %}
+                            <div class="text-danger small mt-1 animated fadeIn">
+                                <i class="fa-solid fa-circle-exclamation me-1"></i>{{ field.errors.0 }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <hr class="my-4 opacity-25">
+
+                    <!-- ACCIONES -->
+                    <div class="d-flex justify-content-end gap-3">
+                        <a href="{% url 'inventario' %}" class="btn btn-light px-4 fw-bold rounded-3">
+                            CANCELAR
+                        </a>
+                        <button type="submit" class="btn btn-stokka px-5 shadow-stokka fw-bold rounded-3">
+                            {% if 'Editar' in titulo %}ACTUALIZAR PRODUCTO{% else %}CREAR PRODUCTO{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            {% if 'Editar' in titulo %}
+            <!-- INFO ADICIONAL (Solo en edición) -->
+            <div class="mt-4 p-3 bg-light rounded-4 border d-flex align-items-center justify-content-between">
+                <div class="small text-muted">
+                    <i class="fa-solid fa-info-circle me-1"></i> 
+                    ID del producto: <strong>#{{ producto.id_formateado }}</strong>
+                </div>
+                <div class="small text-muted">
+                    Última actualización: <strong>{{ producto.actualizado_en|date:"d/m/Y H:i"|default:"Reciente" }}</strong>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos específicos para asegurar que los inputs de Django se vean bien */
+    input[type="text"], input[type="number"], input[type="file"], textarea, select {
+        display: block;
+        width: 100%;
+        padding: 0.6rem 1rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #f8f9fa;
+        background-clip: padding-box;
+        border: 2px solid #eee;
+        border-radius: 12px;
+        transition: border-color .15s ease-in-out, box-shadow .15s ease-in-out;
+    }
+
+    input:focus, textarea:focus {
+        background-color: #fff;
+        border-color: var(--verde-stokka);
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(46, 139, 87, 0.1);
+    }
+
+    .desc-text {
+        min-height: 100px;
+    }
+</style>
+{% endblock %}

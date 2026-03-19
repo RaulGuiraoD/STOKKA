@@ -31,7 +31,7 @@
                     {% if filtro_actual %}
                     <input type="hidden" name="filtro" value="{{ filtro_actual }}">
                     {% endif %}
-                    
+
                     <!-- Búsqueda por Texto -->
                     <div class="mb-4">
                         <label class="small text-muted fw-bold text-uppercase">Nombre o Referencia</label>
@@ -93,13 +93,15 @@
                                 <th class="ps-4 py-3 border-0 text-muted small uppercase sortable">ID</th>
                                 <th class="border-0 text-muted small uppercase sortable">FACTURA / REF</th>
                                 <th class="border-0 text-muted small uppercase sortable">PRODUCTO</th>
+                                <th class="border-0 text-muted small uppercase sortable">REGISTRO</th>
                                 <th class="border-0 text-muted small uppercase text-center sortable">STOCK</th>
                                 <th class="border-0 text-muted small uppercase text-center">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for p in productos %}
-                            <tr id="producto-row-{{ p.pk }}" class="fila-stokka {% if p.semaforo == 'critico' %}stokka-critico{% elif p.semaforo == 'aviso' %}stokka-aviso{% else %}stokka-ok{% endif %}">
+                            <tr id="producto-row-{{ p.pk }}"
+                                class="fila-stokka {% if p.semaforo == 'critico' %}stokka-critico{% elif p.semaforo == 'aviso' %}stokka-aviso{% else %}stokka-ok{% endif %}">
                                 <td class="ps-4 fw-bold">#{{ p.id_formateado }}</td>
                                 <td>
                                     <span class="badge bg-white text-dark border fw-normal px-2 py-1 rounded-2">
@@ -110,23 +112,33 @@
                                     <div class="fw-bold">{{ p.nombre }}</div>
                                     <small class="desc-text">{{ p.descripcion|truncatechars:50 }}</small>
                                 </td>
+                                <td>
+                                    <div class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                        {{ p.fecha_registro|date:"d M, Y" }}
+                                    </div>
+                                    <small class="text-muted" style="font-size: 0.75rem;">
+                                        {{ p.fecha_registro|time:"H:i" }}
+                                    </small>
+                                </td>
                                 <td style="width: 160px;">
                                     <div class="d-flex align-items-center justify-content-center gap-2">
-                                        <a href="#" data-url="{% url 'disminuir_stock' p.pk %}" data-pk="{{ p.pk }}" class="btn-adjust-stock shadow-sm">-</a>
-                                        <span id="stock-val-{{ p.pk }}" class="stock-number mx-1">{{ p.stock_actual }}</span>
-                                        <a href="#" data-url="{% url 'aumentar_stock' p.pk %}" data-pk="{{ p.pk }}" class="btn-adjust-stock shadow-sm">+</a>
+                                        <a href="#" data-url="{% url 'disminuir_stock' p.pk %}" data-pk="{{ p.pk }}"
+                                            class="btn-adjust-stock shadow-sm">-</a>
+                                        <span id="stock-val-{{ p.pk }}" class="stock-number mx-1">{{ p.stock_actual}}</span>
+                                        <a href="#" data-url="{% url 'aumentar_stock' p.pk %}" data-pk="{{ p.pk }}"
+                                            class="btn-adjust-stock shadow-sm">+</a>
                                     </div>
-                                </td>
+                                </td>                    
                                 <td class="text-center pe-4">
                                     <div class="btn-group bg-white rounded-3 shadow-sm border overflow-hidden">
-                                        <a href="{% url 'editar_producto' p.pk %}" class="btn btn-sm btn-white px-3 py-2 border-end" title="Editar">
+                                        <!-- Busca esta parte en tu bucle for p in productos -->
+                                        <button class="btn btn-sm btn-white px-3 py-2 border-end btn-editar-modal"
+                                            data-url="{% url 'editar_producto' p.pk %}" title="Editar">
                                             <i class="fa-solid fa-pen"></i>
-                                        </a>
+                                        </button>
                                         <button class="btn btn-sm btn-white px-3 py-2 text-danger"
-                                            data-bs-toggle="modal" 
-                                            data-bs-target="#modalEliminarUnico"
-                                            data-nombre="{{ p.nombre }}" 
-                                            data-url="{% url 'eliminar_producto' p.pk %}"
+                                            data-bs-toggle="modal" data-bs-target="#modalEliminarUnico"
+                                            data-nombre="{{ p.nombre }}" data-url="{% url 'eliminar_producto' p.pk %}"
                                             title="Eliminar">
                                             <i class="fa-solid fa-trash"></i>
                                         </button>
@@ -156,9 +168,11 @@
             <div class="modal-body p-4 text-center">
                 <div class="mb-3"><i class="fa-solid fa-trash-can text-danger fs-1"></i></div>
                 <h5 class="fw-bold">¿Eliminar producto?</h5>
-                <p class="text-muted small">Estás a punto de borrar <strong id="modalProductoNombre"></strong>. Esta acción es irreversible.</p>
+                <p class="text-muted small">Estás a punto de borrar <strong id="modalProductoNombre"></strong>. Esta
+                    acción es irreversible.</p>
                 <div class="d-flex justify-content-center gap-2 mt-4">
-                    <button type="button" class="btn btn-light rounded-3 px-4 fw-bold" data-bs-dismiss="modal">CANCELAR</button>
+                    <button type="button" class="btn btn-light rounded-3 px-4 fw-bold"
+                        data-bs-dismiss="modal">CANCELAR</button>
                     <form method="POST" action="" id="formEliminar">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-danger rounded-3 px-4 fw-bold">ELIMINAR AHORA</button>
@@ -175,14 +189,16 @@
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header bg-stokka-dueno text-white border-0 py-3 rounded-top-4">
                 <h5 class="modal-title fw-bold"><i class="fa-solid fa-box me-2"></i>Nuevo Producto</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
             </div>
             <form method="POST" action="{% url 'añadir_producto' %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         {% for field in form_añadir %}
-                        <div class="col-{% if field.name == 'descripcion' or field.name == 'nombre' or field.name == 'foto' %}12{% else %}6{% endif %}">
+                        <div
+                            class="col-{% if field.name == 'descripcion' or field.name == 'nombre' or field.name == 'foto' %}12{% else %}6{% endif %}">
                             <label class="small text-muted fw-bold">{{ field.label }}</label>
                             {{ field }}
                             {% if field.errors %}
@@ -197,6 +213,24 @@
                     <button type="submit" class="btn btn-stokka px-4">GUARDAR PRODUCTO</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DINÁMICO DE EDICIÓN -->
+<div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered shadow-stokka">
+        <div class="modal-content border-0 rounded-4">
+            <div class="modal-header bg-stokka-dueno text-white border-0 py-3 rounded-top-4">
+                <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Editar Producto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <!-- El contenido se cargará aquí mediante AJAX -->
+            <div id="contenedor-form-editar">
+                <div class="text-center p-5">
+                    <div class="spinner-border text-success" role="status"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

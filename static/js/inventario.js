@@ -91,6 +91,32 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    // --- MODAL DE EDITAR INTELIGENTE ---
+    const modalEditar = new bootstrap.Modal(document.getElementById('modalEditar'));
+    const contenedorForm = document.getElementById('contenedor-form-editar');
+
+    document.querySelectorAll('.btn-editar-modal').forEach(boton => {
+        boton.addEventListener('click', function() {
+            const url = this.getAttribute('data-url');
+            
+            // 1. Mostrar el modal con el spinner
+            modalEditar.show();
+            contenedorForm.innerHTML = '<div class="text-center p-5"><div class="spinner-border text-success"></div></div>';
+
+            // 2. Cargar el HTML del formulario mediante Fetch
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => response.text())
+            .then(html => {
+                contenedorForm.innerHTML = html;
+            })
+            .catch(error => {
+                contenedorForm.innerHTML = '<div class="alert alert-danger m-3">Error al cargar el formulario.</div>';
+            });
+        });
+    });
+
     // --- CONTROL DE STOCK CONTINUO (CLICK & HOLD) ---
     const stockButtons = document.querySelectorAll('.btn-adjust-stock');
 

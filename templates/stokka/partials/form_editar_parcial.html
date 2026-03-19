@@ -1,0 +1,17 @@
+<form method="POST" action="{% url 'editar_producto' producto.pk %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="modal-body p-4">
+        <div class="row g-3">
+            {% for field in form %}
+            <div class="col-{% if field.name == 'descripcion' or field.name == 'nombre' %}12{% else %}6{% endif %}">
+                <label class="small text-muted fw-bold">{{ field.label }}</label>
+                {{ field }}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="modal-footer border-0 p-4 pt-0">
+        <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal">CANCELAR</button>
+        <button type="submit" class="btn btn-stokka px-4 shadow-stokka">ACTUALIZAR CAMBIOS</button>
+    </div>
+</form>

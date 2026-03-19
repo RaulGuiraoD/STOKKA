@@ -362,11 +362,16 @@ def editar_producto(request, pk):
     else:
         form = ProductoForm(instance=producto)
     
-    return render(request, 'stokka/form_producto.html', {
-        'form': form,
-        'producto': producto,
-        'titulo': 'Editar Producto'
-    })
+    # SI ES AJAX, devolvemos un template parcial (solo el formulario)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'stokka/partials/form_editar_parcial.html', {
+            'form': form,
+            'producto': producto
+        })
+    
+    # Si alguien entra por URL directa, sigue funcionando la página completa
+    return render(request, 'stokka/form_producto.html', {'form': form, 'titulo': 'Editar'})
+
 @login_required
 def aumentar_stock(request, pk):
     if request.method == 'POST':
