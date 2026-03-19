@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Editar Usuario - STOKKA{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12 d-flex align-items-center justify-content-between">
+            <div>
+                <h2 class="fw-bold text-dark mb-0">
+                    <i class="fa-solid fa-user-pen me-2" style="color: var(--verde-stokka);"></i>
+                    Editar Usuario
+                </h2>
+                <p class="text-muted small">Modificando el perfil de: <span class="badge bg-stokka-admin text-dark">{{ usuario_editado.username }}</span></p>
+            </div>
+            <a href="{% url 'gestion_usuarios' %}" class="btn btn-cancelar-stokka rounded-pill px-4 fw-bold">
+                <i class="fa-solid fa-arrow-left me-2"></i>VOLVER
+            </a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 bg-white">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Nombre de Usuario</label>
+                                {{ form.username }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Email *</label>
+                                {{ form.email }}
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Nombre</label>
+                                {{ form.first_name }}
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Apellido</label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="p-3 bg-light rounded-3 border-start border-4" style="border-color: var(--amarillo-alerta) !important;">
+                                <label class="form-label fw-bold small text-uppercase mb-2 text-dark">Asignar Rol en el Sistema</label>
+                                {{ form.rol }}
+                                <div class="form-text mt-2 small">
+                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                    Los roles definen los permisos de acceso al dashboard de STOKKA.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 mt-2">
+                            <div class="p-4 rounded-4 border-start border-4" style="background-color: var(--verde-stokka-light); border-color: var(--verde-stokka) !important;">
+                                <h6 class="fw-bold text-dark mb-3">
+                                    <i class="fa-solid fa-key me-2" style="color: var(--verde-stokka);"></i>Gestión de Seguridad
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Nueva Contraseña</label>
+                                        {{ form.password }}
+                                        <small class="text-muted d-block mt-1 italic">Dejar vacío para no cambiar.</small>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label fw-bold small text-uppercase text-muted">Confirmar Contraseña</label>
+                                        {{ form.confirm_password }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 text-end mt-4 pt-3 border-top">
+                            <button type="submit" class="btn btn-stokka rounded-pill px-5 py-2 shadow-sm text-uppercase fw-bold">
+                                <i class="fa-solid fa-floppy-disk me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos personalizados para inputs de Django */
+    .form-control, .form-select {
+        border-radius: 10px !important;
+        padding: 12px 15px !important;
+        border: 1px solid #dee2e6 !important;
+        transition: all 0.3s ease !important;
+        background-color: #fcfcfc !important;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--verde-stokka) !important;
+        box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
+        background-color: white !important;
+    }
+
+    /* Botones corporativos */
+    .btn-stokka {
+        background-color: var(--verde-stokka) !important;
+        color: white !important;
+        border: none !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .btn-stokka:hover {
+        filter: brightness(1.2);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 61, 0, 0.2) !important;
+    }
+
+    .btn-cancelar-stokka {
+        color: var(--rojo-alerta) !important;
+        border: 2px solid var(--rojo-alerta) !important;
+        background: transparent !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .btn-cancelar-stokka:hover {
+        background-color: var(--rojo-alerta) !important;
+        color: white !important;
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

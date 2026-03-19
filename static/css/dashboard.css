@@ -5,33 +5,20 @@
     --bg-gris: #F2F4F6;
 }
 
-/* ESTRUCTURA BASE */
-body {
-    margin: 0;
-    background-color: var(--bg-gris);
-    font-family: 'Merriweather', serif;
+/* ==========================================================================
+   ESTILOS PERTENECIENTES AL BASE.HTML (Layout Principal)
+   ========================================================================== */
+
+/* Aseguramos la fuente en todo el proyecto */
+body, input, button, select, textarea {
+    font-family: 'Merriweather', serif !important;
 }
 
-/* HEADER */
 .dashboard-header {
     height: var(--header-height);
     background-color: var(--verde-stokka);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 20px;
     color: white;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
-    box-sizing: border-box;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
+    z-index: 1030;
 }
 
 .mini-logo {
@@ -39,89 +26,39 @@ body {
     filter: brightness(0) invert(1);
 }
 
-.brand-name {
-    font-size: 24px;
-    font-weight: bold;
-    letter-spacing: 2px;
-}
-
-.header-center {
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-}
-
+/* BARRA DE BÚSQUEDA: Más larga y grande */
 .search-bar {
-    background: white;
-    border-radius: 20px;
-    padding: 5px 15px;
-    display: flex;
-    width: 40%;
-    align-items: center;
+    max-width: 700px !important; 
+    width: 60% !important;        
+    height: 45px;                
+    font-size: 1rem;
 }
 
 .search-bar input {
-    border: none;
-    width: 100%;
-    outline: none;
-    padding: 5px;
-    font-family: 'Merriweather', serif;
+    font-size: 1rem;
 }
 
-.search-bar button {
-    background: none;
-    border: none;
-    color: var(--verde-stokka);
-    cursor: pointer;
-}
-
-/* USUARIO HEADER */
-.user-identity {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 5px 15px;
-    border-radius: 30px;
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.user-text {
-    text-align: right;
-    color: white;
-}
-
-.user-text .user-name {
-    display: block;
-    font-size: 11px;
+.brand-name {
+    font-size: 22px;
     font-weight: bold;
+    letter-spacing: 3px;
+}
+.user-name {
+    font-size: 8px;
     letter-spacing: 1px;
 }
 
-.user-text .user-role {
-    display: block;
-    font-size: 9px;
-    opacity: 0.7;
+.user-identity {
+    background: rgba(255, 255, 255, 0.1);
 }
 
 .user-avatar-circle {
     width: 40px;
     height: 40px;
     border-radius: 50%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.5);
 }
 
-.user-avatar-circle img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* SIDEBAR */
+/* SIDEBAR: SEPARACIÓN IGUAL Y CONSTANTE */
 .dashboard-sidebar {
     width: var(--sidebar-width);
     background-color: white;
@@ -129,53 +66,72 @@ body {
     position: fixed;
     left: 0;
     top: var(--header-height);
-    display: flex;
-    flex-direction: column;
-    padding: 40px 0;
-    box-sizing: border-box;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-    z-index: 999;
+    z-index: 1020;
 }
 
 .nav-links {
     display: flex;
     flex-direction: column;
-    height: 100%;
-    justify-content: space-between;
     align-items: center;
     width: 100%;
+    /* Distribuye los iconos con el mismo espacio entre ellos */
+    justify-content: space-evenly;
 }
 
 .nav-icon {
-    width: 60px;
-    height: 60px;
+    width: 65px;
+    height: 65px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 28px;
+    font-size: 30px;
     text-decoration: none;
     color: var(--verde-stokka);
-    transition: 0.3s;
-    border-radius: 12px;
+    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 15px;
 }
 
-.nav-icon:hover, .nav-icon.active {
+.nav-icon:hover,
+.nav-icon.active {
     background-color: var(--verde-stokka);
     color: white;
+    transform: scale(1.05);
 }
 
-/* CONTENIDO */
 .dashboard-content {
     margin-left: var(--sidebar-width);
     margin-top: var(--header-height);
-    padding: 30px;
     min-height: calc(100vh - var(--header-height));
-    box-sizing: border-box;
 }
 
-/* RESPONSIVE */
 @media (max-width: 991px) {
-    .dashboard-sidebar { display: none; }
-    .dashboard-content { margin-left: 0; }
-    .search-bar { width: 70%; }
+    .dashboard-sidebar {
+        display: none;
+    }
+
+    .dashboard-content {
+        margin-left: 0;
+    }
+}
+
+/* ==========================================================================
+   ESTILOS NO PERTENECIENTES AL BASE.HTML (No tocados)
+   ========================================================================== */
+
+/* Aquí podrías añadir otros estilos específicos de vistas si los hubiera */
+
+/* --- Títulos y Tipografía --- */
+h1, .h1 { font-size: 1.75rem !important; } /* Tamaño más contenido para h1 */
+h2, .h2 { font-size: 1.5rem !important; }
+h3, .h3 { font-size: 1.25rem !important; }
+
+/* --- Sombra Stokka Global --- */
+.shadow-stokka {
+    box-shadow: 0 10px 30px rgba(0, 61, 0, 0.12) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.shadow-stokka:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px rgba(0, 61, 0, 0.18) !important;
 }

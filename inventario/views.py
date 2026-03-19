@@ -1,14 +1,20 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login, authenticate, get_user_model
+from django.http import JsonResponse
+from django.contrib.auth import login, authenticate, get_user_model, update_session_auth_hash
 from .models import Producto, Perfil, Usuario
 from django.contrib import messages
+from django.core.exceptions import ValidationError
 from django.core.exceptions import PermissionDenied
-from .forms import RegistroUsuarioForm
+from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm, ProductoForm
+from django.contrib.auth.hashers import check_password
+
+from django.db import models
 
 # Esto detecta automáticamente el Usuario personalizado
 User = get_user_model()
 
+#Permisos de administrador
 def admin_required(view_func):
     def _wrapped_view_func(request, *args, **kwarsg):
         if request.user.is_authenticated and (request.user.es_admin_o_dueño()):
@@ -16,14 +22,15 @@ def admin_required(view_func):
         raise PermissionDenied
     return _wrapped_view_func
 
+# LÓGICA DE GESTIÓN DE USUARIOS
 @login_required
 @admin_required
 def gestion_usuarios(request):
     usuarios = User.objects.all().order_by('id')
-    form = RegistroUsuarioForm() # Siempre inicializamos el form aquí
-
+    
     if request.method == 'POST':
-        form = RegistroUsuarioForm(request.POST)
+        # Pasamos user_request aquí
+        form = RegistroUsuarioForm(request.POST, user_request=request.user)
         if form.is_valid():
             nuevo_usuario = form.save(commit=False)
             nuevo_usuario.set_password(form.cleaned_data['password'])
@@ -31,35 +38,109 @@ def gestion_usuarios(request):
             Perfil.objects.get_or_create(user=nuevo_usuario)
             messages.success(request, f"Usuario {nuevo_usuario.username} creado.")
             return redirect('gestion_usuarios')
+    else:
+        # Y aquí también para el formulario vacío
+        form = RegistroUsuarioForm(user_request=request.user)
 
     return render(request, 'stokka/gestion_usuarios.html', {
         'usuarios': usuarios,
         'form': form
     })
 
+# LÓGICA DE GESTIÓN DE USUARIOS -> EDITAR USUARIOS
+@login_required
+@admin_required
+def editar_usuario_admin(request, user_id):
+    # Usamos get_object_or_404 por seguridad
+    usuario_a_editar = get_object_or_404(User, id=user_id)
+    
+    # --- BLOQUE DE SEGURIDAD DE ACCESO ---
+    # 1. Un Admin NO puede editar al Dueño Primario (ID 1)
+    if usuario_a_editar.id == 1 and request.user.id != 1:
+        messages.error(request, "El Dueño Fundador es intocable.")
+        return redirect('gestion_usuarios')
+    
+    # 2. Solo el Dueño puede editar a otros usuarios con rol 'dueño'
+    if usuario_a_editar.rol == 'dueño' and not request.user.es_dueño():
+        messages.error(request, "No tienes permisos para editar perfiles de nivel Dueño.")
+        return redirect('gestion_usuarios')
+
+    # --- PROCESAMIENTO DEL FORMULARIO ---
+    if request.method == 'POST':
+        form = EditarUsuarioAdminForm(request.POST, instance=usuario_a_editar, user_request=request.user)
+        
+        if form.is_valid():
+            usuario = form.save(commit=False)
+            nueva_clave = form.cleaned_data.get('password')
+            
+            # Gestión de Contraseña
+            if nueva_clave:
+                usuario.set_password(nueva_clave)
+                # Si el admin se edita a sí mismo, mantenemos la sesión activa
+                if usuario.id == request.user.id:
+                    update_session_auth_hash(request, usuario)
+            
+            # Protección de roles (Auto-degradación e ID 1)
+            if usuario.id == request.user.id:
+                usuario.rol = request.user.rol
+            if usuario.id == 1:
+                usuario.rol = 'dueño'
+
+            usuario.save()
+            messages.success(request, f"Usuario {usuario.username} actualizado con éxito.")
+            return redirect('gestion_usuarios')
+        else:
+            # Si el formulario no es válido, mandamos los errores a los mensajes flash superiores
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{error}")
+            # Importante: No redirigimos aquí, dejamos que baje al render final para mostrar el form con errores
+    else:
+        form = EditarUsuarioAdminForm(instance=usuario_a_editar, user_request=request.user)
+        
+    return render(request, 'stokka/editar_usuario_admin.html', {
+        'form': form,
+        'usuario_editado': usuario_a_editar
+    })
+
+# LÓGICA DE GESTIÓN DE USUARIOS -> ELIMINAR USUARIO
 @login_required
 @admin_required
 def eliminar_usuario(request, user_id):
-    # Evitar que un usuario se elimine a sí mismo
-    if request.user.id == user_id:
-        messages.error(request, "No puedes darte de baja a ti mismo.")
+    usuario_a_eliminar = User.objects.get(id=user_id)
+
+    # 1. El Dueño Primario (ID 1) es el ÚNICO inmortal
+    if usuario_a_eliminar.id == 1:
+        messages.error(request, "El Dueño fundacional no puede ser eliminado.")
         return redirect('gestion_usuarios')
-    
-    usuario = User.objects.get(id=user_id)
-    # Solo el dueño puede eliminar a otros admins
-    if usuario.rol == 'dueño':
-        messages.error(request, "No se puede eliminar al dueño del sistema.")
-    else:
-        usuario.delete()
-        messages.success(request, "Usuario eliminado correctamente.")
-        
+
+    # 2. Solo el Dueño Primario (ID 1) puede eliminar a otros usuarios con rol 'dueño'
+    if usuario_a_eliminar.rol == 'dueño' and request.user.id != 1:
+        messages.error(request, "Solo el Dueño primario puede eliminar a otros usuarios con rango de Dueño.")
+        return redirect('gestion_usuarios')
+
+    # 3. El resto de reglas se mantienen
+    if request.user.id == user_id:
+        messages.error(request, "No puedes eliminarte a ti mismo.")
+        return redirect('gestion_usuarios')
+
+    if usuario_a_eliminar.rol == 'admin' and not request.user.es_dueño():
+        messages.error(request, "Permisos insuficientes para eliminar administradores.")
+        return redirect('gestion_usuarios')
+
+    usuario_a_eliminar.delete()
+    messages.success(request, "Usuario eliminado.")
     return redirect('gestion_usuarios')
 
+
+# LÓGICA DEL INDEX 
 @login_required
 def index(request):
     productos = Producto.objects.all()
     return render(request, 'stokka/index.html', {'productos': productos})
 
+
+# LÓGICA DEL LOGIN Y REGISTRO 
 def login_view(request):
     if request.method == 'POST':
         email_ingresado = request.POST.get('username') # Asumimos que meten el email en el campo 'usuario'
@@ -141,37 +222,77 @@ def registro_view(request):
             
     return render(request, 'registration/registro.html')
 
-#Funciones del PERFIL
+
+# LÓGICA DEL PERFIL
+# LÓGICA DE LA VISTA DEL PERFIL
 @login_required
 def perfil_view(request):
     # Aseguramos que el objeto perfil exista para pasárselo al template
     perfil, created = Perfil.objects.get_or_create(user=request.user)
     return render(request, 'stokka/perfil.html', {'perfil': perfil})
 
+# LÓGICA DE EDITAR PERFIL
 @login_required
 def editar_perfil_view(request):
-    perfil, created = Perfil.objects.get_or_create(user=request.user)
+    perfil = request.user.perfil
     if request.method == 'POST':
-        # Guardamos datos del usuario
-        request.user.first_name = request.POST.get('nombre')
-        request.user.last_name = request.POST.get('apellido')
-        request.user.email = request.POST.get('email')
-        request.user.telefono = request.POST.get('telefono')
+        nombre = request.POST.get('nombre')
+        apellido = request.POST.get('apellido')
+        email = request.POST.get('email')
+        telefono = request.POST.get('telefono')
+        password = request.POST.get('password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if password:
+            if check_password(password, request.user.password):
+                messages.error(request, "La nueva contraseña debe ser diferente a la actual.")
+                return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
+            
+            if password != confirm_password:
+                messages.error(request, "Las nuevas contraseñas no coinciden.")
+                return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
+            
+            # Si pasa las validaciones, la preparamos
+            request.user.set_password(password)
+            # No guardamos aún, lo haremos al final con el resto de datos
+
+        # Actualizamos el resto de campos
+        request.user.first_name = nombre
+        request.user.last_name = apellido
+        request.user.email = email
+        perfil.telefono = telefono
+        
         request.user.save()
+        perfil.save()
 
+        # Si hubo cambio de contraseña, actualizamos sesión
+        if password:
+            update_session_auth_hash(request, request.user)
 
+        messages.success(request, "Perfil actualizado con éxito.")
         return redirect('perfil')
     
     return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
 
+
+# LÓGICA DEL CAMBIO DE FOTO
 @login_required
 def cambiar_foto(request):
     if request.method == 'POST' and request.FILES.get('foto'):
         perfil, created = Perfil.objects.get_or_create(user=request.user)
         perfil.foto = request.FILES['foto']
-        perfil.save()
+        
+        try:
+            perfil.full_clean() # Esto dispara el validador de los 2MB
+            perfil.save()
+            messages.success(request, "Foto de perfil actualizada.")
+        except ValidationError as e:
+            # e.message_dict['foto'][0] suele traer el texto del error
+            messages.error(request, "Error: La imagen es demasiado pesada (máximo 2MB).")
+            
     return redirect('perfil')
 
+# LÓGICA DE LA ELIMINACIÓN DE LA FOTO
 @login_required
 def eliminar_foto(request):
     if request.method == 'POST':
@@ -179,3 +300,112 @@ def eliminar_foto(request):
         perfil.foto.delete()
         perfil.save()   
     return redirect('perfil')
+
+# LÓGICA DEL INVENTARIO
+@login_required
+def inventario_view(request):
+    filtro = request.GET.get('filtro')
+    query = request.GET.get('q')
+    producto = Producto.objects.all().order_by('-fecha_registro')
+
+    if query:
+        producto = producto.filter(
+            models.Q(nombre__icontains=query) | 
+            models.Q(referencia__icontains=query)
+        )
+
+    if filtro == 'critico':
+        producto = [p for p in producto if p.semaforo == "critico"]
+    elif filtro == 'aviso':
+        producto = [p for p in producto if p.semaforo == "aviso"]
+
+    # formulario vacio que usará el modal de "Añadir"
+    form_añadir = ProductoForm()
+
+    return render(request, 'stokka/inventario.html', {
+        'productos': producto,
+        'filtro_actual': filtro,
+        'query_actual': query,
+        'form_añadir': form_añadir
+    })
+
+@login_required
+def añadir_producto(request):
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Producto añadido correctamente")
+            return redirect('inventario') 
+    else:
+        form = ProductoForm()
+    return render(request, 'stokka/form_producto.html', {'form':form, 'titulo': 'Añadir producto'})
+
+@login_required
+def eliminar_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if request.method == 'POST':
+        producto.delete()
+        messages.success(request, "Producto eliminado.")
+        return redirect('inventario')
+    return render(request, 'stokka/comfirmar_eliminar.html', {'producto': producto})
+
+@login_required
+def eliminar_masivo(request):
+    if request.method == 'POST':
+        ids_raw = request.POST.get('ids', '')
+        if ids_raw:
+            ids_list = ids_raw.split(',')
+            # Eliminamos todos los productos cuyos IDs estén en la lista
+            Producto.objects.filter(id__in=ids_list).delete()
+            messages.success(request, f"Se han eliminado {len(ids_list)} productos correctamente.")
+    return redirect('inventario')
+
+@login_required
+def editar_producto(request, pk):
+    producto = get_object_or_404(Producto, pk=pk)
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, request.FILES, instance=producto)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Producto {producto.nombre} actualizado.")
+            return redirect('inventario')
+    else:
+        form = ProductoForm(instance=producto)
+    
+    # SI ES AJAX, devolvemos un template parcial (solo el formulario)
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return render(request, 'stokka/partials/form_editar_parcial.html', {
+            'form': form,
+            'producto': producto
+        })
+    
+    # Si alguien entra por URL directa, sigue funcionando la página completa
+    return render(request, 'stokka/form_producto.html', {'form': form, 'titulo': 'Editar'})
+
+@login_required
+def aumentar_stock(request, pk):
+    if request.method == 'POST':
+        producto = get_object_or_404(Producto, pk=pk)
+        producto.stock_actual += 1
+        producto.save()
+        
+        # Respuesta AJAX para evitar recarga
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'stock_actual': producto.stock_actual, 'semaforo': producto.semaforo})
+            
+    return redirect('inventario')
+
+@login_required
+def disminuir_stock(request, pk):
+    if request.method == 'POST':
+        producto = get_object_or_404(Producto, pk=pk)
+        if producto.stock_actual > 0:
+            producto.stock_actual -= 1
+            producto.save()
+            
+        # Respuesta AJAX para evitar recarga
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'stock_actual': producto.stock_actual, 'semaforo': producto.semaforo})
+            
+    return redirect('inventario')

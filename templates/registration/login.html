@@ -2,100 +2,37 @@
 {% load static %}
 
 {% block content %}
-<style>
-    .login-box {
-        text-align: center;
-        width: 100%;
-        max-width: 400px;
-        margin-top: 20px;
-    }
-
-    .stokka-icon {
-        width: 100px;
-        margin: 10px 0;
-        cursor: pointer;
-    }
-
-    .auth-subtitle {
-        letter-spacing: 4px;
-        font-weight: 400;
-        margin-bottom: 30px;
-    }
-
-    .form-group {
-        text-align: left;
-        margin-bottom: 20px;
-    }
-
-    .form-group label {
-        display: block;
-        font-size: 14px;
-        margin-bottom: 5px;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 10px;
-        border-radius: 5px;
-        border: none;
-    }
-
-    .form-options {
-        display: flex;
-        justify-content: space-between;
-        font-size: 12px;
-        margin-top: 5px;
-    }
-
-    .confirm-btn {
-        background: white;
-        color: var(--verde-stokka);
-        border: none;
-        padding: 12px 60px;
-        border-radius: 10px;
-        font-weight: bold;
-        cursor: pointer;
-        text-transform: uppercase;
-        margin-top: 30px;
-        transition: 0.3s;
-    }
-
-    .confirm-btn:hover {
-        background-color: #f0f0f0;
-        transform: scale(1.01);
-    }
-
-    .register-link {
-        display: block;
-        margin-top: 20px;
-        color: white;
-        text-decoration: underline;
-        font-size: 13px;
-    }
-</style>
-
-<div class="login-box">
+<div class="login-box text-center pb-5" style="max-width: 400px; width: 100%;">
     <a href="{% url 'login' %}">
-        <img src="{% static 'assets/Logo stokka.png' %}" class="stokka-icon" alt="Logo">
+        <img src="{% static 'assets/Logo stokka.png' %}" class="stokka-icon mb-2" style="width: 100px;" alt="Logo">
     </a>
-    <h2 class="auth-subtitle">INICIO DE SESIÓN</h2>
+    <h2 class="auth-subtitle mb-4 text-white" style="letter-spacing: 4px; font-weight: 400;">INICIO DE SESIÓN</h2>
 
     <form method="POST">
         {% csrf_token %}
-        <div class="form-group">
-            <label>Email</label>
-            <input type="email" name="username" class="form-input" placeholder="user@gmail.com">
+        <div class="text-start mb-3">
+            <label class="text-white small mb-1 d-block">Email</label>
+            <input type="email" name="username" class="form-control border-0 rounded-2 py-2" placeholder="user@gmail.com" style="background: white;">
         </div>
-        <div class="form-group">
-            <label>Contraseña</label>
-            <input type="password" name="password" class="form-input" placeholder="itaca1234">
-            <div class="form-options">
-                <label><input type="checkbox"> Recuérdame</label>
-                <a href="#" style="color: white;">¿Olvidaste la contraseña?</a>
+        
+        <div class="text-start mb-4">
+            <label class="text-white small mb-1 d-block">Contraseña</label>
+            <input type="password" name="password" class="form-control border-0 rounded-2 py-2" placeholder="itaca1234" style="background: white;">
+            
+            <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 12px;">
+                <label class="text-white"><input type="checkbox" class="form-check-input me-1"> Recuérdame</label>
+                <a href="#" class="text-white text-decoration-none">¿Olvidaste la contraseña?</a>
             </div>
         </div>
-        <button type="submit" class="confirm-btn">Confirmar</button>
-        <a href="{% url 'registro' %}" class="register-link">No estoy registrado</a>
+
+        <button type="submit" class="btn btn-light fw-bold text-uppercase w-100 py-2 mt-3" 
+                style="color: var(--verde-stokka); border-radius: 10px; padding: 12px 60px;">
+            Confirmar
+        </button>
+        
+        <a href="{% url 'registro' %}" class="d-block mt-4 text-white text-decoration-underline" style="font-size: 13px;">
+            No estoy registrado
+        </a>
     </form>
 </div>
 {% endblock %}

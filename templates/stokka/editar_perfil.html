@@ -1,119 +1,117 @@
 {% extends "base.html" %}
 
-{% block title %}Editar Perfil{% endblock %}
+{% block title %}Editar Perfil - STOKKA{% endblock %}
 
 {% block content %}
-<div class="perfil-container-figma">
-    <h1 class="perfil-title-figma">Editar Información</h1>
+<div class="container-fluid py-4" style="max-width: 800px;">
+    <h1 class="mb-4 fw-bold" style="color: var(--verde-stokka);">Editar Información</h1>
     
-    <div class="info-bloque">
+    <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 bg-white">
         <form method="POST">
             {% csrf_token %}
             
-            <div class="info-item-figma-edit">
-                <label class="figma-label">Nombre</label>
-                <input type="text" name="nombre" value="{{ user.first_name }}" class="figma-input-edit">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="small text-uppercase fw-bold text-muted d-block mb-2">Nombre</label>
+                        <input type="text" name="nombre" value="{{ user.first_name }}" 
+                               class="form-control form-control-lg border-light-subtle rounded-3 fs-6 bg-light shadow-focus-stokka">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="small text-uppercase fw-bold text-muted d-block mb-2">Apellido</label>
+                        <input type="text" name="apellido" value="{{ user.last_name }}" 
+                               class="form-control form-control-lg border-light-subtle rounded-3 fs-6 bg-light shadow-focus-stokka">
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="form-group">
+                        <label class="small text-uppercase fw-bold text-muted d-block mb-2">Correo electrónico</label>
+                        <input type="email" name="email" value="{{ user.email }}" 
+                               class="form-control form-control-lg border-light-subtle rounded-3 fs-6 bg-light shadow-focus-stokka">
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="form-group">
+                        <label class="small text-uppercase fw-bold text-muted d-block mb-2">Teléfono</label>
+                        <input type="text" name="telefono" value="{{ perfil.telefono|default:'' }}" 
+                               class="form-control form-control-lg border-light-subtle rounded-3 fs-6 bg-light shadow-focus-stokka">
+                    </div>
+                </div>
+
+                <div class="col-12 mt-4">
+                    <div class="p-4 rounded-4 border-start border-4 shadow-sm" style="background-color: var(--verde-stokka-light); border-color: var(--verde-stokka) !important;">
+                        <h5 class="fw-bold mb-3" style="color: var(--verde-stokka);">
+                            <i class="fa-solid fa-lock me-2"></i>Seguridad de la cuenta
+                        </h5>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="small text-uppercase fw-bold text-muted d-block mb-2">Nueva Contraseña</label>
+                                <input type="password" name="password" placeholder="Mínimo 8 caracteres"
+                                       class="form-control border-light-subtle rounded-3 bg-white shadow-focus-stokka">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="small text-uppercase fw-bold text-muted d-block mb-2">Repetir Contraseña</label>
+                                <input type="password" name="confirm_password" placeholder="Confirma tu clave"
+                                       class="form-control border-light-subtle rounded-3 bg-white shadow-focus-stokka">
+                            </div>
+                        </div>
+                        <small class="text-muted mt-3 d-block italic">
+                            <i class="fa-solid fa-circle-info me-1"></i> Deja estos campos vacíos si no deseas cambiar tu contraseña.
+                        </small>
+                    </div>
+                </div>
             </div>
 
-            <div class="info-item-figma-edit">
-                <label class="figma-label">Apellido</label>
-                <input type="text" name="apellido" value="{{ user.last_name }}" class="figma-input-edit">
-            </div>
-
-            <div class="info-item-figma-edit">
-                <label class="figma-label">Correo electrónico</label>
-                <input type="email" name="email" value="{{ user.email }}" class="figma-input-edit">
-            </div>
-
-            <div class="info-item-figma-edit">
-                <label class="figma-label">Teléfono</label>
-                <input type="text" name="telefono" value="{{ perfil.telefono|default:'' }}" class="figma-input-edit" placeholder="+34 000-000-000">
-            </div>
-
-            <div class="perfil-main-actions">
-                <a href="{% url 'perfil' %}" class="btn-figma-light">Cancelar</a>
-                <button type="submit" class="btn-confirmar-stokka">Guardar Cambios</button>
+            <div class="d-flex justify-content-end align-items-center mt-5 pt-4 border-top gap-3">
+                <a href="{% url 'perfil' %}" class="btn btn-cancelar-stokka px-4 py-2 rounded-3 fw-bold text-uppercase small">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-stokka px-5 py-2 rounded-3 fw-bold text-uppercase shadow-sm">
+                    Guardar Cambios
+                </button>
             </div>
         </form>
     </div>
 </div>
 
 <style>
-    /* Separación entre campos */
-    .info-item-figma-edit {
-        margin-bottom: 20px; /* Aquí le damos aire a los campos */
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
+    /* Botón Cancelar con tu rojo-alerta */
+    .btn-cancelar-stokka {
+        color: var(--rojo-alerta);
+        border: 2px solid var(--rojo-alerta);
+        background: transparent;
+        transition: all 0.3s ease;
     }
 
-    .figma-label {
-        font-weight: bold;
-        font-size: 14px;
-        color: #555;
-    }
-
-    .figma-input-edit {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        font-family: 'Merriweather', serif;
-        font-size: 15px;
-        box-sizing: border-box;
-    }
-
-    .figma-input-edit:focus {
-        border-color: var(--verde-stokka);
-        outline: none;
-        box-shadow: 0 0 5px rgba(0, 61, 0, 0.1);
-    }
-
-    /* Botones */
-    .perfil-main-actions {
-        margin-top: 30px;
-        display: flex;
-        gap: 15px;
-        align-items: center;
-    }
-
-    .btn-figma-light {
-        background: white;
-        text-decoration: none;
-        color: black;
-        border: 1px solid var(--rojo-alerta);
-        border-radius: 10px;
-        padding: 10px 20px;
-        font-size: 15px;
-        cursor: pointer;
-        display: inline-block;
-        text-align: center;
-        transition: 0.3s;
-        min-width: 120px;
-    }
-
-    .btn-figma-light:hover {
+    .btn-cancelar-stokka:hover {
         background-color: var(--rojo-alerta);
         color: white;
+        transform: translateY(-2px);
     }
 
-    .btn-confirmar-stokka {
-        background: white;
-        color: black;
-        border: 1px solid var(--verde-stokka);
-        border-radius: 10px;
-        padding: 10px 25px;
-        font-size: 15px;
-        cursor: pointer;
-        font-family: 'Merriweather', serif;
-        transition: 0.3s;
-        min-width: 170px;
+    /* Mejora del botón Stokka para este form */
+    .btn-stokka {
+        background-color: var(--verde-stokka) !important;
+        color: white !important;
+        border: none;
+        transition: all 0.3s ease;
     }
 
-    .btn-confirmar-stokka:hover {
-        background-color: var(--verde-stokka);
-        color: white;
+    .btn-stokka:hover {
+        filter: brightness(1.2);
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 61, 0, 0.2) !important;
+    }
 
+    /* Estilo para los inputs focus */
+    .shadow-focus-stokka:focus {
+        border-color: var(--verde-stokka) !important;
+        box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
     }
 </style>
 {% endblock %}

@@ -2,11 +2,11 @@
 {% load static %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom">
-        <h2 style="color: #003D00; font-weight: 700; margin: 0;">Gestión de Plantilla</h2>
-        <button type="button" class="btn shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNuevoUsuario"
-            style="background-color: #003D00 !important; color: white !important; border-radius: 10px; border: none; padding: 10px 20px;">
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light">
+        <h2 class="h4 fw-bold text-dark m-0">Gestión de Plantilla</h2>
+        <button type="button" class="btn btn-stokka px-4 py-2 rounded-3 shadow-sm" data-bs-toggle="modal"
+            data-bs-target="#modalNuevoUsuario">
             <i class="fas fa-user-plus me-2"></i> Nuevo Usuario
         </button>
     </div>
@@ -14,49 +14,66 @@
     <div class="row g-3">
         {% for u in usuarios %}
         <div class="col-12">
-            <div class="card shadow-sm border-0" style="border-radius: 15px;">
+            <div class="card shadow-stokka border-0 rounded-4">
                 <div class="card-body p-3">
-                    <div class="row align-items-center text-center text-md-start">
-                        <div class="col-12 col-md-auto mb-3 mb-md-0">
+                    <div class="row align-items-center">
+
+                        <div class="col-12 col-md-auto text-center mb-3 mb-md-0">
                             {% if u.perfil.foto %}
-                            <img src="{{ u.perfil.foto.url }}" class="rounded-circle border"
-                                style="width: 70px; height: 70px; object-fit: cover;">
+                            <img src="{{ u.perfil.foto.url }}"
+                                class="rounded-circle border border-2 border-white shadow-sm"
+                                style="width: 65px; height: 65px; object-fit: cover;">
                             {% else %}
                             <img src="https://ui-avatars.com/api/?name={{ u.username }}&background=003D00&color=fff"
-                                class="rounded-circle" style="width: 70px; height: 70px;">
+                                class="rounded-circle shadow-sm" style="width: 65px; height: 65px;">
                             {% endif %}
                         </div>
 
-                        <div class="col-12 col-md">
-                            <label class="text-muted small fw-bold text-uppercase d-block"
-                                style="font-size: 10px;">Nombre</label>
-                            <span class="fw-bold">{{ u.get_full_name|default:u.username }}</span>
+                        <div class="col-12 col-md text-center text-md-start">
+                            <label class="text-muted small fw-bold text-uppercase d-block mb-1"
+                                style="font-size: 10px; letter-spacing: 1px;">Nombre Completo</label>
+                            <span class="fw-bold text-dark fs-6">{{ u.get_full_name|default:u.username }}</span>
                         </div>
 
-                        <div class="col-12 col-md">
-                            <label class="text-muted small fw-bold text-uppercase d-block"
-                                style="font-size: 10px;">Email</label>
-                            <span>{{ u.email }}</span>
+                        <div class="col-12 col-md text-center text-md-start">
+                            <label class="text-muted small fw-bold text-uppercase d-block mb-1"
+                                style="font-size: 10px; letter-spacing: 1px;">Email Corporativo</label>
+                            <span class="text-secondary">{{ u.email }}</span>
                         </div>
 
-                        <div class="col-12 col-md text-md-center">
-                            <label class="text-muted small fw-bold text-uppercase d-block"
-                                style="font-size: 10px;">Rol</label>
-                            <span class="badge rounded-pill shadow-sm" style="padding: 8px 15px; font-weight: bold; 
-                 {% if u.rol == 'dueño' %} background-color: #003D00 !important; color: white !important;
-                 {% elif u.rol == 'admin' %} background-color: #F5C907 !important; color: black !important;
-                 {% else %} background-color: #1CA300 !important; color: white !important; {% endif %}">
-                                {{ u.get_rol_display|upper }}
-                            </span>
+                        <div
+                            class="col-12 col-md-2 text-center d-flex flex-column align-items-center justify-content-center">
+                            <label class="text-muted small fw-bold text-uppercase d-block mb-1"
+                                style="font-size: 10px; letter-spacing: 1px;">Rol</label>
+
+                            {% if u.rol == 'dueño' %}
+                            <span class="badge bg-dark-stokka rounded-pill px-3 py-2 shadow-sm">DUEÑO</span>
+                            {% elif u.rol == 'admin' %}
+                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2 shadow-sm">ADMIN</span>
+                            {% else %}
+                            <span class="badge bg-success-stokka rounded-pill px-3 py-2 shadow-sm">OPERADOR</span>
+                            {% endif %}
                         </div>
 
-                        <div class="col-12 col-md-auto mt-3 mt-md-0 d-flex gap-2 justify-content-center">
-                            <button class="btn btn-sm btn-outline-warning fw-bold"
-                                style="border-radius: 8px; min-width: 80px;">Editar</button>
-                            {% if user.es_dueño and u.id != user.id %}
-                            <a href="{% url 'eliminar_usuario' u.id %}"
-                                onclick="return confirm('¿Estás seguro de que quieres eliminar a este usuario?')"
-                                class="btn btn-sm btn-outline-danger fw-bold">Baja</a>
+                        <div class="col-12 col-md-2 d-flex gap-2 justify-content-center align-items-end mt-3 mt-md-0">
+
+                            {% if request.user.id == 1 or u.rol != 'dueño' %}
+                            <a href="{% url 'editar_usuario_admin' u.id %}"
+                                class="btn btn-sm btn-outline-warning rounded-3 px-3 fw-bold">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                            {% endif %}
+
+                            {% if u.id != 1 and u.id != request.user.id %}
+                            {# El ID 1 puede borrar a cualquier dueño nuevo. Otros dueños no pueden borrar dueños #}
+                            {% if request.user.id == 1 or u.rol != 'dueño' %}
+                            {% if request.user.es_dueño or u.rol == 'empleado' %}
+                            <a href="{% url 'eliminar_usuario' u.id %}" onclick="return confirm('¿Eliminar usuario?')"
+                                class="btn btn-sm btn-outline-danger rounded-3 px-3 fw-bold">
+                                <i class="fa-solid fa-user-minus"></i>
+                            </a>
+                            {% endif %}
+                            {% endif %}
                             {% endif %}
                         </div>
                     </div>
@@ -69,29 +86,58 @@
 
 <div class="modal fade" id="modalNuevoUsuario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 15px;">
-            <div class="modal-header" style="background-color: #003D00; color: white;">
-                <h5 class="modal-title fw-bold">Nuevo Usuario</h5>
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+            <div class="modal-header border-0 bg-dark-stokka text-white p-4">
+                <h5 class="modal-title fw-bold"><i class="fas fa-user-plus me-2"></i> Registro de Usuario</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
                 {% csrf_token %}
-                <div class="modal-body">
+                <div class="modal-body p-4 bg-light">
                     <div class="row g-3">
                         {% for field in form %}
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-uppercase">{{ field.label }}</label>
+                            <label class="form-label small fw-bold text-uppercase text-muted">{{ field.label }}</label>
                             {{ field }}
                         </div>
                         {% endfor %}
                     </div>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn" style="background-color: #003D00; color: white;">Guardar</button>
+                <div class="modal-footer border-0 bg-light p-4 pt-0">
+                    <button type="button" class="btn btn-light rounded-3 px-4 fw-bold"
+                        data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-stokka rounded-3 px-4 fw-bold shadow-sm">Crear Usuario</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+    /* Colores extra para badges */
+    .bg-dark-stokka {
+        background-color: #003D00 !important;
+        color: white;
+    }
+
+    .bg-success-stokka {
+        background-color: #1CA300 !important;
+        color: white;
+    }
+
+    /* Inputs del modal con el estilo de edición de perfil */
+    .modal-body input,
+    .modal-body select {
+        border-radius: 10px !important;
+        border: 1px solid #dee2e6 !important;
+        padding: 10px !important;
+        background-color: white !important;
+    }
+
+    .modal-body input:focus {
+        border-color: var(--verde-stokka) !important;
+        box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
+        outline: none;
+    }
+</style>
 {% endblock %}

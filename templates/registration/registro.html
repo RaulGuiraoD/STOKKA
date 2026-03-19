@@ -4,149 +4,68 @@
 {% block title %}STOKKA - Registrarse{% endblock %}
 
 {% block content %}
-<style>
-    /* Contenedor Principal del Formulario */
-    .register-container { 
-        width: 90%; 
-        max-width: 950px; 
-        text-align: center; 
-        margin-top: -150px;
-        flex-grow: 1; 
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    .auth-subtitle { 
-        letter-spacing: 4px; 
-        font-weight: 400; 
-        margin-bottom: 60px; 
-        text-transform: uppercase;
-        color: white;
-    }
-
-    .register-grid { 
-        display: grid; 
-        grid-template-columns: 1fr 180px 1fr; 
-        gap: 40px; 
-        align-items: center; 
-        text-align: left;
-    }
-
-    .form-col { 
-        display: flex; 
-        flex-direction: column; 
-        gap: 15px; 
-    }
-
-    .logo-central { 
-        display: flex; 
-        justify-content: center; 
-    }
-
-    .stokka-icon { 
-        width: 120px; 
-        cursor: pointer; 
-        transition: transform 0.3s;
-    }
-    .stokka-icon:hover { transform: scale(1.05); }
-
-    /* Estilo de los Inputs */
-    .form-group { margin-bottom: 5px; }
-    .form-group label { 
-        display: block; 
-        font-size: 14px; 
-        margin-bottom: 5px; 
-        color: white; 
-    }
-    .form-input { 
-        width: 100%; 
-        padding: 10px; 
-        border-radius: 8px; 
-        border: none; 
-        box-sizing: border-box;
-        font-family: 'Merriweather', serif;
-    }
-
-    /* Botón Confirmar */
-    .confirm-btn-wrap { 
-        grid-column: 1 / -1; 
-        text-align: center; 
-        margin-top: 30px; 
-    }
-    .confirm-btn { 
-        background: white; 
-        color: #003D00; /* Verde Stokka */
-        border: none; 
-        padding: 12px 70px; 
-        border-radius: 10px;
-        font-weight: bold; 
-        cursor: pointer; 
-        text-transform: uppercase;
-        transition: 0.3s;
-    }
-    .confirm-btn:hover { background-color: #f0f0f0; transform: scale(1.01); }
-
-    /* Ajuste para que el footer no se aplaste */
-    body {
-        display: flex;
-        flex-direction: column;
-        min-height: 100vh;
-    }
-</style>
-
-<div class="register-container">
-    <h2 class="auth-subtitle">REGISTRARSE</h2>
+<div class="register-container py-5" style="width: 95%; max-width: 950px;">
+    <h2 class="auth-subtitle text-center text-white mb-5" style="letter-spacing: 4px; font-weight: 400; text-transform: uppercase;">REGISTRARSE</h2>
     
     {% if error %}
-    <div style="background-color: #ff4d4d; color: white; padding: 10px; border-radius: 8px; margin-bottom: 20px;">
+    <div class="alert alert-danger py-2 px-3 mb-4 border-0 rounded-3 text-center">
         {{ error }}
     </div>
     {% endif %}
 
     <form method="POST">
         {% csrf_token %}
-        <div class="register-grid">
-            <div class="form-col">
-                <div class="form-group">
-                    <label>Nombre *</label>
-                    <input type="text" name="nombre" class="form-input" placeholder="Tu nombre" required>
+        <div class="row align-items-center g-4">
+            
+            <div class="col-12 col-md-5">
+                <div class="mb-3">
+                    <label class="text-white small mb-1 d-block">Nombre *</label>
+                    <input type="text" name="nombre" class="form-control border-0 rounded-3 py-2" placeholder="Tu nombre" required>
                 </div>
-                <div class="form-group">
-                    <label>Apellido (Opcional)</label>
-                    <input type="text" name="apellido" class="form-input" placeholder="Tu apellido">
+                <div class="mb-3">
+                    <label class="text-white small mb-1 d-block">Apellido (Opcional)</label>
+                    <input type="text" name="apellido" class="form-control border-0 rounded-3 py-2" placeholder="Tu apellido">
                 </div>
-                <div class="form-group">
-                    <label>Nombre Usuario *</label>
-                    <input type="text" name="usuario" class="form-input" placeholder="Nombre de usuario" required>
+                <div class="mb-3">
+                    <label class="text-white small mb-1 d-block">Nombre Usuario *</label>
+                    <input type="text" name="usuario" class="form-control border-0 rounded-3 py-2" placeholder="Nombre de usuario" required>
                 </div>
             </div>
 
-            <div class="logo-central">
+            <div class="col-12 col-md-2 text-center my-4 my-md-0">
                 <a href="{% url 'login' %}">
-                    <img src="{% static 'assets/Logo stokka.png' %}" class="stokka-icon" alt="Logo">
+                    <img src="{% static 'assets/Logo stokka.png' %}" class="stokka-icon" style="width: 120px; transition: 0.3s;" alt="Logo">
                 </a>
             </div>
 
-            <div class="form-col">
-                <div class="form-group">
-                    <label>Email *</label>
-                    <input type="email" name="email" class="form-input" placeholder="email@ejemplo.com" required>
+            <div class="col-12 col-md-5">
+                <div class="mb-3">
+                    <label class="text-white small mb-1 d-block">Email *</label>
+                    <input type="email" name="email" class="form-control border-0 rounded-3 py-2" placeholder="email@ejemplo.com" required>
                 </div>
-                <div class="form-group">
-                    <label>Contraseña *</label>
-                    <input type="password" name="password" class="form-input" placeholder="********" required>
+                <div class="mb-3">
+                    <label class="text-white small mb-1 d-block">Contraseña *</label>
+                    <input type="password" name="password" class="form-control border-0 rounded-3 py-2" placeholder="********" required>
                 </div>
-                <div class="form-group">
-                    <label>Teléfono (Opcional)</label>
-                    <input type="tel" name="telefono" class="form-input" placeholder="600 000 000">
+                <div class="mb-3">
+                    <label class="text-white small mb-1 d-block">Teléfono (Opcional)</label>
+                    <input type="tel" name="telefono" class="form-control border-0 rounded-3 py-2" placeholder="600 000 000">
                 </div>
             </div>
 
-            <div class="confirm-btn-wrap">
-                <button type="submit" class="confirm-btn">Confirmar</button>
+            <div class="col-12 text-center mt-5">
+                <button type="submit" class="btn btn-light fw-bold text-uppercase px-5 py-2" 
+                        style="color: var(--verde-stokka); border-radius: 10px; min-width: 250px;">
+                    Confirmar
+                </button>
             </div>
         </div>
     </form>
 </div>
+
+<style>
+    .stokka-icon:hover { transform: scale(1.05); }
+    /* Mantenemos la tipografía Merriweather para los inputs */
+    input.form-control { font-family: 'Merriweather', serif; font-size: 14px; }
+</style>
 {% endblock %}
