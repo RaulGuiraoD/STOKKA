@@ -1,29 +1,59 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Dashboard - STOKKA{% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <h1 class="h4 mb-4 fw-bold text-dark" style="letter-spacing: 0.5px;">Dashboard Principal</h1>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h4 fw-bold text-dark mb-0">Dashboard Principal</h1>
+        <a href="{% url 'inventario' %}" class="btn btn-stokka btn-sm px-3 rounded-3 shadow-sm">
+            <i class="fa-solid fa-boxes-stacked me-1"></i> Ir al Inventario
+        </a>
+    </div>
 
     <div class="row g-4">
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card border-0 shadow-stokka rounded-4 p-4 d-flex align-items-center justify-content-center" style="min-height: 180px;">
-                <p class="text-muted small text-uppercase fw-bold">Próximamente: Resumen</p>
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 h-100">
+                <h6 class="text-muted small text-uppercase fw-bold mb-3">Estado del Inventario</h6>
+                <div style="max-height: 250px;">
+                    <canvas id="chartSemaforo" data-valores='{{ semaforo_data|safe }}'></canvas>
+                </div>
             </div>
         </div>
 
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card border-0 shadow-stokka rounded-4 p-4 d-flex align-items-center justify-content-center" style="min-height: 180px;">
-                <p class="text-muted small text-uppercase fw-bold">Próximamente: Inventario</p>
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 h-100">
+                <h6 class="text-muted small text-uppercase fw-bold mb-4">Productos con mayor existencia</h6>
+                <canvas id="chartBarras" data-labels='{{ nombres_top_json|safe }}'
+                    data-valores='{{ valores_top_json|safe }}'></canvas>
             </div>
         </div>
 
-        <div class="col-12 col-md-6 col-lg-4">
-            <div class="card border-0 shadow-stokka rounded-4 p-4 d-flex align-items-center justify-content-center" style="min-height: 180px;">
-                <p class="text-muted small text-uppercase fw-bold">Próximamente: Alertas</p>
+        {% if es_jefe %}
+        <div class="col-12">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 bg-light border-start border-4 border-success">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="text-success small text-uppercase fw-bold mb-4">
+                            <i class="fa-solid fa-user-shield me-1"></i> Control de Equipo ({{ user.get_rol_display }})
+                        </h6>
+                        <p class="text-muted">Panel de administración para la gestión de operarios y movimientos.</p>
+                        <canvas id="chartAdmin" style="max-height: 150px;"></canvas>
+                    </div>
+                    <div class="col-md-4 text-center border-start">
+                        <div class="py-2">
+                            <h2 class="fw-bold text-dark mb-0">{{ total_empleados }}</h2>
+                            <p class="text-muted small mb-0 text-uppercase">Empleados registrados</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+        {% endif %}
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}

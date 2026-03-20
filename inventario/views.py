@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -137,8 +138,42 @@ def eliminar_usuario(request, user_id):
 @login_required
 def index(request):
     productos = Producto.objects.all()
-    return render(request, 'stokka/index.html', {'productos': productos})
+    
+    # 1. Datos para el gráfico de Sectores (Usando tus nombres de campos)
+    criticos = 0
+    aviso = 0
+    ok = 0
 
+    for p in productos:
+        # Usamos los nombres exactos de tu models.py
+        if p.stock_actual <= p.umbrales_rojo:
+            criticos += 1
+        elif p.stock_actual <= p.umbrales_amarillo:
+            aviso += 1
+        else:
+            ok += 1
+
+    # 2. Datos para el gráfico de Barras (Top 5)
+    top_productos = productos.order_by('-stock_actual')[:5]
+    nombres_top = [p.nombre for p in top_productos]
+    valores_top = [p.stock_actual for p in top_productos]
+
+    # 3. Lógica de Roles usando tus métodos de AbstractUser
+    es_jefe = request.user.es_admin_o_dueño()
+    total_empleados = 0
+    
+    if es_jefe:
+        # Filtramos por tu ROL_CHOICES
+        total_empleados = Usuario.objects.filter(rol='empleado').count()
+
+    context = {
+        'semaforo_data': [criticos, aviso, ok],
+        'nombres_top_json': json.dumps(nombres_top),
+        'valores_top_json': json.dumps(valores_top),
+        'es_jefe': es_jefe,
+        'total_empleados': total_empleados,
+    }
+    return render(request, 'stokka/index.html', context)
 
 # LÓGICA DEL LOGIN Y REGISTRO 
 def login_view(request):
