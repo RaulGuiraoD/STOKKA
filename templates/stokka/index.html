@@ -5,53 +5,89 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h4 fw-bold text-dark mb-0">Dashboard Principal</h1>
-        <a href="{% url 'inventario' %}" class="btn btn-stokka btn-sm px-3 rounded-3 shadow-sm">
-            <i class="fa-solid fa-boxes-stacked me-1"></i> Ir al Inventario
-        </a>
+    <!-- Fila 1: KPIs Rápidos (Tarjetas de métricas) -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 border-start border-4 border-success h-100">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 10px;">Stock Total</small>
+                <h4 class="fw-bold mb-0 text-dark">{{ stock_total }} <span class="fs-6 fw-normal text-muted">uds.</span></h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 border-start border-4 border-warning h-100">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 10px;">Sin Referencia</small>
+                <h4 class="fw-bold mb-0 text-dark">{{ sin_ref }}</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 border-start border-4 border-primary h-100">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 10px;">Nuevos (7d)</small>
+                <h4 class="fw-bold mb-0 text-dark">{{ nuevos_7d }}</h4>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 border-start border-4 border-danger h-100">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 10px;">En Crítico</small>
+                <h4 class="fw-bold mb-0 text-dark">{{ semaforo_data.0 }}</h4>
+            </div>
+        </div>
     </div>
 
-    <div class="row g-4">
-        <div class="col-12 col-lg-4">
-            <div class="card border-0 shadow-stokka rounded-4 p-4 h-100">
-                <h6 class="text-muted small text-uppercase fw-bold mb-3">Estado del Inventario</h6>
-                <div style="max-height: 250px;">
+    <!-- Fila 2: Gráficos principales -->
+    <div class="row g-4 mb-4">
+        <!-- Gráfico Semáforo -->
+        <div class="col-12 col-xl-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 h-100 d-flex flex-column">
+                <h6 class="text-muted small text-uppercase fw-bold mb-4">Salud del Inventario</h6>
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
                     <canvas id="chartSemaforo" data-valores='{{ semaforo_data|safe }}'></canvas>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-lg-8">
+        <!-- Gráfico de Barras -->
+        <div class="col-12 col-xl-8">
             <div class="card border-0 shadow-stokka rounded-4 p-4 h-100">
-                <h6 class="text-muted small text-uppercase fw-bold mb-4">Productos con mayor existencia</h6>
-                <canvas id="chartBarras" data-labels='{{ nombres_top_json|safe }}'
-                    data-valores='{{ valores_top_json|safe }}'></canvas>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h6 class="text-muted small text-uppercase fw-bold mb-0">Top Existencias</h6>
+                    <a href="{% url 'inventario' %}" class="btn btn-stokka btn-sm px-3 rounded-3 shadow-sm">Ver Todo</a>
+                </div>
+                <div style="height: 300px;">
+                    <canvas id="chartBarras" 
+                            data-labels='{{ nombres_top_json|safe }}'
+                            data-valores='{{ valores_top_json|safe }}'></canvas>
+                </div>
             </div>
         </div>
+    </div>
 
-        {% if es_jefe %}
+    <!-- Fila 3: Panel Admin -->
+    {% if es_jefe %}
+    <div class="row">
         <div class="col-12">
-            <div class="card border-0 shadow-stokka rounded-4 p-4 bg-light border-start border-4 border-success">
+            <div class="card border-0 shadow-stokka rounded-4 p-4 bg-white border-top border-4 border-dark">
                 <div class="row align-items-center">
                     <div class="col-md-8">
-                        <h6 class="text-success small text-uppercase fw-bold mb-4">
-                            <i class="fa-solid fa-user-shield me-1"></i> Control de Equipo ({{ user.get_rol_display }})
+                        <h6 class="text-dark small text-uppercase fw-bold mb-4">
+                            <i class="fa-solid fa-user-shield me-2"></i>Control de Equipo ({{ user.get_rol_display }})
                         </h6>
-                        <p class="text-muted">Panel de administración para la gestión de operarios y movimientos.</p>
-                        <canvas id="chartAdmin" style="max-height: 150px;"></canvas>
+                        <div style="height: 150px;">
+                            <canvas id="chartAdmin"></canvas>
+                        </div>
                     </div>
-                    <div class="col-md-4 text-center border-start">
-                        <div class="py-2">
+                    <div class="col-md-4 text-center border-start border-md-start-0">
+                        <div class="p-3">
                             <h2 class="fw-bold text-dark mb-0">{{ total_empleados }}</h2>
-                            <p class="text-muted small mb-0 text-uppercase">Empleados registrados</p>
+                            <p class="text-muted small mb-0 text-uppercase">Operarios Activos</p>
+                            <hr class="w-25 mx-auto">
+                            <p class="extra-small text-muted mb-0">Actividad de stock detectada en las últimas 24h.</p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        {% endif %}
     </div>
+    {% endif %}
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

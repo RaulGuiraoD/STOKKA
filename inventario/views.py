@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.exceptions import PermissionDenied
 from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm, ProductoForm
 from django.contrib.auth.hashers import check_password
+from django.utils import timezone
 
 from django.db import models
 
@@ -139,13 +140,14 @@ def eliminar_usuario(request, user_id):
 def index(request):
     productos = Producto.objects.all()
     
-    # 1. Datos para el gráfico de Sectores (Usando tus nombres de campos)
+    # 1. Cálculos de Semáforo y Métricas
     criticos = 0
     aviso = 0
     ok = 0
+    stock_total_unidades = 0
 
     for p in productos:
-        # Usamos los nombres exactos de tu models.py
+        stock_total_unidades += p.stock_actual
         if p.stock_actual <= p.umbrales_rojo:
             criticos += 1
         elif p.stock_actual <= p.umbrales_amarillo:
@@ -153,23 +155,27 @@ def index(request):
         else:
             ok += 1
 
-    # 2. Datos para el gráfico de Barras (Top 5)
+    # 2. Top 5 Productos (Gráfico de Barras)
     top_productos = productos.order_by('-stock_actual')[:5]
-    nombres_top = [p.nombre for p in top_productos]
-    valores_top = [p.stock_actual for p in top_productos]
-
-    # 3. Lógica de Roles usando tus métodos de AbstractUser
-    es_jefe = request.user.es_admin_o_dueño()
-    total_empleados = 0
     
-    if es_jefe:
-        # Filtramos por tu ROL_CHOICES
-        total_empleados = Usuario.objects.filter(rol='empleado').count()
+    # 3. Métricas extra para tarjetas (KPIs)
+    # Productos sin referencia o referencia vacía
+    sin_ref = productos.filter(models.Q(referencia__isnull=True) | models.Q(referencia='')).count()
+    # Productos creados en los últimos 7 días
+    hace_una_semana = timezone.now() - timezone.timedelta(days=7)
+    nuevos_7d = productos.filter(fecha_registro__gte=hace_una_semana).count()
+
+    # 4. Lógica de Roles STOKKA
+    es_jefe = request.user.es_admin_o_dueño()
+    total_empleados = Usuario.objects.filter(rol='empleado').count() if es_jefe else 0
 
     context = {
         'semaforo_data': [criticos, aviso, ok],
-        'nombres_top_json': json.dumps(nombres_top),
-        'valores_top_json': json.dumps(valores_top),
+        'nombres_top_json': json.dumps([p.nombre for p in top_productos]),
+        'valores_top_json': json.dumps([p.stock_actual for p in top_productos]),
+        'stock_total': stock_total_unidades,
+        'sin_ref': sin_ref,
+        'nuevos_7d': nuevos_7d,
         'es_jefe': es_jefe,
         'total_empleados': total_empleados,
     }
