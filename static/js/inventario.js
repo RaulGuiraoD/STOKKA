@@ -217,4 +217,28 @@ document.addEventListener("DOMContentLoaded", function () {
         btn.addEventListener('touchstart', start);
         btn.addEventListener('touchend', stop);
     });
+
+    // --- LÓGICA DE ELIMINACIÓN (CONEXIÓN MODALES) ---
+
+    // 1. Eliminación Única: Asigna la URL correcta al form del modal
+    const modalEliminarUnico = document.getElementById('modalEliminarUnico');
+    if (modalEliminarUnico) {
+        modalEliminarUnico.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            const nombre = button.getAttribute('data-nombre');
+            const url = button.getAttribute('data-url');
+            
+            document.getElementById('modalProductoNombre').textContent = nombre;
+            document.getElementById('formEliminar').action = url;
+        });
+    }
+
+    // 2. Eliminación Masiva: Rellena los IDs seleccionados
+    const modalEliminarMasivo = document.getElementById('modalEliminarMasivo');
+    if (modalEliminarMasivo) {
+        modalEliminarMasivo.addEventListener('show.bs.modal', function () {
+            const seleccionados = Array.from(document.querySelectorAll('.checkbox-producto:checked')).map(cb => cb.value);
+            document.getElementById('input-ids-masivo').value = seleccionados.join(',');
+        });
+    }
 });
