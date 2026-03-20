@@ -11,6 +11,7 @@ from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm, ProductoForm
 from django.contrib.auth.hashers import check_password
 from django.utils import timezone
 
+from django.db.models import Count, Sum
 from django.db import models
 
 # Esto detecta automáticamente el Usuario personalizado
@@ -140,44 +141,59 @@ def eliminar_usuario(request, user_id):
 def index(request):
     productos = Producto.objects.all()
     
-    # 1. Cálculos de Semáforo y Métricas
-    criticos = 0
-    aviso = 0
-    ok = 0
-    stock_total_unidades = 0
+    # 1. KPIs y Semáforo
+    criticos_cont = 0
+    aviso_cont = 0
+    ok_cont = 0
+    
+    uds_criticas = 0
+    uds_aviso = 0
+    uds_ok = 0
+    stock_total = 0
 
     for p in productos:
-        stock_total_unidades += p.stock_actual
+        stock_total += p.stock_actual
         if p.stock_actual <= p.umbrales_rojo:
-            criticos += 1
+            criticos_cont += 1
+            uds_criticas += p.stock_actual
         elif p.stock_actual <= p.umbrales_amarillo:
-            aviso += 1
+            aviso_cont += 1
+            uds_aviso += p.stock_actual
         else:
-            ok += 1
+            ok_cont += 1
+            uds_ok += p.stock_actual
 
-    # 2. Top 5 Productos (Gráfico de Barras)
-    top_productos = productos.order_by('-stock_actual')[:5]
+    # 2. Top 5 y Recientes
+    top_5 = productos.order_by('-stock_actual')[:5]
+    ultimos = productos.order_by('-fecha_registro')[:5]
     
     # 3. Métricas extra para tarjetas (KPIs)
     # Productos sin referencia o referencia vacía
-    sin_ref = productos.filter(models.Q(referencia__isnull=True) | models.Q(referencia='')).count()
-    # Productos creados en los últimos 7 días
+    sin_ref = productos.filter(models.Q(referencia__isnull=True) | models.Q(referencia='')).count()    # Productos creados en los últimos 7 días
     hace_una_semana = timezone.now() - timezone.timedelta(days=7)
-    nuevos_7d = productos.filter(fecha_registro__gte=hace_una_semana).count()
+    nuevos_7d = productos.filter(fecha_registro__gte=timezone.now() - timezone.timedelta(days=7)).count()
 
+    stats_categoria = productos.values('nombre')[:5] # Ejemplo rápido
+    # Lo ideal es: Producto.objects.values('categoria').annotate(total=Count('id'))
+    # --- 4. ÚLTIMOS REGISTROS (NUEVO) ---
+    ultimos_productos = productos.order_by('-fecha_registro')[:5]
     # 4. Lógica de Roles STOKKA
+
     es_jefe = request.user.es_admin_o_dueño()
     total_empleados = Usuario.objects.filter(rol='empleado').count() if es_jefe else 0
 
     context = {
-        'semaforo_data': [criticos, aviso, ok],
-        'nombres_top_json': json.dumps([p.nombre for p in top_productos]),
-        'valores_top_json': json.dumps([p.stock_actual for p in top_productos]),
-        'stock_total': stock_total_unidades,
+        'semaforo_data': [criticos_cont, aviso_cont, ok_cont],
+        'balance_data': [uds_criticas, uds_aviso, uds_ok], # DATOS REALES
+        'nombres_top_json': json.dumps([p.nombre for p in top_5]),
+        'valores_top_json': json.dumps([p.stock_actual for p in top_5]),
+        'stock_total': stock_total,
         'sin_ref': sin_ref,
         'nuevos_7d': nuevos_7d,
+        'ultimos_productos': ultimos_productos,
         'es_jefe': es_jefe,
         'total_empleados': total_empleados,
+        'stats_categoria' : stats_categoria,
     }
     return render(request, 'stokka/index.html', context)
 

@@ -6,11 +6,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Mapeamos tus variables de CSS
     const colores = {
-        verdeOscuro: getCSSVar('--verde-stokka'),      // #003D00
-        verdeSecundario: getCSSVar('--verde-secundario'), // #1CA300
-        rojo: getCSSVar('--rojo-alerta'),             // #C10D00
-        amarillo: getCSSVar('--amarillo-alerta'),       // #F5C907
-        grisFondo: getCSSVar('--gris-fondo')           // #F2F4F6
+        verdeOscuro: getCSSVar('--verde-stokka'),           // #003D00
+        verdeSecundario: getCSSVar('--verde-secundario'),   // #1CA300
+        rojo: getCSSVar('--rojo-alerta'),                   // #C10D00
+        amarillo: getCSSVar('--amarillo-alerta'),           // #F5C907
+        grisFondo: getCSSVar('--gris-fondo')                // #F2F4F6
     };
 
     // Configuración común para que los gráficos sean responsivos
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
             options: {
                 ...commonOptions,
                 plugins: {
-                    legend: { 
+                    legend: {
                         position: 'bottom',
                         labels: { usePointStyle: true, padding: 20 }
                     }
@@ -51,32 +51,43 @@ document.addEventListener("DOMContentLoaded", function () {
     // 3. GRÁFICO BARRAS (Top Stock)
     const ctxBarras = document.getElementById('chartBarras');
     if (ctxBarras) {
-        const labels = JSON.parse(ctxBarras.dataset.labels);
-        const valores = JSON.parse(ctxBarras.dataset.valores);
         new Chart(ctxBarras, {
             type: 'bar',
             data: {
-                labels: labels,
+                labels: JSON.parse(ctxBarras.dataset.labels),
                 datasets: [{
-                    label: 'Unidades',
-                    data: valores,
-                    // Usamos tu verde oscuro principal para las barras
+                    data: JSON.parse(ctxBarras.dataset.valores),
                     backgroundColor: colores.verdeOscuro,
-                    borderRadius: 10,
-                    barThickness: 'flex',
-                    maxBarThickness: 40
+                    borderRadius: 8
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+        });
+    }
+    // 4. GRÁFICO BALANCE OPERATIVO (Top Stock)
+    const ctxRadar = document.getElementById('chartRadar');
+    if (ctxRadar) {
+        const valoresReales = JSON.parse(ctxRadar.dataset.valores);
+        new Chart(ctxRadar, {
+            type: 'polarArea',
+            data: {
+                labels: ['Uds. Críticas', 'Uds. Aviso', 'Uds. OK'],
+                datasets: [{
+                    data: valoresReales,
+                    backgroundColor: [
+                        colores.rojo + 'aa',
+                        colores.amarillo + 'aa',
+                        colores.verdeSecundario + 'aa'
+                    ],
+                    borderWidth: 1,
+                    borderColor: colores.gris
                 }]
             },
             options: {
-                ...commonOptions,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { 
-                        beginAtZero: true,
-                        grid: { color: '#e9ecef', drawBorder: false }
-                    },
-                    x: { grid: { display: false } }
-                }
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { r: { ticks: { display: false }, grid: { color: '#f0f0f0' } } },
+                plugins: { legend: { position: 'bottom', labels: { usePointStyle: true } } }
             }
         });
     }
