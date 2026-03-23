@@ -12,7 +12,7 @@
             <i class="fa-solid fa-filter me-2"></i> FILTROS
         </button>
         <div class="d-flex gap-2">
-            <button id="btn-eliminar-masivo" class="btn btn-danger shadow-stokka d-none" data-bs-toggle="modal"
+            <button id="btn-eliminar-masivo" class="btn btn-cancelar-stokka shadow-stokka d-none" data-bs-toggle="modal"
                 data-bs-target="#modalEliminarMasivo">
                 <i class="fa-solid fa-trash-can me-2"></i> ELIMINAR (<span id="count-seleccionados">0</span>)
             </button>
@@ -168,7 +168,7 @@
                                             data-url="{% url 'editar_producto' p.pk %}" title="Editar">
                                             <i class="fa-solid fa-pen"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-white px-3 py-2 text-danger"
+                                        <button class="btn btn-sm btn-white px-3 py-2" style="color: var(--rojo-alerta);"
                                             data-bs-toggle="modal" data-bs-target="#modalEliminarUnico"
                                             data-nombre="{{ p.nombre }}" data-url="{% url 'eliminar_producto' p.pk %}"
                                             title="Eliminar">
@@ -198,16 +198,16 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-stokka rounded-4">
             <div class="modal-body p-4 text-center">
-                <div class="mb-3"><i class="fa-solid fa-trash-can text-danger fs-1"></i></div>
+                <div class="mb-3"><i class="fa-solid fa-trash-can fs-1" style="color: var(--rojo-alerta);"></i></div>
                 <h5 class="fw-bold">¿Eliminar producto?</h5>
                 <p class="text-dark small">Estás a punto de borrar <strong id="modalProductoNombre"></strong>. Esta
                     acción es irreversible.</p>
                 <div class="d-flex justify-content-center gap-2 mt-4">
-                    <button type="button" class="btn btn-light rounded-3 px-4 fw-bold"
+                    <button type="button" class="btn btn-cancelar2-stokka rounded-3 px-4 fw-bold"
                         data-bs-dismiss="modal">CANCELAR</button>
                     <form method="POST" action="" id="formEliminar">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-danger rounded-3 px-4 fw-bold">ELIMINAR AHORA</button>
+                        <button type="submit" class="btn btn-cancelar-stokka rounded-3 px-4 fw-bold">ELIMINAR AHORA</button>
                     </form>
                 </div>
             </div>
@@ -220,17 +220,17 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-stokka rounded-4">
             <div class="modal-body p-4 text-center">
-                <i class="fa-solid fa-triangle-exclamation text-danger fs-1 mb-3"></i>
+                <i class="fa-solid fa-triangle-exclamation fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
                 <h5 class="fw-bold">¿Eliminar productos seleccionados?</h5>
                 <p class="text-dark small">Esta acción eliminará todos los productos marcados de forma permanente.</p>
                 <form method="POST" action="{% url 'eliminar_masivo' %}" id="formEliminarMasivo">
                     {% csrf_token %}
                     <input type="hidden" name="ids" id="input-ids-masivo">
                     <div class="d-flex justify-content-center gap-2 mt-4">
-                        <button type="button" class="btn btn-light rounded-3 px-4 fw-bold"
+                        <button type="button" class="btn btn-cancelar2-stokka rounded-3 px-4 fw-bold"
                             data-bs-dismiss="modal">CANCELAR</button>
                         <button type="submit" id="confirmar-borrado-masivo"
-                            class="btn btn-danger rounded-3 px-4 fw-bold">SÍ, ELIMINAR</button>
+                            class="btn btn-cancelar-stokka rounded-3 px-4 fw-bold">SÍ, ELIMINAR</button>
                     </div>
                 </form>
             </div>

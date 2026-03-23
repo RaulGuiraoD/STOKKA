@@ -29,10 +29,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 labels: ['Crítico', 'Aviso', 'Correcto'],
                 datasets: [{
                     data: valores,
-                    // Usamos tus colores de alerta y el verde secundario para "OK"
                     backgroundColor: [colores.rojo, colores.amarillo, colores.verdeSecundario],
-                    borderWidth: 0,
-                    hoverOffset: 15
+                    borderWidth: -10,
+                    hoverOffset: 5
                 }]
             },
             options: {
@@ -43,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         labels: { usePointStyle: true, padding: 20 }
                     }
                 },
-                cutout: '70%' // Estilo moderno tipo anillo
+                cutout: '67%' // Estilo moderno tipo anillo
             }
         });
     }
@@ -75,9 +74,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 datasets: [{
                     data: valoresReales,
                     backgroundColor: [
-                        colores.rojo + 'aa',
-                        colores.amarillo + 'aa',
-                        colores.verdeSecundario + 'aa'
+                        colores.rojo,
+                        colores.amarillo,
+                        colores.verdeSecundario 
                     ],
                     borderWidth: 1,
                     borderColor: colores.verdeOscuro

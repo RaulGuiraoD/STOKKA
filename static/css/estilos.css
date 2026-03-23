@@ -37,6 +37,19 @@
     transform: translateY(-2px);
 }
 
+.btn-cancelar2-stokka {
+    color: var(--verde-stokka);
+    border: 2px solid var(--verde-stokka);
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-cancelar2-stokka:hover {
+    background-color: var(--verde-stokka);
+    color: white;
+    transform: translateY(-2px);
+}
+
 .btn-editar-stokka {
     color: var(--amarillo-alerta);
     border: 2px solid var(--amarillo-alerta);
@@ -99,6 +112,32 @@
     transform: translateY(-4px);
     box-shadow: 0 12px 35px rgba(0, 61, 0, 0.18) !important;
 }
+/*-------------------------------------------------------------------*/
+/** Apartdo de gestion de usuarios, etiquetas de los roles*/
+.bg-dark-stokka {
+        background-color: #003D00 !important;
+        color: white;
+    }
+
+    .bg-success-stokka {
+        background-color: #1CA300 !important;
+        color: white;
+    }
+
+    /* Inputs del modal con el estilo de edición de perfil */
+    .modal-body input,
+    .modal-body select {
+        border-radius: 10px !important;
+        border: 1px solid #dee2e6 !important;
+        padding: 10px !important;
+        background-color: white !important;
+    }
+
+    .modal-body input:focus {
+        border-color: var(--verde-stokka) !important;
+        box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
+        outline: none;
+    }
 
 /*-------------------------------------------------------------------*/
 /* PERFIL */

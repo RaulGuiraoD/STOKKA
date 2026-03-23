@@ -67,16 +67,37 @@
                             {% endif %}
 
                             {% if u.id != 1 and u.id != request.user.id %}
-                            {# El ID 1 puede borrar a cualquier dueño nuevo. Otros dueños no pueden borrar dueños #}
                             {% if request.user.id == 1 or u.rol != 'dueño' %}
                             {% if request.user.es_dueño or u.rol == 'empleado' %}
-                            <a href="{% url 'eliminar_usuario' u.id %}" onclick="return confirm('¿Eliminar usuario?')"
-                                class="btn btn-cancelar-stokka btn-outline-danger rounded-3 px-3 fw-bold">
+                            <button type="button"
+                                class="btn btn-cancelar-stokka btn-outline-danger rounded-3 px-3 fw-bold"
+                                data-bs-toggle="modal" data-bs-target="#modalEliminarUsuario{{ u.id }}">
                                 <i class="fa-solid fa-user-minus"></i>
-                            </a>
+                            </button>
                             {% endif %}
                             {% endif %}
                             {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% for u in usuarios %}
+        <div class="modal fade" id="modalEliminarUsuario{{ u.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow rounded-4">
+                    <div class="modal-body p-4 text-center">
+                        <i class="fa-solid fa-triangle-exclamation fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                        <h5 class="fw-bold">¿Estás seguro?</h5>
+                        <p class="text-dark small">Vas a eliminar permanentemente a <strong class="text-danger small">{{ u.username }}</strong>.
+                            Esta acción no se puede deshacer.</p>
+
+                        <div class="d-flex gap-2 justify-content-center mt-4">
+                            <button type="button" class="btn btn-cancelar2-stokka rounded-pill px-3 fw-bold"
+                                data-bs-dismiss="modal">Cancelar</button>
+                            <a href="{% url 'eliminar_usuario' u.id %}"
+                                class="btn btn-cancelar-stokka rounded-pill px-3 fw-bold">Eliminar</a>
                         </div>
                     </div>
                 </div>
@@ -107,7 +128,7 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0 bg-light p-4 pt-0">
-                    <button type="button" class="btn btn-light rounded-3 px-4 fw-bold"
+                    <button type="button" class="btn btn-cancelar-stokka rounded-3 px-4 fw-bold"
                         data-bs-dismiss="modal">Cerrar</button>
                     <button type="submit" class="btn btn-stokka rounded-3 px-4 fw-bold shadow-sm">Crear Usuario</button>
                 </div>
@@ -135,31 +156,4 @@
     </div>
 </div>
 
-<style>
-    /* Colores extra para badges */
-    .bg-dark-stokka {
-        background-color: #003D00 !important;
-        color: white;
-    }
-
-    .bg-success-stokka {
-        background-color: #1CA300 !important;
-        color: white;
-    }
-
-    /* Inputs del modal con el estilo de edición de perfil */
-    .modal-body input,
-    .modal-body select {
-        border-radius: 10px !important;
-        border: 1px solid #dee2e6 !important;
-        padding: 10px !important;
-        background-color: white !important;
-    }
-
-    .modal-body input:focus {
-        border-color: var(--verde-stokka) !important;
-        box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
-        outline: none;
-    }
-</style>
 {% endblock %}
