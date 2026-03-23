@@ -82,7 +82,8 @@
                         </div>
 
                         <div class="alert alert-light border-0 small p-2 mt-2">
-                            <i class="fa-solid fa-info-circle me-1"></i> Mostrando entre <span id="rangoTexto">0 y {{max_stock_real }}</span>.
+                            <i class="fa-solid fa-info-circle me-1"></i> Mostrando entre <span id="rangoTexto">0 y
+                                {{max_stock_real }}</span>.
                         </div>
                     </div>
 
@@ -119,23 +120,28 @@
                             {% for p in productos %}
                             <tr id="producto-row-{{ p.pk }}"
                                 class="fila-stokka {% if p.semaforo == 'critico' %}stokka-critico{% elif p.semaforo == 'aviso' %}stokka-aviso{% else %}stokka-ok{% endif %}">
-                                <td class="ps-4">
+
+                                <td class="ps-4" data-label="SELECCIONAR">
                                     <div class="form-check">
                                         <input class="form-check-input checkbox-producto shadow-none" type="checkbox"
                                             value="{{ p.pk }}">
                                     </div>
                                 </td>
-                                <td class="ps-4 fw-bold">#{{ p.id_formateado }}</td>
-                                <td>
+
+                                <td class="ps-4 fw-bold" data-label="ID">#{{ p.id_formateado }}</td>
+
+                                <td data-label="REFERENCIA">
                                     <span class="badge bg-white text-dark border fw-normal px-2 py-1 rounded-2">
                                         {{ p.referencia|default:"S-REF-01" }}
                                     </span>
                                 </td>
-                                <td>
+
+                                <td data-label="PRODUCTO">
                                     <div class="fw-bold">{{ p.nombre }}</div>
                                     <small class="desc-text">{{ p.descripcion|truncatechars:50 }}</small>
                                 </td>
-                                <td>
+
+                                <td data-label="REGISTRO">
                                     <div class="fw-bold text-dark" style="font-size: 0.85rem;">
                                         {{ p.fecha_registro|date:"d M, Y" }}
                                     </div>
@@ -143,7 +149,8 @@
                                         {{ p.fecha_registro|time:"H:i" }}
                                     </small>
                                 </td>
-                                <td style="width: 160px;">
+
+                                <td style="width: 160px;" data-label="STOCK ACTUAL">
                                     <div class="d-flex align-items-center justify-content-center gap-2">
                                         <a href="#" data-url="{% url 'disminuir_stock' p.pk %}" data-pk="{{ p.pk }}"
                                             class="btn-adjust-stock shadow-sm">-</a>
@@ -153,9 +160,9 @@
                                             class="btn-adjust-stock shadow-sm">+</a>
                                     </div>
                                 </td>
-                                <td class="text-center pe-4">
+
+                                <td class="text-center pe-4" data-label="ACCIONES">
                                     <div class="btn-group bg-white rounded-3 shadow-sm border overflow-hidden">
-                                        <!-- Busca esta parte en tu bucle for p in productos -->
                                         <button class="btn btn-sm btn-white px-3 py-2 border-end btn-editar-modal"
                                             data-bs-toggle="modal" data-bs-target="#modalEditar"
                                             data-url="{% url 'editar_producto' p.pk %}" title="Editar">

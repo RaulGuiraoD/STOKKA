@@ -20,7 +20,7 @@
 }
 
 .fila-stokka.stokka-critico .btn-group .fa-pen {
-    color: black !important; 
+    color: black !important;
 }
 
 .btn-white:hover .fa-pen {
@@ -28,7 +28,7 @@
 }
 
 .stokka-critico .btn-group .btn {
-    color: inherit; 
+    color: inherit;
 }
 
 /* Efecto de desplazamiento y resalte */
@@ -37,7 +37,7 @@
     background-image: linear-gradient(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.12));
     background-blend-mode: multiply;
     transition: transform 0.2s ease, background-color 0.2s ease;
-    border-color: rgba(255,255,255,0.2) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
 /* Quitamos completamente la línea blanca */
@@ -258,4 +258,131 @@ body.modal-open {
     content: '\f0dd';
     opacity: 1;
     color: var(--verde-stokka);
+}
+
+@media (max-width: 992px) {
+    #sidebar-filtros {
+        display: block !important; /* Ahora siempre "existe" para poder animarse */
+        width: 100% !important;
+        margin: 0 !important;
+        
+        /* Estado inicial: Cerrado e invisible */
+        max-height: 0; 
+        opacity: 0;
+        visibility: hidden;
+        overflow: hidden;
+        transition: max-height 0.4s ease-in-out, opacity 0.3s ease, margin-bottom 0.3s ease;
+    }
+
+    #sidebar-filtros.active {
+        /* Estado final: Abierto y visible */
+        max-height: 1000px; /* Un valor suficientemente alto para el contenido */
+        opacity: 1;
+        visibility: visible;
+        margin-bottom: 25px !important;
+        padding-bottom: 10px;
+    }
+
+    #sidebar-filtros > div {
+        min-width: 100% !important;
+    }
+    .container-fluid > .d-flex {
+        flex-direction: column !important;
+        gap: 10px !important; /* Espacio mínimo controlado entre botones y tabla */
+    }
+
+    /* 2. TABLA -> MODO TARJETA */
+    #tabla-inventario, 
+    #tabla-inventario thead, 
+    #tabla-inventario tbody, 
+    #tabla-inventario tr, 
+    #tabla-inventario td {
+        display: block !important;
+        width: 100% !important;
+    }
+
+    #tabla-inventario thead {
+        display: none !important;
+    }
+
+    #tabla-inventario tbody tr {
+        margin-bottom: 20px;
+        border: 1px solid rgba(0,0,0,0.1) !important;
+        border-radius: 12px !important;
+        overflow: hidden;
+    }
+
+    /* 3. LÓGICA DE COLORES DE FONDO Y TEXTO (SOLO MÓVIL) */
+    
+    /* CRÍTICO (ROJO) -> Fondo rojo, Letras Blancas */
+    #tabla-inventario tr.stokka-critico {
+        background-color: var(--rojo-alerta) !important;
+    }
+    #tabla-inventario tr.stokka-critico td,
+    #tabla-inventario tr.stokka-critico td div,
+    #tabla-inventario tr.stokka-critico td span:not(.badge),
+    #tabla-inventario tr.stokka-critico td small {
+        color: white !important;
+    }
+    #tabla-inventario tr.stokka-critico td::before {
+        color: white; /* Etiquetas en blanco traslúcido */
+    }
+
+    /* AVISO (AMARILLO) -> Fondo amarillo, Letras Negras */
+    #tabla-inventario tr.stokka-aviso {
+        background-color: var(--amarillo-alerta) !important;
+    }
+    #tabla-inventario tr.stokka-aviso td,
+    #tabla-inventario tr.stokka-aviso td div,
+    #tabla-inventario tr.stokka-aviso td span:not(.badge),
+    #tabla-inventario tr.stokka-aviso td small {
+        color: black !important;
+    }
+
+    /* OK (VERDE) -> Fondo verde secundario, Letras Negras */
+    #tabla-inventario tr.stokka-ok {
+        background-color: var(--verde-secundario) !important;
+    }
+    #tabla-inventario tr.stokka-ok td,
+    #tabla-inventario tr.stokka-ok td div,
+    #tabla-inventario tr.stokka-ok td span:not(.badge),
+    #tabla-inventario tr.stokka-ok td small {
+        color: black !important;
+    }
+
+    /* 4. AJUSTE DE CELDAS */
+    #tabla-inventario td {
+        text-align: right !important;
+        padding: 12px 15px !important;
+        border: none !important;
+        border-bottom: 1px solid rgba(22, 21, 21, 0.05) !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center;
+        position: relative;
+        min-height: 48px;
+    }
+
+    #tabla-inventario td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        font-weight: 800;
+        text-transform: uppercase;
+        font-size: 0.65rem;
+        color: inherit;
+        opacity: 0.6;
+    }
+
+    /* Quitar etiqueta en celdas de acciones y checkbox */
+    #tabla-inventario td[data-label="SELECCIONAR"]::before,
+    #tabla-inventario td[data-label="ACCIONES"]::before {
+        display: none;
+    }
+
+    #tabla-inventario td[data-label="SELECCIONAR"],
+    #tabla-inventario td[data-label="ACCIONES"] {
+        justify-content: center !important;
+        background-color:black; /* Fondo sutil para separar secciones */
+    }
 }
