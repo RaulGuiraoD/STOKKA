@@ -19,6 +19,18 @@
     color: white !important;
 }
 
+.fila-stokka.stokka-critico .btn-group .fa-pen {
+    color: black !important; 
+}
+
+.btn-white:hover .fa-pen {
+    color: black !important;
+}
+
+.stokka-critico .btn-group .btn {
+    color: inherit; 
+}
+
 /* Efecto de desplazamiento y resalte */
 #tabla-inventario tbody tr.fila-seleccionada td {
     transform: translateX(8px);

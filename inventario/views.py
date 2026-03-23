@@ -10,6 +10,7 @@ from django.core.exceptions import PermissionDenied
 from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm, ProductoForm
 from django.contrib.auth.hashers import check_password
 from django.utils import timezone
+from django.db.models import Max
 
 from django.db.models import Count, Sum
 from django.db import models
@@ -364,6 +365,7 @@ def inventario_view(request):
     filtro = request.GET.get('filtro')
     query = request.GET.get('q')
     producto = Producto.objects.all().order_by('-fecha_registro')
+    max_stock_real = producto.aggregate(Max('stock_actual'))['stock_actual__max'] or 0
 
     if query:
         producto = producto.filter(
@@ -381,6 +383,7 @@ def inventario_view(request):
 
     return render(request, 'stokka/inventario.html', {
         'productos': producto,
+        'max_stock_real': max_stock_real,
         'filtro_actual': filtro,
         'query_actual': query,
         'form_añadir': form_añadir

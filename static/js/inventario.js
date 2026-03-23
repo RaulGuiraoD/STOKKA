@@ -100,15 +100,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Resetear visualmente al hacer clic en limpiar
     if (btnLimpiar) {
-        btnLimpiar.addEventListener("click", () => {
+        btnLimpiar.addEventListener("click", (e) => {
+            // e.preventDefault(); // Si es un enlace <a> para que no recargue
+
+            // Obtenemos el valor máximo real desde el atributo max del input
+            const valorMaximoReal = stockMax.getAttribute('max');
+
             if (stockMin) stockMin.value = 0;
             if (numMin) numMin.value = 0;
-            if (stockMax) stockMax.value = 800;
-            if (numMax) numMax.value = 800;
+            if (stockMax) stockMax.value = valorMaximoReal;
+            if (numMax) numMax.value = valorMaximoReal;
+
+            if (rangoTexto) {
+                rangoTexto.innerText = `0 y ${valorMaximoReal}`;
+            }
+
+            aplicarFiltros(); // Para que la tabla se limpie también
         });
     }
 
-    // --- FUNCIÓN FILTRAR (CORREGIDA) ---
+    // --- FUNCIÓN FILTRAR  ---
     function aplicarFiltros() {
         const term = searchInput.value.toLowerCase().trim();
         const minLimit = parseInt(stockMin.value) || 0;
