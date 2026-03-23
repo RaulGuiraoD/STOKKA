@@ -393,10 +393,17 @@ def añadir_producto(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Producto añadido correctamente")
-            return redirect('inventario') 
-    else:
-        form = ProductoForm()
-    return render(request, 'stokka/form_producto.html', {'form':form, 'titulo': 'Añadir producto'})
+            return redirect('inventario')
+        else:
+            # SI HAY ERROR DE UMBRALES:
+            # Volvemos al inventario pasándole el formulario con los errores
+            productos = Producto.objects.all()
+            return render(request, 'stokka/inventario.html', {
+                'productos': productos,
+                'form_añadir': form, # Pasamos el form con errores
+                'titulo': 'Inventario'
+            })
+    return redirect('inventario')
 
 @login_required
 def eliminar_producto(request, pk):

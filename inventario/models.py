@@ -6,6 +6,7 @@ from PIL import Image
 import os
 from django.conf import settings
 
+# MODELO USUARIOS
 class Usuario(AbstractUser):
     ROL_CHOICES = (
         ('dueño', 'Dueño/Admin Principal'),
@@ -21,7 +22,7 @@ class Usuario(AbstractUser):
     def es_admin_o_dueño(self):
         return self.rol in ['dueño', 'admin']
 
-# 2. Los demás modelos
+# 2. MODELO PRODUCTOS
 class Producto(models.Model):
     nombre = models.CharField(max_length=100, verbose_name="Nombre del Producto")
     referencia = models.CharField(max_length=50, blank=True, null=True, verbose_name="Referencia/SKU")
@@ -35,6 +36,17 @@ class Producto(models.Model):
     def __str__(self):
         return self.nombre
     
+    def clean(self):
+        if self.umbrales_amarillo is not None and self.umbrales_rojo is not None:
+            if self.umbrales_amarillo <= self.umbrales_rojo:
+                raise ValidationError({
+                    'umbrales_amarillo': 'El umbral de aviso debe ser mayor al umbral crítico.'
+                })
+        
+    def save(self, *args,**kwargs):
+        self.full_clean()   # Ejecuta la validación clean() antes de guardar
+        super().save(*args, **kwargs)
+
     @property
     def id_formateado(self):
         return f"{self.id:04d}"
@@ -53,7 +65,8 @@ def validar_tamano_foto(value):
     limit = 2 * 1024 * 1024  #2MB
     if value.size > limit:
         raise ValidationError('La imagen es demasiado pesada (máximo 2MB).')
-    
+
+# MODELOS PERFILES    
 class Perfil(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     telefono = models.CharField(max_length=15, blank=True, null=True)

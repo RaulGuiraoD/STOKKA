@@ -227,7 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const button = event.relatedTarget;
             const nombre = button.getAttribute('data-nombre');
             const url = button.getAttribute('data-url');
-            
+
             document.getElementById('modalProductoNombre').textContent = nombre;
             document.getElementById('formEliminar').action = url;
         });
@@ -241,4 +241,38 @@ document.addEventListener("DOMContentLoaded", function () {
             document.getElementById('input-ids-masivo').value = seleccionados.join(',');
         });
     }
+
+    // --- VALIDACIÓN DE UMBRALES EN TIEMPO REAL ---
+    function validarUmbrales(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        const inputAmarillo = modal.querySelector('[name="umbrales_amarillo"]');
+        const inputRojo = modal.querySelector('[name="umbrales_rojo"]');
+
+        if (inputAmarillo && inputRojo) {
+            const validar = () => {
+                const valA = parseInt(inputAmarillo.value) || 0;
+                const valR = parseInt(inputRojo.value) || 0;
+
+                if (valA <= valR && inputAmarillo.value !== "" && inputRojo.value !== "") {
+                    inputAmarillo.setCustomValidity("El aviso debe ser mayor al crítico");
+                    inputAmarillo.classList.add('is-invalid');
+                } else {
+                    inputAmarillo.setCustomValidity("");
+                    inputAmarillo.classList.remove('is-invalid');
+                }
+            };
+
+            inputAmarillo.addEventListener('input', validar);
+            inputRojo.addEventListener('input', validar);
+        }
+    }
+
+    // Solo ejecutamos la lógica de inicialización
+    validarUmbrales('modalAñadir');
+
+    const observer = new MutationObserver(() => validarUmbrales('modalEditar'));
+    const contenedor = document.getElementById('contenedor-form-editar');
+    if (contenedor) observer.observe(contenedor, { childList: true });
 });
