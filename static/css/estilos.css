@@ -8,7 +8,7 @@
 }
 
 
-/* --- CLASES DE GESTIÓN DE USUARIOS (NUEVAS) --- */
+/* --- CLASES DE GESTIÓN DE USUARIOS --- */
 
 /* Botón Nuevo Usuario */
 .btn-stokka {
@@ -57,19 +57,6 @@
     transform: translateY(-5px);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
 }
-
-/* --- OTRAS CLASES EXISTENTES --- */
-/*
-.fila-critica {
-    background-color: rgba(193, 13, 0, 0.1) !important; 
-    border-left: 5px solid var(--rojo-alerta);
-}
-
-.fila-aviso {
-    background-color: rgba(245, 201, 7, 0.1) !important;
-    border-left: 5px solid var(--amarillo-alerta);
-}
-*/
 
 /* --- SOMBRA VERDE STOKKA --- */
 .shadow-stokka {

@@ -41,6 +41,9 @@
 
 <body>
     <header class="dashboard-header fixed-top d-flex align-items-center justify-content-between px-4">
+        <button class="btn text-white d-lg-none me-2" id="toggleSidebar">
+            <i class="fa-solid fa-bars"></i>
+        </button>
         <div class="header-left d-flex align-items-center gap-2" onclick="location.href='{% url 'index' %}'"
             style="cursor:pointer;">
             <img src="{% static 'assets/Logo stokka.png' %}" class="mini-logo" alt="Logo">
@@ -52,7 +55,7 @@
                 style="max-width: 500px;">
                 <input type="text" class="border-0 w-100 py-1" placeholder="Buscar productos..." style="outline: none;">
                 <button class="border-0 bg-transparent text-success">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <i class="fa-solid fa-magnifying-glass" style="color: var(--verde-stokka);"></i>
                 </button>
             </div>
         </div>
@@ -60,22 +63,24 @@
         <div class="header-right">
             <div class="user-identity d-flex align-items-center gap-3 px-3 py-1 rounded-pill">
                 <div class="user-text text-end d-none d-sm-block">
-                    <span class="user-name d-block fw-bold fs-6 text-white" style="line-height: 1.2;">
+                    <a href="{% url 'perfil' %}" class="user-name d-block fw-bold fs-6 text-white" style="line-height: 1.2; text-decoration: none;">
                         Hola, {{ user.first_name|capfirst }}
-                    </span>
-                    <span class="user-role d-block"
-                        style="font-size: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">
+                    </a>
+                    <a href="{% url 'perfil' %}" class="user-role d-block"
+                        style="font-size: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7); text-decoration: none;">
                         {{ user.get_rol_display|capfirst }}
-                    </span>
+                    </a>
                 </div>
 
                 <div class="user-avatar-circle shadow-sm overflow-hidden d-flex align-items-center justify-content-center bg-white border border-white border-2"
                     style="width: 40px; height: 40px; border-radius: 50%;">
+                    <a href="{% url 'perfil' %}">
                     {% if user.perfil.foto %}
                     <img src="{{ user.perfil.foto.url }}" alt="Avatar" class="w-100 h-100 object-fit-cover">
                     {% else %}
                     <i class="fa-solid fa-circle-user text-secondary fs-4"></i>
                     {% endif %}
+                    </a>
                 </div>
             </div>
         </div>
@@ -85,34 +90,39 @@
         <nav class="dashboard-sidebar shadow-sm">
             <div class="nav-links d-flex flex-column align-items-center h-100">
                 <a href="{% url 'index' %}"
-                    class="nav-icon {% if request.resolver_match.url_name == 'index' %}active{% endif %}" title="Home">
+                    class="nav-item {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
                     <i class="fa-solid fa-house"></i>
+                    <span class="nav-text">Inicio</span>
                 </a>
 
-                <a href="{% url 'inventario' %}" class="nav-icon {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}" title="Inventario">
+                <a href="{% url 'inventario' %}"
+                    class="nav-item {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
                     <i class="fa-solid fa-file-circle-plus"></i>
+                    <span class="nav-text">Inventario</span>
                 </a>
 
                 {% if user.es_admin_o_dueño %}
                 <a href="{% url 'gestion_usuarios' %}"
-                    class="nav-icon {% if request.resolver_match.url_name == 'gestion_usuarios' %}active{% endif %}"
-                    title="Gestión Usuarios">
+                    class="nav-item {% if request.resolver_match.url_name == 'gestion_usuarios' %}active{% endif %}">
                     <i class="fa-solid fa-users-gear"></i>
+                    <span class="nav-text">Usuarios</span>
                 </a>
                 {% endif %}
 
-                <a href="#" class="nav-icon" title="Mensajes">
+                <a href="#" class="nav-item">
                     <i class="fa-solid fa-envelope"></i>
+                    <span class="nav-text">Mensajes</span>
                 </a>
 
-                <a href="#" class="nav-icon" title="Editar">
+                <a href="#" class="nav-item">
                     <i class="fa-solid fa-pen-to-square"></i>
+                    <span class="nav-text">Editar</span>
                 </a>
 
                 <a href="{% url 'perfil' %}"
-                    class="nav-icon {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}"
-                    title="Ajustes">
+                    class="nav-item {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}">
                     <i class="fa-solid fa-gear"></i>
+                    <span class="nav-text">Ajustes</span>
                 </a>
             </div>
         </nav>
@@ -157,6 +167,24 @@
                     bsAlert.close();
                 }, 3000);
             });
+        });
+
+        const toggleBtn = document.getElementById("toggleSidebar");
+        const sidebar = document.querySelector(".dashboard-sidebar");
+
+        // crear overlay dinámicamente
+        const overlay = document.createElement("div");
+        overlay.classList.add("sidebar-overlay");
+        document.body.appendChild(overlay);
+
+        toggleBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+        });
+
+        overlay.addEventListener("click", () => {
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
         });
     </script>
 </body>

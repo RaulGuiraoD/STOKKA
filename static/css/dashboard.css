@@ -1,7 +1,8 @@
 :root {
     --header-height: 70px;
-    --sidebar-width: 80px;
-    --verde-stokka: #003D00;
+    --sidebar-collapsed: 60px;
+    --sidebar-expanded: 95px;
+    --verde-stokka-light: #e6f0e6;
     --bg-gris: #F2F4F6;
 }
 
@@ -10,7 +11,11 @@
    ========================================================================== */
 
 /* Aseguramos la fuente en todo el proyecto */
-body, input, button, select, textarea {
+body,
+input,
+button,
+select,
+textarea {
     font-family: 'Merriweather', serif !important;
 }
 
@@ -28,9 +33,9 @@ body, input, button, select, textarea {
 
 /* BARRA DE BÚSQUEDA: Más larga y grande */
 .search-bar {
-    max-width: 700px !important; 
-    width: 60% !important;        
-    height: 45px;                
+    max-width: 700px !important;
+    width: 60% !important;
+    height: 45px;
     font-size: 1rem;
 }
 
@@ -43,6 +48,7 @@ body, input, button, select, textarea {
     font-weight: bold;
     letter-spacing: 3px;
 }
+
 .user-name {
     font-size: 8px;
     letter-spacing: 1px;
@@ -58,59 +64,151 @@ body, input, button, select, textarea {
     border-radius: 50%;
 }
 
-/* SIDEBAR: SEPARACIÓN IGUAL Y CONSTANTE */
+/* SIDEBAR */
 .dashboard-sidebar {
-    width: var(--sidebar-width);
+    width: var(--sidebar-collapsed);
     background-color: white;
     height: calc(100vh - var(--header-height));
     position: fixed;
-    left: 0;
     top: var(--header-height);
+    left: 0;
+    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+    border-right: 1px solid #eee;
     z-index: 1020;
 }
 
+/* HOVER EXPAND */
+.dashboard-sidebar:hover {
+    width: var(--sidebar-expanded);
+}
+
+/* NAV */
 .nav-links {
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    /* Distribuye los iconos con el mismo espacio entre ellos */
     justify-content: space-evenly;
+    height: 100%;
 }
 
-.nav-icon {
-    width: 65px;
-    height: 65px;
+/* ITEM */
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 6px 0;
+    color: var(--verde-stokka);
+    text-decoration: none;
+}
+
+/* CONTENEDOR VISUAL (CLAVE PARA ACTIVE) */
+.nav-item i {
+    font-size: 18px;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 30px;
-    text-decoration: none;
-    color: var(--verde-stokka);
-    transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 15px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
 }
 
-.nav-icon:hover,
-.nav-icon.active {
+/* TEXTO */
+.nav-text {
+    font-size: 10px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+/* SHOW TEXT */
+.dashboard-sidebar:hover .nav-text {
+    opacity: 1;
+}
+
+/* HOVER ICON */
+.nav-item:hover i {
+    background-color: var(--verde-stokka-light);
+}
+
+/* ACTIVE SOLO EN ICONO (NO TODO EL ITEM) */
+.nav-item.active i {
     background-color: var(--verde-stokka);
     color: white;
-    transform: scale(1.05);
 }
 
+/* TEXTO ACTIVE */
+.nav-item.active .nav-text {
+    font-weight: bold;
+}
+
+/* CONTENT SHIFT */
 .dashboard-content {
-    margin-left: var(--sidebar-width);
+    margin-left: var(--sidebar-collapsed);
     margin-top: var(--header-height);
-    min-height: calc(100vh - var(--header-height));
+    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.dashboard-sidebar:hover ~ .dashboard-content {
+    margin-left: var(--sidebar-expanded);
+}
+
+/* MOBILE SIDEBAR */
 @media (max-width: 991px) {
+
     .dashboard-sidebar {
-        display: none;
+        left: -100%;
+        width: 220px;
+        transition: left 0.3s ease;
+    }
+
+    .dashboard-sidebar.active {
+        left: 0;
+    }
+
+    .dashboard-sidebar:hover {
+        width: 220px; /* fijo en móvil */
+    }
+
+    /* Mostrar texto siempre en móvil */
+    .nav-text {
+        opacity: 1;
+    }
+
+    /* Layout horizontal en móvil */
+    .nav-item {
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 12px 20px;
+        gap: 15px;
+    }
+
+    .nav-item i {
+        width: 35px;
+        height: 35px;
     }
 
     .dashboard-content {
         margin-left: 0;
+    }
+
+    /* Overlay */
+    .sidebar-overlay {
+        position: fixed;
+        top: var(--header-height);
+        left: 0;
+        width: 100%;
+        height: calc(100vh - var(--header-height));
+        background: rgba(0,0,0,0.3);
+        z-index: 1010;
+        display: none;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
     }
 }
 
@@ -118,12 +216,24 @@ body, input, button, select, textarea {
    ESTILOS NO PERTENECIENTES AL BASE.HTML (No tocados)
    ========================================================================== */
 
-/* Aquí podrías añadir otros estilos específicos de vistas si los hubiera */
+/* Aquí se pueden añadir otros estilos específicos de vistas si los hubiera */
 
 /* --- Títulos y Tipografía --- */
-h1, .h1 { font-size: 1.75rem !important; } /* Tamaño más contenido para h1 */
-h2, .h2 { font-size: 1.5rem !important; }
-h3, .h3 { font-size: 1.25rem !important; }
+h1,
+.h1 {
+    font-size: 1.75rem !important;
+}
+
+/* Tamaño más contenido para h1 */
+h2,
+.h2 {
+    font-size: 1.5rem !important;
+}
+
+h3,
+.h3 {
+    font-size: 1.25rem !important;
+}
 
 /* --- Sombra Stokka Global --- */
 .shadow-stokka {
