@@ -120,4 +120,75 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+
+    const alerts = document.querySelectorAll('.custom-alert');
+    if (alerts.length > 0) {
+        alerts.forEach(function (alert) {
+            setTimeout(function () {
+                try {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                } catch (e) {
+                    // Si Bootstrap no ha cargado aún o el elemento ya no está
+                    alert.style.display = 'none';
+                }
+            }, 3000);
+        });
+    }
+
+    // 2. LÓGICA DEL SIDEBAR Y OVERLAY
+    const toggleBtn = document.getElementById("toggleSidebar");
+    const sidebar = document.querySelector(".dashboard-sidebar");
+
+    // Solo ejecutamos si ambos elementos existen en el HTML
+    if (toggleBtn && sidebar) {
+        // Crear overlay dinámicamente si no existe ya
+        let overlay = document.querySelector(".sidebar-overlay");
+        if (!overlay) {
+            overlay = document.createElement("div");
+            overlay.classList.add("sidebar-overlay");
+            document.body.appendChild(overlay);
+        }
+
+        toggleBtn.addEventListener("click", () => {
+            sidebar.classList.toggle("active");
+            overlay.classList.toggle("active");
+        });
+
+        overlay.addEventListener("click", () => {
+            sidebar.classList.remove("active");
+            overlay.classList.remove("active");
+        });
+    }
+
+    // 3. OCULTAR BARRA INFERIOR AL HACER SCROLL (Mobile)
+    let lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollThreshold = 15;
+
+    window.addEventListener('scroll', function (e) {
+        if (!sidebar) return; // Si no hay sidebar, no hacemos nada
+
+        let currentScrollY = window.pageYOffset || document.documentElement.scrollTop || (e.target.scrollTop > 0 ? e.target.scrollTop : 0);
+
+        // Si estamos arriba del todo, siempre mostrar
+        if (currentScrollY <= 10) {
+            sidebar.classList.remove('sidebar-hidden');
+            lastScrollY = currentScrollY;
+            return;
+        }
+
+        const delta = currentScrollY - lastScrollY;
+
+        if (Math.abs(delta) > scrollThreshold) {
+            // Solo ocultamos si estamos en formato móvil (barra inferior)
+            if (window.innerWidth <= 991) {
+                if (delta > 0) {
+                    sidebar.classList.add('sidebar-hidden');
+                } else {
+                    sidebar.classList.remove('sidebar-hidden');
+                }
+            }
+            lastScrollY = currentScrollY;
+        }
+    }, true);
 });

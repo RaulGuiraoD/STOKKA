@@ -23,7 +23,7 @@ textarea {
     height: var(--header-height);
     background-color: var(--verde-stokka);
     color: white;
-    z-index: 1030;
+    z-index: 30;
 }
 
 .mini-logo {
@@ -44,9 +44,9 @@ textarea {
 }
 
 .brand-name {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: bold;
-    letter-spacing: 3px;
+    letter-spacing: 1px;
 }
 
 .user-name {
@@ -105,7 +105,7 @@ textarea {
     text-decoration: none;
 }
 
-/* CONTENEDOR VISUAL (CLAVE PARA ACTIVE) */
+/* CONTENEDOR VISUAL */
 .nav-item i {
     font-size: 18px;
     width: 42px;
@@ -156,60 +156,107 @@ textarea {
     margin-left: var(--sidebar-expanded);
 }
 
-/* MOBILE SIDEBAR */
+
+/* --- BOTTOM NAVIGATION BAR REFINADA Y OCULTABLE (SÓLO MÓVIL) --- */
 @media (max-width: 991px) {
-
+    
+    /* 1. EL CONTENEDOR PRINCIPAL: Pasa de lateral a barra inferior fija con animación de ocultación */
     .dashboard-sidebar {
-        left: -100%;
-        width: 220px;
-        transition: left 0.3s ease;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        top: auto !important; 
+        width: 100% !important; 
+        height: 60px !important; /* <--- Reducimos altura para mayor compacidad */
+        background-color: white !important;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.08) !important; 
+        z-index: 2000 !important; /* <--- Aumentamos z-index para asegurar que está encima */
+        border-top: 1px solid rgba(0,0,0,0.05);
+        border-radius: 18px 18px 0 0 !important; /* Bordes ligeramente más suaves */
+        padding: 0 !important;
+        overflow: hidden;
+        
+        /* --- LÓGICA PARA EL OCULTADO AUTOMÁTICO --- */
+        transition: transform 0.3s ease-in-out !important; /* Animación suave de movimiento */
+        transform: translateY(0); /* Estado por defecto: visible */
     }
 
-    .dashboard-sidebar.active {
-        left: 0;
+    /* Clase que añadiremos con JS para ocultar la barra */
+    .dashboard-sidebar.sidebar-hidden {
+        transform: translateY(100%) !important; /* Se esconde hacia abajo completamente */
     }
 
-    .dashboard-sidebar:hover {
-        width: 220px; /* fijo en móvil */
-    }
-
-    /* Mostrar texto siempre en móvil */
-    .nav-text {
-        opacity: 1;
-    }
-
-    /* Layout horizontal en móvil */
-    .nav-item {
-        flex-direction: row;
-        justify-content: flex-start;
-        padding: 12px 20px;
-        gap: 15px;
-    }
-
-    .nav-item i {
-        width: 35px;
-        height: 35px;
-    }
-
-    .dashboard-content {
-        margin-left: 0;
-    }
-
-    /* Overlay */
-    .sidebar-overlay {
-        position: fixed;
-        top: var(--header-height);
-        left: 0;
+    /* 2. LOS ENLACES: Flex horizontal distribuido uniformemente */
+    .nav-links {
+        flex-direction: row !important; 
+        justify-content: space-around !important; 
+        align-items: center !important;
         width: 100%;
-        height: calc(100vh - var(--header-height));
-        background: rgba(0,0,0,0.3);
-        z-index: 1010;
-        display: none;
+        height: 100%;
+        padding: 0 5px !important; /* <--- Padding lateral mínimo */
     }
 
-    .sidebar-overlay.active {
-        display: block;
+    /* 3. CADA ITEM: Flex vertical (Icono arriba, Texto abajo) */
+    .nav-item {
+        flex-direction: column !important; 
+        justify-content: center !important;
+        align-items: center !important;
+        flex: 1; 
+        height: 100%;
+        padding: 2px 0 !important; /* <--- Padding vertical mínimo */
+        gap: 2px !important; /* <--- Espacio mínimo controlado entre icono y texto */
+        border-radius: 12px;
+        text-decoration: none !important; /* <--- Asegurar que no hay subrayado */
+        transition: all 0.2s ease;
     }
+
+    /* 4. ICONOS: Más compactos */
+    .nav-item i {
+        font-size: 1.1rem !important; /* <--- REDUCIDO (era 1.3rem) */
+        color: var(--verde-stokka); 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.2s ease;
+    }
+
+    /* 5. TEXTO: EFECTO FADE-IN (APARICIÓN SUAVE) */
+    .nav-text {
+        font-size: 0.6rem !important; /* <--- REDUCIDO (era 0.7rem) y forzado */
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--verde-stokka); 
+        display: block !important;
+        
+        /* Animación Fade-In */
+        opacity: 0;
+        animation: fadeInText 0.5s ease forwards;
+    }
+
+    @keyframes fadeInText {
+        from { opacity: 0; transform: translateY(2px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* 7. AJUSTE DE CONTENIDO: Dejamos espacio abajo para la barra */
+    .dashboard-content, #main-content {
+        margin-left: 0 !important;
+        padding-bottom: 75px !important;
+        /* Aseguramos que el scroll sea fluido para que el JS lo detecte siempre */
+        overflow-y: visible !important; 
+        height: auto !important;
+    }
+
+    /* Evitamos que el scroll horizontal de la tabla bloquee el vertical */
+    .table-responsive {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Anulamos el overlay de móvil del sidebar lateral */
+    .sidebar-overlay { display: none !important; }
+
+    
 }
 
 /* ==========================================================================

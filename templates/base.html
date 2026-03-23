@@ -41,9 +41,6 @@
 
 <body>
     <header class="dashboard-header fixed-top d-flex align-items-center justify-content-between px-4">
-        <button class="btn text-white d-lg-none me-2" id="toggleSidebar">
-            <i class="fa-solid fa-bars"></i>
-        </button>
         <div class="header-left d-flex align-items-center gap-2" onclick="location.href='{% url 'index' %}'"
             style="cursor:pointer;">
             <img src="{% static 'assets/Logo stokka.png' %}" class="mini-logo" alt="Logo">
@@ -157,36 +154,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Auto-cerrar mensajes después de 3 segundos (3000ms)
-        document.addEventListener("DOMContentLoaded", function () {
-            const alerts = document.querySelectorAll('.custom-alert');
-            alerts.forEach(function (alert) {
-                setTimeout(function () {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                }, 3000);
-            });
-        });
-
-        const toggleBtn = document.getElementById("toggleSidebar");
-        const sidebar = document.querySelector(".dashboard-sidebar");
-
-        // crear overlay dinámicamente
-        const overlay = document.createElement("div");
-        overlay.classList.add("sidebar-overlay");
-        document.body.appendChild(overlay);
-
-        toggleBtn.addEventListener("click", () => {
-            sidebar.classList.toggle("active");
-            overlay.classList.toggle("active");
-        });
-
-        overlay.addEventListener("click", () => {
-            sidebar.classList.remove("active");
-            overlay.classList.remove("active");
-        });
-    </script>
+    <script src="{% static 'js/dashboard.js' %}"></script>
 </body>
 
 </html>
