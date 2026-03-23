@@ -281,14 +281,3 @@ h3,
 .h3 {
     font-size: 1.25rem !important;
 }
-
-/* --- Sombra Stokka Global --- */
-.shadow-stokka {
-    box-shadow: 0 10px 30px rgba(0, 61, 0, 0.12) !important;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.shadow-stokka:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 35px rgba(0, 61, 0, 0.18) !important;
-}

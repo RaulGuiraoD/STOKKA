@@ -40,7 +40,6 @@
     border-color: rgba(255, 255, 255, 0.2) !important;
 }
 
-/* Quitamos completamente la línea blanca */
 #tabla-inventario tbody tr.fila-seleccionada td:first-child {
     box-shadow: none !important;
 }
@@ -89,7 +88,7 @@
     border-color: var(--amarillo-alerta) !important;
 }
 
-/* Botones ajuste stock estilo Cardmarket */
+/* Botones ajuste stock (seleccionador) */
 .btn-adjust-stock {
     width: 30px;
     height: 30px;
@@ -260,6 +259,8 @@ body.modal-open {
     color: var(--verde-stokka);
 }
 
+/*-------------------------------------------------------------------*/
+/* MEDIA QUERY FILTROS Y TABLA */
 @media (max-width: 992px) {
     #sidebar-filtros {
         display: block !important; /* Ahora siempre "existe" para poder animarse */

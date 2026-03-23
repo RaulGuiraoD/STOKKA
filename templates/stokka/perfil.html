@@ -24,14 +24,14 @@
                     accept="image/jpeg,image/png,image/jpg">
             </form>
 
-            <button class="btn btn-outline-warning w-100 rounded-3 py-2 text-dark fw-bold"
+            <button class="btn btn-editar-stokka w-100 rounded-3 py-2 text-dark fw-bold"
                 onclick="document.getElementById('fotoInput').click();" style="border-color: var(--amarillo-alerta);">
                 Cambiar foto
             </button>
 
             <form method="POST" action="{% url 'eliminar_foto' %}" class="w-100">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger w-100 rounded-3 py-2 fw-bold">
+                <button type="submit" class="btn btn-cancelar-stokka w-100 rounded-3 py-2 fw-bold">
                     Eliminar foto
                 </button>
             </form>
@@ -76,7 +76,7 @@
                 <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
                     <form action="{% url 'logout' %}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger px-4 py-2 rounded-3 fw-bold text-uppercase">
+                        <button type="submit" class="btn btn-cancelar-stokka px-4 py-2 rounded-3 fw-bold text-uppercase small">
                             Cerrar Sesión
                         </button>
                     </form>
@@ -91,51 +91,4 @@
     </div>
 </div>
 
-<style>
-    /* Mantenemos solo lo esencial que no cubre Bootstrap */
-    .avatar-container-large {
-        width: 160px;
-        height: 160px;
-        border-radius: 50%;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #f8f9fa;
-        border: 4px solid white;
-    }
-
-    .avatar-image-large {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .info-item-row {
-        border-bottom: 1px solid #f1f1f1;
-        padding: 1.5rem 0;
-    }
-
-    .info-item-row:first-child {
-        padding-top: 0;
-    }
-
-    /* Botón personalizado para mantener tu color verde */
-    .btn-stokka {
-        background-color: var(--verde-stokka);
-        color: white;
-        border: none;
-    }
-
-    .btn-stokka:hover {
-        background-color: #005000;
-        color: white;
-    }
-</style>
-
-<script>
-    function submitFotoForm() {
-        document.getElementById('fotoForm').submit();
-    }
-</script>
 {% endblock %}

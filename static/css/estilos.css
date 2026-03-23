@@ -4,30 +4,52 @@
     --rojo-alerta: #C10D00;
     --amarillo-alerta: #F5C907;
     --blanco: #FFFFFF;
-    --gris-fondo: #F2F4F6; 
+    --gris-fondo: #F2F4F6;
 }
 
 
-/* --- CLASES DE GESTIÓN DE USUARIOS --- */
+/* --- BOTONES STOKKA --- */
 
 /* Botón Nuevo Usuario */
 .btn-stokka {
     background-color: var(--verde-stokka) !important;
-    color: #ffffff !important;
-    border: none !important;
-    padding: 10px 20px !important;
-    border-radius: 10px !important;
-    text-decoration: none !important;
-    display: inline-flex !important;
-    align-items: center;
-    font-weight: bold;
-    transition: 0.3s;
+    color: white !important;
+    border: none;
+    transition: all 0.3s ease;
 }
 
 .btn-stokka:hover {
     filter: brightness(1.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 61, 0, 0.2) !important;
 }
 
+.btn-cancelar-stokka {
+    color: var(--rojo-alerta);
+    border: 2px solid var(--rojo-alerta);
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-cancelar-stokka:hover {
+    background-color: var(--rojo-alerta);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-editar-stokka {
+    color: var(--amarillo-alerta);
+    border: 2px solid var(--amarillo-alerta);
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-editar-stokka:hover {
+    background-color: var(--amarillo-alerta);
+    color: black;
+    transform: translateY(-2px);
+}
+/*-------------------------------------------------------------------*/
 /* Badge de Roles */
 .rol-stokka {
     padding: 6px 14px !important;
@@ -40,16 +62,25 @@
     text-align: center;
 }
 
-.bg-stokka-dueno { background-color: var(--verde-stokka) !important; }
-.bg-stokka-admin { background-color: var(--amarillo-alerta) !important; color: #000 !important; }
-.bg-stokka-empleado { background-color: var(--verde-secundario) !important; }
+.bg-stokka-dueno {
+    background-color: var(--verde-stokka) !important;
+}
+
+.bg-stokka-admin {
+    background-color: var(--amarillo-alerta) !important;
+    color: #000 !important;
+}
+
+.bg-stokka-empleado {
+    background-color: var(--verde-secundario) !important;
+}
 
 /* Tarjetas de Usuario */
 .card-usuario {
     background: white;
     border-radius: 15px;
     border: none;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -58,15 +89,42 @@
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
 }
 
-/* --- SOMBRA VERDE STOKKA --- */
+/* --- Sombra Stokka Global --- */
 .shadow-stokka {
-        box-shadow: 0 10px 30px rgba(0, 61, 0, 0.15) !important;
-    }
-
-    /* Efecto al hacer clic en los inputs */
-.shadow-focus-stokka:focus {
-    border-color: var(--verde-stokka) !important;
-    box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
-    background-color: white !important;
+    box-shadow: 0 10px 30px rgba(0, 61, 0, 0.12) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.shadow-stokka:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 35px rgba(0, 61, 0, 0.18) !important;
+}
+
+/*-------------------------------------------------------------------*/
+/* PERFIL */
+.avatar-container-large {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    border: 4px solid white;
+}
+
+.avatar-image-large {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.info-item-row {
+    border-bottom: 1px solid #f1f1f1;
+    padding: 1.5rem 0;
+}
+
+.info-item-row:first-child {
+    padding-top: 0;
+}

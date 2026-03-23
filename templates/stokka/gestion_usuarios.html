@@ -58,10 +58,12 @@
                         <div class="col-12 col-md-2 d-flex gap-2 justify-content-center align-items-end mt-3 mt-md-0">
 
                             {% if request.user.id == 1 or u.rol != 'dueño' %}
-                            <a href="{% url 'editar_usuario_admin' u.id %}"
-                                class="btn btn-sm btn-outline-warning rounded-3 px-3 fw-bold">
+                            <button type="button"
+                                class="btn btn-editar-stokka btn-outline-warning rounded-3 px-3 fw-bold btn-cargar-editar"
+                                data-url="{% url 'editar_usuario_admin' u.id %}" data-bs-toggle="modal"
+                                data-bs-target="#modalEditarUsuario">
                                 <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
+                            </button>
                             {% endif %}
 
                             {% if u.id != 1 and u.id != request.user.id %}
@@ -69,7 +71,7 @@
                             {% if request.user.id == 1 or u.rol != 'dueño' %}
                             {% if request.user.es_dueño or u.rol == 'empleado' %}
                             <a href="{% url 'eliminar_usuario' u.id %}" onclick="return confirm('¿Eliminar usuario?')"
-                                class="btn btn-sm btn-outline-danger rounded-3 px-3 fw-bold">
+                                class="btn btn-cancelar-stokka btn-outline-danger rounded-3 px-3 fw-bold">
                                 <i class="fa-solid fa-user-minus"></i>
                             </a>
                             {% endif %}
@@ -84,6 +86,7 @@
     </div>
 </div>
 
+<!-- MODAL AÑADIR USUARIO-->
 <div class="modal fade" id="modalNuevoUsuario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
@@ -109,6 +112,25 @@
                     <button type="submit" class="btn btn-stokka rounded-3 px-4 fw-bold shadow-sm">Crear Usuario</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL EDITAR USUARIO-->
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-labelledby="modalEditarUsuarioLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0" id="bodyEditarUsuario">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

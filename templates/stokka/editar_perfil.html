@@ -72,46 +72,11 @@
                     Cancelar
                 </a>
                 <button type="submit" class="btn btn-stokka px-5 py-2 rounded-3 fw-bold text-uppercase shadow-sm">
-                    Guardar Cambios
+                   <i class="fa-solid fa-floppy-disk me-2"></i> Guardar Cambios
                 </button>
             </div>
         </form>
     </div>
 </div>
 
-<style>
-    /* Botón Cancelar con tu rojo-alerta */
-    .btn-cancelar-stokka {
-        color: var(--rojo-alerta);
-        border: 2px solid var(--rojo-alerta);
-        background: transparent;
-        transition: all 0.3s ease;
-    }
-
-    .btn-cancelar-stokka:hover {
-        background-color: var(--rojo-alerta);
-        color: white;
-        transform: translateY(-2px);
-    }
-
-    /* Mejora del botón Stokka para este form */
-    .btn-stokka {
-        background-color: var(--verde-stokka) !important;
-        color: white !important;
-        border: none;
-        transition: all 0.3s ease;
-    }
-
-    .btn-stokka:hover {
-        filter: brightness(1.2);
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 61, 0, 0.2) !important;
-    }
-
-    /* Estilo para los inputs focus */
-    .shadow-focus-stokka:focus {
-        border-color: var(--verde-stokka) !important;
-        box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
-    }
-</style>
 {% endblock %}

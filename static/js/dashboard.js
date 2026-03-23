@@ -80,7 +80,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         colores.verdeSecundario + 'aa'
                     ],
                     borderWidth: 1,
-                    borderColor: colores.gris
+                    borderColor: colores.verdeOscuro
                 }]
             },
             options: {
@@ -191,4 +191,31 @@ document.addEventListener("DOMContentLoaded", function () {
             lastScrollY = currentScrollY;
         }
     }, true);
+
+    // --- CARGA DINÁMICA DE MODAL EDITAR USUARIO ---
+    const modalBody = document.getElementById('bodyEditarUsuario');
+
+    document.addEventListener('click', function (e) {
+        if (e.target.closest('.btn-cargar-editar')) {
+            const btn = e.target.closest('.btn-cargar-editar');
+            const url = btn.getAttribute('data-url');
+
+            // Limpiamos y ponemos el spinner mientras carga
+            modalBody.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-success"></div></div>';
+
+            fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(response => response.text())
+                .then(html => {
+                    modalBody.innerHTML = html;
+                })
+                .catch(err => {
+                    modalBody.innerHTML = '<div class="alert alert-danger">Error al cargar el formulario.</div>';
+                });
+        }
+    });
 });
+function submitFotoForm() {
+        document.getElementById('fotoForm').submit();
+    }
