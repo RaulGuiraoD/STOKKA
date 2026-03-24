@@ -157,7 +157,7 @@ textarea {
 }
 
 
-/* --- BOTTOM NAVIGATION BAR REFINADA Y OCULTABLE (SÓLO MÓVIL) --- */
+/* --- BOTTOM NAVIGATION BAR REFINADA Y OCULTABLE  --- */
 @media (max-width: 991px) {
     
     /* 1. EL CONTENEDOR PRINCIPAL: Pasa de lateral a barra inferior fija con animación de ocultación */
@@ -167,12 +167,12 @@ textarea {
         left: 0 !important;
         top: auto !important; 
         width: 100% !important; 
-        height: 60px !important; /* <--- Reducimos altura para mayor compacidad */
+        height: 60px !important; /*  Reducimos altura para mayor compacidad */
         background-color: white !important;
         box-shadow: 0 -4px 15px rgba(0,0,0,0.08) !important; 
-        z-index: 2000 !important; /* <--- Aumentamos z-index para asegurar que está encima */
+        z-index: 2000 !important; /* Aumentamos z-index para asegurar que está encima */
         border-top: 1px solid rgba(0,0,0,0.05);
-        border-radius: 18px 18px 0 0 !important; /* Bordes ligeramente más suaves */
+        border-radius: 18px 18px 0 0 !important; /* Bordes suaves */
         padding: 0 !important;
         overflow: hidden;
         
@@ -183,7 +183,7 @@ textarea {
 
     /* Clase que añadiremos con JS para ocultar la barra */
     .dashboard-sidebar.sidebar-hidden {
-        transform: translateY(100%) !important; /* Se esconde hacia abajo completamente */
+        transform: translateY(100%) !important; /* Se esconde hacia abajo */
     }
 
     /* 2. LOS ENLACES: Flex horizontal distribuido uniformemente */
@@ -193,7 +193,7 @@ textarea {
         align-items: center !important;
         width: 100%;
         height: 100%;
-        padding: 0 5px !important; /* <--- Padding lateral mínimo */
+        padding: 0 5px !important; /* Padding lateral mínimo */
     }
 
     /* 3. CADA ITEM: Flex vertical (Icono arriba, Texto abajo) */
@@ -203,16 +203,16 @@ textarea {
         align-items: center !important;
         flex: 1; 
         height: 100%;
-        padding: 2px 0 !important; /* <--- Padding vertical mínimo */
-        gap: 2px !important; /* <--- Espacio mínimo controlado entre icono y texto */
+        padding: 2px 0 !important; /* Padding vertical mínimo */
+        gap: 2px !important; /* Espacio mínimo controlado entre icono y texto */
         border-radius: 12px;
-        text-decoration: none !important; /* <--- Asegurar que no hay subrayado */
+        text-decoration: none !important; /* Asegurar que no hay subrayado */
         transition: all 0.2s ease;
     }
 
     /* 4. ICONOS: Más compactos */
     .nav-item i {
-        font-size: 1.1rem !important; /* <--- REDUCIDO (era 1.3rem) */
+        font-size: 1.1rem !important; 
         color: var(--verde-stokka); 
         display: flex;
         align-items: center;
@@ -222,7 +222,7 @@ textarea {
 
     /* 5. TEXTO: EFECTO FADE-IN (APARICIÓN SUAVE) */
     .nav-text {
-        font-size: 0.6rem !important; /* <--- REDUCIDO (era 0.7rem) y forzado */
+        font-size: 0.6rem !important; /* REDUCIDO y forzado */
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.03em;
@@ -260,7 +260,7 @@ textarea {
 }
 
 /* ==========================================================================
-   ESTILOS NO PERTENECIENTES AL BASE.HTML (No tocados)
+   ESTILOS NO PERTENECIENTES AL BASE.HTML
    ========================================================================== */
 
 /* Aquí se pueden añadir otros estilos específicos de vistas si los hubiera */
