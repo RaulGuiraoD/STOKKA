@@ -84,6 +84,7 @@
         </div>
         {% endfor %}
         {% for u in usuarios %}
+        <!-- MODAL ELIMINAR USUARIO -->
         <div class="modal fade" id="modalEliminarUsuario{{ u.id }}" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered modal-sm">
                 <div class="modal-content border-0 shadow rounded-4">
@@ -94,10 +95,10 @@
                             Esta acción no se puede deshacer.</p>
 
                         <div class="d-flex gap-2 justify-content-center mt-4">
-                            <button type="button" class="btn btn-cancelar2-stokka rounded-pill px-3 fw-bold"
+                            <button type="button" class="btn btn-cancelar2-stokka rounded-3 px-4 fw-bold"
                                 data-bs-dismiss="modal">Cancelar</button>
                             <a href="{% url 'eliminar_usuario' u.id %}"
-                                class="btn btn-cancelar-stokka rounded-pill px-3 fw-bold">Eliminar</a>
+                                class="btn btn-cancelar-stokka rounded-3 px-4 fw-bold">Eliminar</a>
                         </div>
                     </div>
                 </div>

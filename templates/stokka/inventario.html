@@ -8,15 +8,15 @@
 
     <!-- CABECERA DE ACCIONES -->
     <div class="d-flex justify-content-between align-items-center mb-4 px-2">
-        <button class="btn btn-stokka shadow-stokka px-4 fw-bold" type="button" onclick="toggleFiltros()">
+        <button class="btn btn-inventario-stokka shadow-stokka px-4 fw-bold" type="button" onclick="toggleFiltros()">
             <i class="fa-solid fa-filter me-2"></i> FILTROS
         </button>
         <div class="d-flex gap-2">
-            <button id="btn-eliminar-masivo" class="btn btn-cancelar-stokka shadow-stokka d-none" data-bs-toggle="modal"
+            <button id="btn-eliminar-masivo" class="btn btn-inventario-cancelar-stokka shadow-stokka d-none" data-bs-toggle="modal"
                 data-bs-target="#modalEliminarMasivo">
                 <i class="fa-solid fa-trash-can me-2"></i> ELIMINAR (<span id="count-seleccionados">0</span>)
             </button>
-            <button class="btn btn-stokka shadow-stokka" data-bs-toggle="modal" data-bs-target="#modalAñadir"
+            <button class="btn btn-inventario-stokka shadow-stokka" data-bs-toggle="modal" data-bs-target="#modalAñadir"
                 style="background-color: var(--verde-secundario) !important;">
                 <i class="fa-solid fa-plus me-2"></i> NUEVO PRODUCTO
             </button>
@@ -37,7 +37,7 @@
                         <div class="d-flex mt-1 gap-2">
                             <input type="text" name="q" id="inputSearch" class="form-control shadow-focus-stokka"
                                 placeholder="Buscar..." value="{{ query_actual|default:'' }}">
-                            <button class="btn btn-stokka px-3" type="submit">
+                            <button class="btn btn-inventario-stokka px-3" type="submit">
                                 <i class="fa-solid fa-magnifying-glass"></i>
                             </button>
                         </div>
@@ -48,12 +48,12 @@
                         <label class="small text-dark fw-bold text-uppercase d-block mb-2">Estado del Stock</label>
                         <div class="d-grid gap-2">
                             <a href="{% url 'inventario' %}"
-                                class="btn btn-stokka fw-bold rounded-3 {% if not filtro_actual %}btn-stokka{% else %}btn-outline-secondary{% endif %}">VER
+                                class="btn btn-inventario-stokka fw-bold rounded-3 {% if not filtro_actual %}btn-inventario-stokka{% else %}btn-outline-secondary{% endif %}">VER
                                 TODO</a>
                             <a href="{% url 'inventario' %}?filtro=critico"
-                                class="btn btn-cancelar-stokka fw-bold btn-outline-danger rounded-3 {% if filtro_actual == 'critico' %}active-critico{% endif %}">CRÍTICOS</a>
+                                class="btn btn-inventario-cancelar-stokka fw-bold btn-outline-danger rounded-3 {% if filtro_actual == 'critico' %}active-critico{% endif %}">CRÍTICOS</a>
                             <a href="{% url 'inventario' %}?filtro=aviso"
-                                class="btn btn-editar-stokka fw-bold btn-outline-warning rounded-3 {% if filtro_actual == 'aviso' %}active-aviso{% endif %}">CUIDADO</a>
+                                class="btn btn-inventario-editar-stokka fw-bold btn-outline-warning rounded-3 {% if filtro_actual == 'aviso' %}active-aviso{% endif %}">CUIDADO</a>
                         </div>
                     </div>
 
@@ -208,11 +208,11 @@
                 <p class="text-dark small">Estás a punto de borrar <strong id="modalProductoNombre"></strong>. Esta
                     acción es irreversible.</p>
                 <div class="d-flex justify-content-center gap-2 mt-4">
-                    <button type="button" class="btn btn-cancelar2-stokka rounded-3 px-4 fw-bold"
+                    <button type="button" class="btn btn-inventario-cancelar2-stokka rounded-3 px-4 fw-bold"
                         data-bs-dismiss="modal">CANCELAR</button>
                     <form method="POST" action="" id="formEliminar">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-cancelar-stokka rounded-3 px-4 fw-bold">ELIMINAR
+                        <button type="submit" class="btn btn-inventario-cancelar-stokka rounded-3 px-4 fw-bold">ELIMINAR
                             AHORA</button>
                     </form>
                 </div>
@@ -233,10 +233,10 @@
                     {% csrf_token %}
                     <input type="hidden" name="ids" id="input-ids-masivo">
                     <div class="d-flex justify-content-center gap-2 mt-4">
-                        <button type="button" class="btn btn-cancelar2-stokka rounded-3 px-4 fw-bold"
+                        <button type="button" class="btn btn-inventario-cancelar2-stokka rounded-3 px-4 fw-bold"
                             data-bs-dismiss="modal">CANCELAR</button>
                         <button type="submit" id="confirmar-borrado-masivo"
-                            class="btn btn-cancelar-stokka rounded-3 px-4 fw-bold">SÍ, ELIMINAR</button>
+                            class="btn btn-inventario-cancelar-stokka rounded-3 px-4 fw-bold">SÍ, ELIMINAR</button>
                     </div>
                 </form>
             </div>
@@ -270,10 +270,10 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-cancelar-stokka fw-bold"
+                    <button type="button" class="btn btn-inventario-cancelar-stokka fw-bold"
                         data-bs-dismiss="modal">CERRAR</button>
                     <button type="submit"
-                        class="bbtn btn-stokka px-5 py-2 rounded-3 fw-bold text-uppercase shadow-sm"><i
+                        class="bbtn btn-inventario-stokka px-5 py-2 rounded-3 fw-bold text-uppercase shadow-sm"><i
                             class="fa-solid fa-floppy-disk me-2"></i>GUARDAR PRODUCTO</button>
                 </div>
             </form>

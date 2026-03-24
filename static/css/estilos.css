@@ -183,3 +183,59 @@
 .info-item-row:first-child {
     padding-top: 0;
 }
+
+/* Media Query Global para Adaptabilidad de Botones */
+@media (max-width: 992px) {
+    /* 1. Comportamiento de Contenedores de Botones */
+    /* Buscamos cualquier d-flex que contenga nuestros botones para que no se amontonen */
+    .d-flex:has(.btn-stokka), 
+    .d-flex:has(.btn-cancelar-stokka),
+    .btn-group {
+        flex-direction: row !important; /* Mantener en línea si es posible */
+        flex-wrap: wrap !important;    /* Si no caben por el texto, saltan de línea */
+        gap: 10px !important;
+        width: 100% !important;
+        justify-content: center !important;
+    }
+
+    /* 2. Ajuste de Dimensiones y Texto */
+    .btn-stokka, 
+    .btn-cancelar-stokka, 
+    .btn-cancelar2-stokka, 
+    .btn-editar-stokka {
+        /* Flexibilidad */
+        flex: 1 1 auto !important;    /* Los botones crecen para llenar el ancho disponible */
+        min-width: 130px !important;  /* Evitamos que el texto se corte */
+        max-width: 100% !important;   /* No permiten que se salgan de la pantalla */
+        
+        /* Ergonomía Táctil */
+        height: 46px !important;      /* Altura estándar para dedos en móvil */
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        
+        /* Estética */
+        padding: 10px 20px !important;
+        font-size: 0.85rem !important; /* Un poco más pequeño para evitar desbordes */
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-weight: 700;
+        border-radius: 10px !important; /* Bordes más suaves para móvil */
+    }
+
+    /* 3. Ajustes para Iconos dentro de botones */
+    .btn-stokka i, 
+    .btn-cancelar-stokka i, 
+    .btn-cancelar2-stokka i, 
+    .btn-editar-stokka i {
+        margin-right: 8px !important;
+        font-size: 1rem !important;
+    }
+
+    /* 4. Casos Especiales: Botones muy pequeños (como el de eliminar con contador) */
+    /* Si el botón tiene estructura de columna (como el de tu captura), lo centramos */
+    .btn-outline-danger.d-flex.flex-column {
+        height: auto !important;
+        padding: 8px !important;
+    }
+}

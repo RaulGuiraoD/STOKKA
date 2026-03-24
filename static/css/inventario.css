@@ -31,6 +31,59 @@
     color: inherit;
 }
 
+/* Botón Nuevo Usuario */
+.btn-inventario-stokka {
+    background-color: var(--verde-stokka) !important;
+    color: white !important;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-inventario-stokka:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 61, 0, 0.2) !important;
+}
+
+.btn-inventario-cancelar-stokka {
+    color: var(--rojo-alerta);
+    border: 2px solid var(--rojo-alerta);
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-inventario-cancelar-stokka:hover {
+    background-color: var(--rojo-alerta);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-inventario-cancelar2-stokka {
+    color: var(--verde-stokka);
+    border: 2px solid var(--verde-stokka);
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-inventario-cancelar2-stokka:hover {
+    background-color: var(--verde-stokka);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.btn-inventario-editar-stokka {
+    color: var(--amarillo-alerta);
+    border: 2px solid var(--amarillo-alerta);
+    background: transparent;
+    transition: all 0.3s ease;
+}
+
+.btn-inventario-editar-stokka:hover {
+    background-color: var(--amarillo-alerta);
+    color: black;
+    transform: translateY(-2px);
+}
+
 /* Efecto de desplazamiento y resalte */
 #tabla-inventario tbody tr.fila-seleccionada td {
     transform: translateX(8px);
@@ -274,7 +327,7 @@ body.modal-open {
     }
 
     /* Forzamos a que los 3 botones principales sean hermanos iguales */
-    .btn-stokka, .btn-outline-danger, #btn-toggle-filtros {
+    .btn-inventario-stokka, .btn-outline-danger, #btn-toggle-filtros {
         flex: 1 1 auto !important; /* Crecen por igual */
         min-width: 100px !important;
         height: 45px !important; /* Altura uniforme */
