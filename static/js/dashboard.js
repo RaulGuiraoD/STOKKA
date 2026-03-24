@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }, true);
 
-    // --- CARGA DINÁMICA DE MODAL EDITAR USUARIO ---
+    // --- CARGA DINÁMICA DE MODAL EDITAR USUARIO (ADMIN)---
     const modalBody = document.getElementById('bodyEditarUsuario');
 
     document.addEventListener('click', function (e) {
@@ -219,15 +219,26 @@ document.addEventListener("DOMContentLoaded", function () {
     const btnEditarPerfil = document.querySelector('.btn-cargar-editar-perfil');
     const bodyPerfil = document.getElementById('bodyEditarPerfil');
 
+    // 1. Lógica para abrir automáticamente si hay error
+    const señalErrorPerfil = document.querySelector('.open_edit_modal');
+    if (señalErrorPerfil && btnEditarPerfil) {
+        setTimeout(() => {
+            btnEditarPerfil.click();
+            console.log("Abriendo modal por error detectado...");
+        }, 200); // Un pelín más de delay para asegurar
+    }
+
+    // 2. Lógica del click manual 
     if (btnEditarPerfil) {
         btnEditarPerfil.addEventListener('click', function () {
             const url = this.getAttribute('data-url');
-            bodyPerfil.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-success"></div></div>';
-
-            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                .then(response => response.text())
-                .then(html => { bodyPerfil.innerHTML = html; })
-                .catch(err => { bodyPerfil.innerHTML = '<div class="alert alert-danger">Error al cargar.</div>'; });
+            if (bodyPerfil) {
+                bodyPerfil.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-success"></div></div>';
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(response => response.text())
+                    .then(html => { bodyPerfil.innerHTML = html; })
+                    .catch(err => { bodyPerfil.innerHTML = '<div class="alert alert-danger">Error al cargar el formulario.</div>'; });
+            }
         });
     }
 

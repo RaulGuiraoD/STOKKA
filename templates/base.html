@@ -16,27 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <style>
-        /*Estilos aplicados para las alertas de mensajes, tanto positivos como negativos*/
-        :root {
-            --verde-stokka: #003D00;
-            --verde-stokka-light: #e6f0e6;
-            --rojo-alerta: #C10D00;
-            --rojo-alerta-light: #fce8e6;
-        }
 
-        .alert-success-stokka {
-            background-color: var(--verde-stokka-light) !important;
-            color: var(--verde-stokka) !important;
-            border: 2px solid var(--verde-stokka) !important;
-        }
-
-        .alert-error-stokka {
-            background-color: var(--rojo-alerta-light) !important;
-            color: var(--rojo-alerta) !important;
-            border: 2px solid var(--rojo-alerta) !important;
-        }
-    </style>
 </head>
 
 <body>
@@ -60,7 +40,8 @@
         <div class="header-right">
             <div class="user-identity d-flex align-items-center gap-3 px-3 py-1 rounded-pill">
                 <div class="user-text text-end d-none d-sm-block">
-                    <a href="{% url 'perfil' %}" class="user-name d-block fw-bold fs-6 text-white" style="line-height: 1.2; text-decoration: none;">
+                    <a href="{% url 'perfil' %}" class="user-name d-block fw-bold fs-6 text-white"
+                        style="line-height: 1.2; text-decoration: none;">
                         Hola, {{ user.first_name|capfirst }}
                     </a>
                     <a href="{% url 'perfil' %}" class="user-role d-block"
@@ -72,11 +53,11 @@
                 <div class="user-avatar-circle shadow-sm overflow-hidden d-flex align-items-center justify-content-center bg-white border border-white border-2"
                     style="width: 40px; height: 40px; border-radius: 50%;">
                     <a href="{% url 'perfil' %}">
-                    {% if user.perfil.foto %}
-                    <img src="{{ user.perfil.foto.url }}" alt="Avatar" class="w-100 h-100 object-fit-cover">
-                    {% else %}
-                    <i class="fa-solid fa-circle-user text-secondary fs-4"></i>
-                    {% endif %}
+                        {% if user.perfil.foto %}
+                        <img src="{{ user.perfil.foto.url }}" alt="Avatar" class="w-100 h-100 object-fit-cover">
+                        {% else %}
+                        <i class="fa-solid fa-circle-user text-secondary fs-4"></i>
+                        {% endif %}
                     </a>
                 </div>
             </div>
@@ -130,12 +111,12 @@
                 <div class="container mt-2" id="container-mensajes">
                     {% if messages %}
                     {% for message in messages %}
-                    <div class="alert {% if message.tags == 'success' %}alert-success-stokka{% elif message.tags == 'error' %}alert-error-stokka{% else %}alert-info{% endif %} alert-dismissible fade show shadow-sm rounded-3 custom-alert"
+                    <div class="alert {% if 'success' in message.tags %}alert-success-stokka{% elif 'error' in message.tags or 'danger' in message.tags %}alert-error-stokka{% else %}alert-info{% endif %} alert-dismissible fade show shadow-sm rounded-3 custom-alert {{ message.tags }}"
                         role="alert">
 
-                        {% if message.tags == 'success' %}
+                        {% if 'success' in message.tags %}
                         <i class="fa-solid fa-circle-check me-2"></i>
-                        {% elif message.tags == 'error' %}
+                        {% elif 'error' in message.tags or 'danger' in message.tags %}
                         <i class="fa-solid fa-circle-exclamation me-2"></i>
                         {% else %}
                         <i class="fa-solid fa-info-circle me-2"></i>

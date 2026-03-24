@@ -5,8 +5,22 @@
     --amarillo-alerta: #F5C907;
     --blanco: #FFFFFF;
     --gris-fondo: #F2F4F6;
+    --verde-stokka-light: #e6f0e6;
+    --rojo-alerta-light: #fce8e6;
 }
 
+/* --- ALERTAS STOKKA --- */
+.alert-success-stokka {
+    background-color: var(--verde-stokka-light) !important;
+    color: var(--verde-stokka) !important;
+    border: 2px solid var(--verde-stokka) !important;
+}
+
+.alert-error-stokka {
+    background-color: var(--rojo-alerta-light) !important;
+    color: var(--rojo-alerta) !important;
+    border: 2px solid var(--rojo-alerta) !important;
+}
 
 /* --- BOTONES STOKKA --- */
 
@@ -62,6 +76,7 @@
     color: black;
     transform: translateY(-2px);
 }
+
 /*-------------------------------------------------------------------*/
 /* Badge de Roles */
 .rol-stokka {
@@ -112,32 +127,33 @@
     transform: translateY(-4px);
     box-shadow: 0 12px 35px rgba(0, 61, 0, 0.18) !important;
 }
+
 /*-------------------------------------------------------------------*/
 /** Apartdo de gestion de usuarios, etiquetas de los roles*/
 .bg-dark-stokka {
-        background-color: #003D00 !important;
-        color: white;
-    }
+    background-color: #003D00 !important;
+    color: white;
+}
 
-    .bg-success-stokka {
-        background-color: #1CA300 !important;
-        color: white;
-    }
+.bg-success-stokka {
+    background-color: #1CA300 !important;
+    color: white;
+}
 
-    /* Inputs del modal con el estilo de edición de perfil */
-    .modal-body input,
-    .modal-body select {
-        border-radius: 10px !important;
-        border: 1px solid #dee2e6 !important;
-        padding: 10px !important;
-        background-color: white !important;
-    }
+/* Inputs del modal con el estilo de edición de perfil */
+.modal-body input,
+.modal-body select {
+    border-radius: 10px !important;
+    border: 1px solid #dee2e6 !important;
+    padding: 10px !important;
+    background-color: white !important;
+}
 
-    .modal-body input:focus {
-        border-color: var(--verde-stokka) !important;
-        box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
-        outline: none;
-    }
+.modal-body input:focus {
+    border-color: var(--verde-stokka) !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
+    outline: none;
+}
 
 /*-------------------------------------------------------------------*/
 /* PERFIL */
