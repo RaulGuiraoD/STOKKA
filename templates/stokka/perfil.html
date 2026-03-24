@@ -29,9 +29,9 @@
                 Cambiar foto
             </button>
 
-            <form method="POST" action="{% url 'eliminar_foto' %}" class="w-100">
+            <form method="POST" action="{% url 'eliminar_foto' %}" id="eliminar_foto" class="w-100">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-cancelar-stokka w-100 rounded-3 py-2 fw-bold">
+                <button type="button" data-bs-toggle="modal" data-bs-target="#modalEliminarFoto" class="btn btn-cancelar-stokka w-100 rounded-3 py-2 fw-bold">
                     Eliminar foto
                 </button>
             </form>
@@ -90,6 +90,27 @@
                 </div>
             </div>
         </main>
+    </div>
+</div>
+
+<!-- MODAL PARA ELIMINAR FOTO -->
+<div class="modal fade" id="modalEliminarFoto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-body p-4 text-center">
+               <i class="fa-solid fa-image fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                <h5 class="fw-bold">¿Borrar foto?</h5>
+                <p class="text-dark small">Estás a punto de eliminar tu foto de perfil.</p>
+
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="button" class="btn btn-cancelar2-stokka rounded-3 px-4 fw-bold"
+                        data-bs-dismiss="modal">Cancelar</button>
+
+                    <button type="button" onclick="document.getElementById('eliminar_foto').submit();"
+                        class="btn btn-cancelar-stokka rounded-3 px-4 fw-bold">Confirmar</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
