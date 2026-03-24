@@ -304,11 +304,11 @@ def editar_perfil_view(request):
         if password:
             if check_password(password, request.user.password):
                 messages.error(request, "La nueva contraseña debe ser diferente a la actual.")
-                return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
+                return redirect('perfil')
             
             if password != confirm_password:
                 messages.error(request, "Las nuevas contraseñas no coinciden.")
-                return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
+                return redirect('perfil')
             
             # Si pasa las validaciones, la preparamos
             request.user.set_password(password)

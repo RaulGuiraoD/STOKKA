@@ -76,7 +76,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     backgroundColor: [
                         colores.rojo,
                         colores.amarillo,
-                        colores.verdeSecundario 
+                        colores.verdeSecundario
                     ],
                     borderWidth: 1,
                     borderColor: colores.verdeOscuro
@@ -214,7 +214,24 @@ document.addEventListener("DOMContentLoaded", function () {
                 });
         }
     });
+
+    // --- CARGA DINÁMICA MODAL EDITAR PERFIL ---
+    const btnEditarPerfil = document.querySelector('.btn-cargar-editar-perfil');
+    const bodyPerfil = document.getElementById('bodyEditarPerfil');
+
+    if (btnEditarPerfil) {
+        btnEditarPerfil.addEventListener('click', function () {
+            const url = this.getAttribute('data-url');
+            bodyPerfil.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-success"></div></div>';
+
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => response.text())
+                .then(html => { bodyPerfil.innerHTML = html; })
+                .catch(err => { bodyPerfil.innerHTML = '<div class="alert alert-danger">Error al cargar.</div>'; });
+        });
+    }
+
 });
 function submitFotoForm() {
-        document.getElementById('fotoForm').submit();
-    }
+    document.getElementById('fotoForm').submit();
+}
