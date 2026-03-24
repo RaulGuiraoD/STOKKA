@@ -286,4 +286,21 @@ document.addEventListener("DOMContentLoaded", function () {
     const observer = new MutationObserver(() => validarUmbrales('modalEditar'));
     const contenedor = document.getElementById('contenedor-form-editar');
     if (contenedor) observer.observe(contenedor, { childList: true });
+
+    const tableBody = document.querySelector("#tabla-inventario tbody");
+
+    if (tableBody) {
+        tableBody.addEventListener("click", function(e) {
+            // Solo actuamos si estamos en móvil
+            if (window.innerWidth <= 992) {
+                const row = e.target.closest("tr");
+                const isAction = e.target.closest("button") || e.target.closest("a") || e.target.closest(".form-check-input");
+
+                // Si tocamos la fila pero NO un botón o checkbox
+                if (row && !isAction) {
+                    row.classList.toggle("is-open");
+                }
+            }
+        });
+    }
 });

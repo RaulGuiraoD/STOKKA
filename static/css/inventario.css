@@ -90,8 +90,8 @@
 
 /* Botones ajuste stock (seleccionador) */
 .btn-adjust-stock {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -118,6 +118,7 @@
 }
 
 .stock-number {
+    display: inline-block;
     font-size: 1.25rem;
     font-weight: 800;
     min-width: 35px;
@@ -261,129 +262,199 @@ body.modal-open {
 
 /*-------------------------------------------------------------------*/
 /* MEDIA QUERY FILTROS Y TABLA */
+
 @media (max-width: 992px) {
-    #sidebar-filtros {
-        display: block !important; /* Ahora siempre "existe" para poder animarse */
-        width: 100% !important;
+    .container-fluid .d-flex.gap-2, 
+    .container-fluid .d-flex.justify-content-between.mb-4 {
+        display: flex !important;
+        flex-direction: row !important; /* Mantenerlos en línea */
+        flex-wrap: wrap; /* Si no caben, que bajen suavemente */
+        gap: 8px !important;
+        justify-content: center !important;
+    }
+
+    /* Forzamos a que los 3 botones principales sean hermanos iguales */
+    .btn-stokka, .btn-outline-danger, #btn-toggle-filtros {
+        flex: 1 1 auto !important; /* Crecen por igual */
+        min-width: 100px !important;
+        height: 45px !important; /* Altura uniforme */
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem !important; /* Texto un poco más pequeño para que quepa */
+        padding: 5px 10px !important;
         margin: 0 !important;
-        
-        /* Estado inicial: Cerrado e invisible */
-        max-height: 0; 
+        text-transform: uppercase;
+        font-weight: 700;
+    }
+
+    /* Ajuste específico para el icono y texto del botón Eliminar */
+    .btn-outline-danger {
+        flex-direction: column;
+        line-height: 1;
+    }
+    .btn-outline-danger i { margin-bottom: 2px; }
+
+    /* 1. Estructura Base de Tarjetas (Lo que ya tenías abajo...) */
+    .container-fluid > .d-flex.position-relative {
+        flex-direction: column !important;
+        margin-top: 15px; /* Espacio tras los botones */
+    }
+    /* 1. Estructura Base de Tarjetas */
+    .container-fluid > .d-flex.position-relative {
+        flex-direction: column !important; /* Fuerza al sidebar a estar arriba */
+    }
+
+    #sidebar-filtros {
+        width: 100% !important;
+        max-height: 0; /* Cerrado por defecto */
+        overflow: hidden;
         opacity: 0;
         visibility: hidden;
-        overflow: hidden;
-        transition: max-height 0.4s ease-in-out, opacity 0.3s ease, margin-bottom 0.3s ease;
+        margin-right: 0 !important;
+        margin-bottom: 0;
+        transition: max-height 0.4s ease, opacity 0.3s ease, margin-bottom 0.3s ease;
     }
 
     #sidebar-filtros.active {
-        /* Estado final: Abierto y visible */
-        max-height: 1000px; /* Un valor suficientemente alto para el contenido */
+        width: 100% !important;
+        max-height: 1000px; /* Suficiente para el contenido de filtros */
         opacity: 1;
         visibility: visible;
-        margin-bottom: 25px !important;
-        padding-bottom: 10px;
+        margin-bottom: 20px; /* Separa de la tabla al abrirse */
     }
 
-    #sidebar-filtros > div {
-        min-width: 100% !important;
-    }
-    .container-fluid > .d-flex {
-        flex-direction: column !important;
-        gap: 10px !important; /* Espacio mínimo controlado entre botones y tabla */
-    }
-
-    /* 2. TABLA -> MODO TARJETA */
-    #tabla-inventario, 
-    #tabla-inventario thead, 
-    #tabla-inventario tbody, 
-    #tabla-inventario tr, 
-    #tabla-inventario td {
+    #tabla-inventario, #tabla-inventario tbody, #tabla-inventario tr, #tabla-inventario td {
         display: block !important;
         width: 100% !important;
     }
+    #tabla-inventario thead { display: none !important; }
 
-    #tabla-inventario thead {
+    #tabla-inventario tbody tr {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: center;
+        height: 72px; /* Altura fija cuando está cerrado */
+        margin-bottom: 12px;
+        border-radius: 12px !important;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.1) !important;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    #tabla-inventario tbody tr.is-open {
+        height: auto !important; /* Se expande al abrir */
+    }
+
+    /* 2. Colores de Estado (Inundación total) */
+    #tabla-inventario tr.stokka-critico { background-color: var(--rojo-alerta) !important; color: white !important; }
+    #tabla-inventario tr.stokka-aviso { background-color: var(--amarillo-alerta) !important; color: black !important; }
+    #tabla-inventario tr.stokka-ok { background-color: var(--verde-secundario) !important; color: black !important; }
+
+    #tabla-inventario td {
+        background-color: transparent !important;
+        color: inherit !important;
+        border: none !important;
+        padding: 0 15px !important;
+        min-height: 72px;
+        display: flex !important;
+        align-items: center;
+    }
+
+    /* 3. Organización de la Fila Principal (Cerrada) */
+    
+    /* Checkbox */
+    #tabla-inventario td[data-label="SELECCIONAR"] {
+        order: 1;
+        width: 45px !important;
+    }
+
+    /* Producto */
+    #tabla-inventario td[data-label="PRODUCTO"] {
+        order: 2;
+        flex: 1 !important;
+        flex-direction: column;
+        justify-content: center !important;
+        align-items: flex-start !important;
+        padding-left: 5px !important;
+    }
+    #tabla-inventario td[data-label="PRODUCTO"] .desc-text {
+        font-size: 0.75rem;
+        opacity: 0.8;
+    }
+
+    /* Stock Actual (Ajustado para cifras grandes como 2000) */
+    #tabla-inventario td[data-label="STOCK ACTUAL"] {
+        order: 3;
+        width: auto !important;
+        min-width: 140px !important;
+        justify-content: flex-end !important;
+        padding-right: 15px !important;
+    }
+
+    /* 4. Bloque Desplegable (Solo se ve al abrir) */
+    #tabla-inventario td[data-label="ID"],
+    #tabla-inventario td[data-label="REFERENCIA"],
+    #tabla-inventario td[data-label="REGISTRO"],
+    #tabla-inventario td[data-label="ACCIONES"] {
+        order: 4;
+        display: none !important; 
+        min-height: 50px;
+        background-color: rgba(0,0,0,0.05) !important;
+        border-top: 1px solid rgba(255,255,255,0.1) !important;
+        justify-content: space-between !important;
+    }
+
+    #tabla-inventario tr.is-open td[data-label="ID"],
+    #tabla-inventario tr.is-open td[data-label="REFERENCIA"],
+    #tabla-inventario tr.is-open td[data-label="REGISTRO"],
+    #tabla-inventario tr.is-open td[data-label="ACCIONES"] {
+        display: flex !important;
+    }
+
+    /* Etiquetas solo para la info extra (NO para Nombre o Stock) */
+    #tabla-inventario tr.is-open td[data-label="ID"]::before,
+    #tabla-inventario tr.is-open td[data-label="REFERENCIA"]::before,
+    #tabla-inventario tr.is-open td[data-label="REGISTRO"]::before,
+    #tabla-inventario tr.is-open td[data-label="ACCIONES"]::before {
+        content: attr(data-label);
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        opacity: 0.7;
+    }
+
+    /* Eliminar etiquetas fantasmas en Producto y Stock */
+    #tabla-inventario td[data-label="PRODUCTO"]::before,
+    #tabla-inventario td[data-label="STOCK ACTUAL"]::before,
+    #tabla-inventario td[data-label="SELECCIONAR"]::before {
         display: none !important;
     }
 
-    #tabla-inventario tbody tr {
-        margin-bottom: 20px;
-        border: 1px solid rgba(0,0,0,0.1) !important;
-        border-radius: 12px !important;
-        overflow: hidden;
-    }
-
-    /* 3. LÓGICA DE COLORES DE FONDO Y TEXTO (SOLO MÓVIL) */
-    
-    /* CRÍTICO (ROJO) -> Fondo rojo, Letras Blancas */
-    #tabla-inventario tr.stokka-critico {
-        background-color: var(--rojo-alerta) !important;
-    }
-    #tabla-inventario tr.stokka-critico td,
-    #tabla-inventario tr.stokka-critico td div,
-    #tabla-inventario tr.stokka-critico td span:not(.badge),
-    #tabla-inventario tr.stokka-critico td small {
-        color: white !important;
-    }
-    #tabla-inventario tr.stokka-critico td::before {
-        color: white; /* Etiquetas en blanco traslúcido */
-    }
-
-    /* AVISO (AMARILLO) -> Fondo amarillo, Letras Negras */
-    #tabla-inventario tr.stokka-aviso {
-        background-color: var(--amarillo-alerta) !important;
-    }
-    #tabla-inventario tr.stokka-aviso td,
-    #tabla-inventario tr.stokka-aviso td div,
-    #tabla-inventario tr.stokka-aviso td span:not(.badge),
-    #tabla-inventario tr.stokka-aviso td small {
-        color: black !important;
-    }
-
-    /* OK (VERDE) -> Fondo verde secundario, Letras Negras */
-    #tabla-inventario tr.stokka-ok {
-        background-color: var(--verde-secundario) !important;
-    }
-    #tabla-inventario tr.stokka-ok td,
-    #tabla-inventario tr.stokka-ok td div,
-    #tabla-inventario tr.stokka-ok td span:not(.badge),
-    #tabla-inventario tr.stokka-ok td small {
-        color: black !important;
-    }
-
-    /* 4. AJUSTE DE CELDAS */
-    #tabla-inventario td {
-        text-align: right !important;
-        padding: 12px 15px !important;
-        border: none !important;
-        border-bottom: 1px solid rgba(22, 21, 21, 0.05) !important;
+    /* 5. Ajustes de UI */
+    .btn-adjust-stock {
+        width: 28px !important;
+        height: 28px !important;
+        font-size: 0.8rem !important;
         display: flex !important;
-        justify-content: flex-end !important;
+        justify-content: center;
         align-items: center;
-        position: relative;
-        min-height: 48px;
     }
 
-    #tabla-inventario td::before {
-        content: attr(data-label);
-        position: absolute;
-        left: 15px;
-        font-weight: 800;
-        text-transform: uppercase;
-        font-size: 0.65rem;
-        color: inherit;
-        opacity: 0.6;
+    .stock-number {
+        font-size: 1rem !important;
+        min-width: 40px !important;
+        text-align: center;
     }
 
-    /* Quitar etiqueta en celdas de acciones y checkbox */
-    #tabla-inventario td[data-label="SELECCIONAR"]::before,
-    #tabla-inventario td[data-label="ACCIONES"]::before {
-        display: none;
+    /* Botones de acción */
+    #tabla-inventario td[data-label="ACCIONES"] .btn-group {
+        max-width: 140px;
     }
+}
 
-    #tabla-inventario td[data-label="SELECCIONAR"],
-    #tabla-inventario td[data-label="ACCIONES"] {
-        justify-content: center !important;
-        background-color:black; /* Fondo sutil para separar secciones */
-    }
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
