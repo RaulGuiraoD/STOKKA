@@ -1,19 +1,23 @@
+# 1. Standard Library Imports
 import json
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.contrib.auth import login, authenticate, get_user_model, update_session_auth_hash
-from .models import Producto, Perfil, Usuario
-from django.contrib import messages
-from django.core.exceptions import ValidationError
-from django.core.exceptions import PermissionDenied
-from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm, ProductoForm
-from django.contrib.auth.hashers import check_password
-from django.utils import timezone
-from django.db.models import Max
 
-from django.db.models import Count, Sum
+# 2. Django Core & Common Imports
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models
+from django.db.models import Count, Max, Q, Sum
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
+# 3. Django Auth & Security
+from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import check_password
+
+# 4. Local App Imports
+from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroUsuarioForm
+from .models import Perfil, Producto, Usuario
 
 # Esto detecta automáticamente el Usuario personalizado
 User = get_user_model()

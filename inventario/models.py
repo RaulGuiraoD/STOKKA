@@ -1,10 +1,14 @@
+#1. Third-Party Library Imports (PIL para procesamiento de imágenes)
+from PIL import Image
+
+# 2. Django Core Imports
+from django.conf import settings
+from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
-from django.core.exceptions import ValidationError
-from django.contrib.auth.models import AbstractUser
-from PIL import Image
-import os
-from django.conf import settings
+
+# 3. Local App Imports 
 
 # MODELO USUARIOS
 class Usuario(AbstractUser):
