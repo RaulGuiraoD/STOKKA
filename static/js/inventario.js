@@ -100,15 +100,26 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Resetear visualmente al hacer clic en limpiar
     if (btnLimpiar) {
-        btnLimpiar.addEventListener("click", () => {
+        btnLimpiar.addEventListener("click", (e) => {
+            // e.preventDefault(); // Si es un enlace <a> para que no recargue
+
+            // Obtenemos el valor máximo real desde el atributo max del input
+            const valorMaximoReal = stockMax.getAttribute('max');
+
             if (stockMin) stockMin.value = 0;
             if (numMin) numMin.value = 0;
-            if (stockMax) stockMax.value = 800;
-            if (numMax) numMax.value = 800;
+            if (stockMax) stockMax.value = valorMaximoReal;
+            if (numMax) numMax.value = valorMaximoReal;
+
+            if (rangoTexto) {
+                rangoTexto.innerText = `0 y ${valorMaximoReal}`;
+            }
+
+            aplicarFiltros(); // Para que la tabla se limpie también
         });
     }
 
-    // --- FUNCIÓN FILTRAR (CORREGIDA) ---
+    // --- FUNCIÓN FILTRAR  ---
     function aplicarFiltros() {
         const term = searchInput.value.toLowerCase().trim();
         const minLimit = parseInt(stockMin.value) || 0;
@@ -227,7 +238,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const button = event.relatedTarget;
             const nombre = button.getAttribute('data-nombre');
             const url = button.getAttribute('data-url');
-            
+
             document.getElementById('modalProductoNombre').textContent = nombre;
             document.getElementById('formEliminar').action = url;
         });
@@ -239,6 +250,57 @@ document.addEventListener("DOMContentLoaded", function () {
         modalEliminarMasivo.addEventListener('show.bs.modal', function () {
             const seleccionados = Array.from(document.querySelectorAll('.checkbox-producto:checked')).map(cb => cb.value);
             document.getElementById('input-ids-masivo').value = seleccionados.join(',');
+        });
+    }
+
+    // --- VALIDACIÓN DE UMBRALES EN TIEMPO REAL ---
+    function validarUmbrales(modalId) {
+        const modal = document.getElementById(modalId);
+        if (!modal) return;
+
+        const inputAmarillo = modal.querySelector('[name="umbrales_amarillo"]');
+        const inputRojo = modal.querySelector('[name="umbrales_rojo"]');
+
+        if (inputAmarillo && inputRojo) {
+            const validar = () => {
+                const valA = parseInt(inputAmarillo.value) || 0;
+                const valR = parseInt(inputRojo.value) || 0;
+
+                if (valA <= valR && inputAmarillo.value !== "" && inputRojo.value !== "") {
+                    inputAmarillo.setCustomValidity("El aviso debe ser mayor al crítico");
+                    inputAmarillo.classList.add('is-invalid');
+                } else {
+                    inputAmarillo.setCustomValidity("");
+                    inputAmarillo.classList.remove('is-invalid');
+                }
+            };
+
+            inputAmarillo.addEventListener('input', validar);
+            inputRojo.addEventListener('input', validar);
+        }
+    }
+
+    // Solo ejecutamos la lógica de inicialización
+    validarUmbrales('modalAñadir');
+
+    const observer = new MutationObserver(() => validarUmbrales('modalEditar'));
+    const contenedor = document.getElementById('contenedor-form-editar');
+    if (contenedor) observer.observe(contenedor, { childList: true });
+
+    const tableBody = document.querySelector("#tabla-inventario tbody");
+
+    if (tableBody) {
+        tableBody.addEventListener("click", function(e) {
+            // Solo actuamos si estamos en móvil
+            if (window.innerWidth <= 992) {
+                const row = e.target.closest("tr");
+                const isAction = e.target.closest("button") || e.target.closest("a") || e.target.closest(".form-check-input");
+
+                // Si tocamos la fila pero NO un botón o checkbox
+                if (row && !isAction) {
+                    row.classList.toggle("is-open");
+                }
+            }
         });
     }
 });

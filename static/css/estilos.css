@@ -1,85 +1,151 @@
+/* ==========================================
+   STOKKA - BRAND IDENTITY & UI ELEMENTS
+   ========================================== */
 :root {
     --verde-stokka: #003D00;
     --verde-secundario: #1CA300;
     --rojo-alerta: #C10D00;
     --amarillo-alerta: #F5C907;
     --blanco: #FFFFFF;
-    --gris-fondo: #F2F4F6; 
+    --gris-fondo: #F2F4F6;
+    --verde-stokka-light: #e6f0e6;
+    --rojo-alerta-light: #fce8e6;
+
+    --header-height: 85px; 
+    --sidebar-w: 65px;     
+    --sidebar-w-expand: 100px;
+}
+body {
+    font-family: 'Merriweather', serif !important;
+    font-weight: 400; 
+    color: black;
 }
 
+/* --- SOMBRA STOKKA GLOBAL --- 
+   Aplica esta clase a cualquier card o div */
+.shadow-stokka {
+    box-shadow: 0 10px 30px rgba(0, 61, 0, 0.08) !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
 
-/* --- CLASES DE GESTIÓN DE USUARIOS (NUEVAS) --- */
+.shadow-stokka:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(0, 61, 0, 0.15) !important;
+}
 
-/* Botón Nuevo Usuario */
+/* --- BOTONES STOKKA --- */
+.btn-stokka, .btn-cancelar-stokka, .btn-cancelar2-stokka, .btn-editar-stokka {
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease !important;
+    border-radius: 10px; 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Botón Principal  */
 .btn-stokka {
     background-color: var(--verde-stokka) !important;
-    color: #ffffff !important;
-    border: none !important;
-    padding: 10px 20px !important;
-    border-radius: 10px !important;
-    text-decoration: none !important;
-    display: inline-flex !important;
-    align-items: center;
-    font-weight: bold;
-    transition: 0.3s;
+    color: white !important;
+    border: none;
 }
-
 .btn-stokka:hover {
     filter: brightness(1.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 61, 0, 0.2) !important;
 }
 
-/* Badge de Roles */
+/* Botón Cancelar  */
+.btn-cancelar-stokka {
+    color: var(--rojo-alerta) !important;
+    border: 2px solid var(--rojo-alerta) !important;
+    background: transparent;
+}
+.btn-cancelar-stokka:hover {
+    background-color: var(--rojo-alerta) !important;
+    color: white !important;
+    transform: translateY(-2px);
+}
+
+/* Botón Cancelar Alternativo (Verde) */
+.btn-cancelar2-stokka {
+    color: var(--verde-stokka) !important;
+    border: 2px solid var(--verde-stokka) !important;
+    background: transparent;
+}
+.btn-cancelar2-stokka:hover {
+    background-color: var(--verde-stokka) !important;
+    color: white !important;
+    transform: translateY(-2px);
+}
+
+/* Botón Editar  */
+.btn-editar-stokka {
+    color: var(--amarillo-alerta) !important;
+    border: 2px solid var(--amarillo-alerta) !important;
+    background: transparent;
+}
+.btn-editar-stokka:hover {
+    background-color: var(--amarillo-alerta) !important;
+    color: black !important;
+    transform: translateY(-2px);
+}
+
+/* --- BADGES Y ROLES --- */
 .rol-stokka {
     padding: 6px 14px !important;
     border-radius: 20px !important;
     font-weight: 700 !important;
     font-size: 11px !important;
     text-transform: uppercase;
-    display: inline-block !important;
-    color: #ffffff !important;
-    text-align: center;
+}
+.bg-stokka-dueno { background-color: var(--verde-stokka) !important; color: white !important; }
+.bg-stokka-admin { background-color: var(--amarillo-alerta) !important; color: black !important; }
+.bg-stokka-empleado { background-color: var(--verde-secundario) !important; color: white !important; }
+
+/* --- ALERTAS PERSONALIZADAS --- */
+.alert-success-stokka {
+    background-color: var(--verde-stokka-light) !important;
+    color: var(--verde-stokka) !important;
+    border: 2px solid var(--verde-stokka) !important;
+}
+.alert-error-stokka {
+    background-color: var(--rojo-alerta-light) !important;
+    color: var(--rojo-alerta) !important;
+    border: 2px solid var(--rojo-alerta) !important;
 }
 
-.bg-stokka-dueno { background-color: var(--verde-stokka) !important; }
-.bg-stokka-admin { background-color: var(--amarillo-alerta) !important; color: #000 !important; }
-.bg-stokka-empleado { background-color: var(--verde-secundario) !important; }
+/* --- MODALES E INPUTS --- */
+.modal-content { border-radius: 15px; border: none; }
 
-/* Tarjetas de Usuario */
-.card-usuario {
-    background: white;
-    border-radius: 15px;
-    border: none;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.stokka-input, .modal-body input, .modal-body select {
+    border-radius: 10px !important;
+    border: 1px solid #dee2e6 !important;
+    padding: 10px !important;
+    transition: all 0.2s;
 }
 
-.card-usuario:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08) !important;
-}
-
-/* --- OTRAS CLASES EXISTENTES --- */
-/*
-.fila-critica {
-    background-color: rgba(193, 13, 0, 0.1) !important; 
-    border-left: 5px solid var(--rojo-alerta);
-}
-
-.fila-aviso {
-    background-color: rgba(245, 201, 7, 0.1) !important;
-    border-left: 5px solid var(--amarillo-alerta);
-}
-*/
-
-/* --- SOMBRA VERDE STOKKA --- */
-.shadow-stokka {
-        box-shadow: 0 10px 30px rgba(0, 61, 0, 0.15) !important;
-    }
-
-    /* Efecto al hacer clic en los inputs */
-.shadow-focus-stokka:focus {
+.stokka-input:focus, .modal-body input:focus {
     border-color: var(--verde-stokka) !important;
     box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
-    background-color: white !important;
+    outline: none;
 }
 
+/* --- MEDIA QUERY: BOTONES RESPONSIVOS --- */
+@media (max-width: 991.98px) {
+    .btn-container-stokka {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+    }
+
+    .btn-stokka, .btn-cancelar-stokka, .btn-cancelar2-stokka, .btn-editar-stokka {
+        flex: 1 1 auto;
+        min-width: 130px;
+        height: 48px;
+        font-size: 0.85rem !important;
+    }
+}

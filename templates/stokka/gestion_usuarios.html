@@ -3,9 +3,9 @@
 
 {% block content %}
 <div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-3 border-bottom border-light">
-        <h2 class="h4 fw-bold text-dark m-0">Gestión de Plantilla</h2>
-        <button type="button" class="btn btn-stokka px-4 py-2 rounded-3 shadow-sm" data-bs-toggle="modal"
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
+        <h2 class="fw-bold text-dark m-0">Gestión de Plantilla</h2>
+        <button type="button" class="btn btn-stokka px-4 py-2 shadow-sm" data-bs-toggle="modal"
             data-bs-target="#modalNuevoUsuario">
             <i class="fas fa-user-plus me-2"></i> Nuevo Usuario
         </button>
@@ -15,66 +15,81 @@
         {% for u in usuarios %}
         <div class="col-12">
             <div class="card shadow-stokka border-0 rounded-4">
-                <div class="card-body p-3">
-                    <div class="row align-items-center">
+                <div class="card-body p-3 p-md-4">
+                    <div class="row align-items-center text-center text-md-start">
 
-                        <div class="col-12 col-md-auto text-center mb-3 mb-md-0">
+                        <div class="col-12 col-md-auto mb-3 mb-md-0">
                             {% if u.perfil.foto %}
-                            <img src="{{ u.perfil.foto.url }}"
-                                class="rounded-circle border border-2 border-white shadow-sm"
-                                style="width: 65px; height: 65px; object-fit: cover;">
+                            <img src="{{ u.perfil.foto.url }}" class="rounded-circle border border-2 border-white shadow-sm" 
+                                 style="width: 70px; height: 70px; object-fit: cover;">
                             {% else %}
-                            <img src="https://ui-avatars.com/api/?name={{ u.username }}&background=003D00&color=fff"
-                                class="rounded-circle shadow-sm" style="width: 65px; height: 65px;">
+                            <img src="https://ui-avatars.com/api/?name={{ u.username }}&background=003D00&color=fff" 
+                                 class="rounded-circle shadow-sm" style="width: 70px; height: 70px;">
                             {% endif %}
                         </div>
 
-                        <div class="col-12 col-md text-center text-md-start">
-                            <label class="text-muted small fw-bold text-uppercase d-block mb-1"
-                                style="font-size: 10px; letter-spacing: 1px;">Nombre Completo</label>
+                        <div class="col-12 col-md-2 ps-md-4 mb-2 mb-md-0">
+                            <label class="text-muted small fw-bold text-uppercase d-block mb-1" style="font-size: 10px;">Nombre Completo</label>
                             <span class="fw-bold text-dark fs-6">{{ u.get_full_name|default:u.username }}</span>
                         </div>
 
-                        <div class="col-12 col-md text-center text-md-start">
-                            <label class="text-muted small fw-bold text-uppercase d-block mb-1"
-                                style="font-size: 10px; letter-spacing: 1px;">Email Corporativo</label>
-                            <span class="text-secondary">{{ u.email }}</span>
+                        <div class="col-12 col-md-3 mb-2 mb-md-0">
+                            <label class="text-dark small fw-bold text-uppercase d-block mb-1" style="font-size: 10px;">Email Corporativo</label>
+                            <span class="text-secondary small fw-medium text-break">{{ u.email }}</span>
                         </div>
 
-                        <div
-                            class="col-12 col-md-2 text-center d-flex flex-column align-items-center justify-content-center">
-                            <label class="text-muted small fw-bold text-uppercase d-block mb-1"
-                                style="font-size: 10px; letter-spacing: 1px;">Rol</label>
-
-                            {% if u.rol == 'dueño' %}
-                            <span class="badge bg-dark-stokka rounded-pill px-3 py-2 shadow-sm">DUEÑO</span>
-                            {% elif u.rol == 'admin' %}
-                            <span class="badge bg-warning text-dark rounded-pill px-3 py-2 shadow-sm">ADMIN</span>
-                            {% else %}
-                            <span class="badge bg-success-stokka rounded-pill px-3 py-2 shadow-sm">OPERADOR</span>
-                            {% endif %}
+                        <div class="col-12 col-md-2 mb-2 mb-md-0">
+                            <label class="text-dark small fw-bold text-uppercase d-block mb-1" style="font-size: 10px;">Teléfono</label>
+                            <span class="text-secondary small fw-medium">{{ u.perfil.telefono|default:"--- --- ---" }}</span>
                         </div>
 
-                        <div class="col-12 col-md-2 d-flex gap-2 justify-content-center align-items-end mt-3 mt-md-0">
+                        <div class="col-12 col-md text-center mb-3 mb-md-0">
+                            <label class="text-dark small fw-bold text-uppercase d-block mb-1" style="font-size: 10px;">Rol</label>
+                            <div class="d-inline-block">
+                                {% if u.rol == 'dueño' %}
+                                    <span class="rol-stokka bg-stokka-dueno shadow-sm px-4">Dueño</span>
+                                {% elif u.rol == 'admin' %}
+                                    <span class="rol-stokka bg-stokka-admin shadow-sm px-4">Admin</span>
+                                {% else %}
+                                    <span class="rol-stokka bg-stokka-empleado shadow-sm px-4">Operador</span>
+                                {% endif %}
+                            </div>
+                        </div>
 
+                        <div class="col-12 col-md-auto d-flex gap-2 justify-content-center justify-content-md-end" style="min-width: 130px;">
                             {% if request.user.id == 1 or u.rol != 'dueño' %}
-                            <a href="{% url 'editar_usuario_admin' u.id %}"
-                                class="btn btn-sm btn-outline-warning rounded-3 px-3 fw-bold">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </a>
+                            <button type="button" class="btn btn-editar-stokka px-3 py-2 btn-cargar-editar"
+                                data-url="{% url 'editar_usuario_admin' u.id %}" data-bs-toggle="modal" data-bs-target="#modalEditarUsuario">
+                                <i class="fa-solid fa-pen-to-square fs-5"></i>
+                            </button>
                             {% endif %}
 
                             {% if u.id != 1 and u.id != request.user.id %}
-                            {# El ID 1 puede borrar a cualquier dueño nuevo. Otros dueños no pueden borrar dueños #}
-                            {% if request.user.id == 1 or u.rol != 'dueño' %}
-                            {% if request.user.es_dueño or u.rol == 'empleado' %}
-                            <a href="{% url 'eliminar_usuario' u.id %}" onclick="return confirm('¿Eliminar usuario?')"
-                                class="btn btn-sm btn-outline-danger rounded-3 px-3 fw-bold">
-                                <i class="fa-solid fa-user-minus"></i>
-                            </a>
+                                {% if request.user.id == 1 or u.rol != 'dueño' %}
+                                    {% if request.user.es_dueño or u.rol == 'empleado' %}
+                                    <button type="button" class="btn btn-cancelar-stokka px-3 py-2" data-bs-toggle="modal"
+                                        data-bs-target="#modalEliminarUsuario{{ u.id }}">
+                                        <i class="fa-solid fa-user-minus fs-5"></i>
+                                    </button>
+                                    {% endif %}
+                                {% endif %}
                             {% endif %}
-                            {% endif %}
-                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="modalEliminarUsuario{{ u.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-body p-4 text-center">
+                        <i class="fa-solid fa-triangle-exclamation fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                        <h5 class="fw-bold">¿Estás seguro?</h5>
+                        <p class="text-muted small">Vas a eliminar a <strong style="color: var(--rojo-alerta);">{{ u.username }}</strong>. Esta acción no se puede deshacer.</p>
+                        <div class="d-flex gap-2 justify-content-center mt-4">
+                            <button type="button" class="btn btn-cancelar2-stokka rounded-3 px-3 fw-bold small" data-bs-dismiss="modal">Volver</button>
+                            <a href="{% url 'eliminar_usuario' u.id %}" class="btn btn-cancelar-stokka rounded-3 px-3 fw-bold small">Eliminar</a>
                         </div>
                     </div>
                 </div>
@@ -86,58 +101,45 @@
 
 <div class="modal fade" id="modalNuevoUsuario" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-            <div class="modal-header border-0 bg-dark-stokka text-white p-4">
+        <div class="modal-content border-0 shadow-stokka rounded-4 overflow-hidden">
+            <div class="modal-header border-0 bg-stokka-dueno text-white p-4">
                 <h5 class="modal-title fw-bold"><i class="fas fa-user-plus me-2"></i> Registro de Usuario</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST">
                 {% csrf_token %}
-                <div class="modal-body p-4 bg-light">
+                <div class="modal-body p-4">
                     <div class="row g-3">
                         {% for field in form %}
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-uppercase text-muted">{{ field.label }}</label>
+                            <label class="form-label small fw-bold text-uppercase text-muted mb-1">{{ field.label }}</label>
                             {{ field }}
                         </div>
                         {% endfor %}
                     </div>
                 </div>
-                <div class="modal-footer border-0 bg-light p-4 pt-0">
-                    <button type="button" class="btn btn-light rounded-3 px-4 fw-bold"
-                        data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-stokka rounded-3 px-4 fw-bold shadow-sm">Crear Usuario</button>
+                <div class="modal-footer border-0 p-4 pt-0">
+                    <button type="button" class="btn btn-cancelar-stokka px-4 fw-bold" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-stokka px-4 fw-bold shadow-sm">Crear Usuario</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<style>
-    /* Colores extra para badges */
-    .bg-dark-stokka {
-        background-color: #003D00 !important;
-        color: white;
-    }
-
-    .bg-success-stokka {
-        background-color: #1CA300 !important;
-        color: white;
-    }
-
-    /* Inputs del modal con el estilo de edición de perfil */
-    .modal-body input,
-    .modal-body select {
-        border-radius: 10px !important;
-        border: 1px solid #dee2e6 !important;
-        padding: 10px !important;
-        background-color: white !important;
-    }
-
-    .modal-body input:focus {
-        border-color: var(--verde-stokka) !important;
-        box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
-        outline: none;
-    }
-</style>
+<div class="modal fade" id="modalEditarUsuario" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-stokka rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold ps-3 pt-3">Modificar Miembro</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-0" id="bodyEditarUsuario">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-success" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

@@ -8,134 +8,125 @@
     <title>STOKKA - {% block title %}{% endblock %}</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-    <link rel="stylesheet" href="{% static 'css/inventario.css' %}">
-
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <style>
-        /*Estilos aplicados para las alertas de mensajes, tanto positivos como negativos*/
-        :root {
-            --verde-stokka: #003D00;
-            --verde-stokka-light: #e6f0e6;
-            --rojo-alerta: #C10D00;
-            --rojo-alerta-light: #fce8e6;
-        }
 
-        .alert-success-stokka {
-            background-color: var(--verde-stokka-light) !important;
-            color: var(--verde-stokka) !important;
-            border: 2px solid var(--verde-stokka) !important;
-        }
-
-        .alert-error-stokka {
-            background-color: var(--rojo-alerta-light) !important;
-            color: var(--rojo-alerta) !important;
-            border: 2px solid var(--rojo-alerta) !important;
-        }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
 
-<body>
-    <header class="dashboard-header fixed-top d-flex align-items-center justify-content-between px-4">
-        <div class="header-left d-flex align-items-center gap-2" onclick="location.href='{% url 'index' %}'"
-            style="cursor:pointer;">
-            <img src="{% static 'assets/Logo stokka.png' %}" class="mini-logo" alt="Logo">
-            <span class="brand-name d-none d-md-block">STOKKA</span>
+<body class="bg-light">
+    <header class="dashboard-header fixed-top d-flex align-items-center justify-content-between px-3 px-md-4 shadow">
+        <div class="header-left d-flex align-items-center gap-2 cursor-pointer"
+            onclick="location.href='{% url 'index' %}'">
+            <img src="{% static 'assets/Logo stokka.png' %}" style="width: 42px;" class="mini-logo" alt="Logo">
+            <span class="brand-name d-none d-md-block text-white fs-3 fw-bolder" style="letter-spacing: 1.5px;">
+                STOKKA
+            </span>
         </div>
 
-        <div class="header-center flex-grow-1 d-flex justify-content-center px-3">
-            <div class="search-bar d-flex align-items-center px-3 rounded-pill bg-white w-100 shadow-sm"
-                style="max-width: 500px;">
-                <input type="text" class="border-0 w-100 py-1" placeholder="Buscar productos..." style="outline: none;">
-                <button class="border-0 bg-transparent text-success">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </button>
-            </div>
+        <div class="header-center flex-grow-1 d-flex justify-content-center px-2 px-md-5">
+            <form action="{% url 'inventario' %}" method="GET" class="search-bar-container w-100"
+                style="max-width: 800px;">
+                <div class="input-group bg-white rounded-pill overflow-hidden shadow-sm py-1">
+                    <input type="text" name="q" class="form-control border-0 px-4 fs-6"
+                        placeholder="Buscar productos...">
+                    <button class="btn border-0 text-success bg-white pe-4" type="submit">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+            </form>
         </div>
 
         <div class="header-right">
-            <div class="user-identity d-flex align-items-center gap-3 px-3 py-1 rounded-pill">
+            <a href="{% url 'perfil' %}"
+                class="user-identity d-flex align-items-center gap-3 px-4 py-2 rounded-pill text-decoration-none"
+                style="background: rgba(255, 255, 255, 0.1);">
                 <div class="user-text text-end d-none d-sm-block">
-                    <span class="user-name d-block fw-bold fs-6 text-white" style="line-height: 1.2;">
+                    <span class="user-name d-block fw-bold text-white fs-6 mb-0" style="line-height: 1.1;">
                         Hola, {{ user.first_name|capfirst }}
                     </span>
-                    <span class="user-role d-block"
-                        style="font-size: 0.75rem; font-weight: 500; color: rgba(255, 255, 255, 0.7);">
+                    <span class="user-role d-block text-white-50" style="font-size: 0.75rem;">
                         {{ user.get_rol_display|capfirst }}
                     </span>
                 </div>
-
-                <div class="user-avatar-circle shadow-sm overflow-hidden d-flex align-items-center justify-content-center bg-white border border-white border-2"
-                    style="width: 40px; height: 40px; border-radius: 50%;">
-                    {% if user.perfil.foto %}
+                <div class="bg-white border border-2 border-white shadow-sm rounded-circle overflow-hidden d-flex align-items-center justify-content-center"
+                    style="width: 45px; height: 45px;"> {% if user.perfil.foto %}
                     <img src="{{ user.perfil.foto.url }}" alt="Avatar" class="w-100 h-100 object-fit-cover">
                     {% else %}
-                    <i class="fa-solid fa-circle-user text-secondary fs-4"></i>
+                    <i class="fa-solid fa-circle-user text-secondary fs-3"></i>
                     {% endif %}
                 </div>
-            </div>
+            </a>
         </div>
     </header>
 
-    <div class="d-flex">
-        <nav class="dashboard-sidebar shadow-sm">
-            <div class="nav-links d-flex flex-column align-items-center h-100">
-                <a href="{% url 'index' %}"
-                    class="nav-icon {% if request.resolver_match.url_name == 'index' %}active{% endif %}" title="Home">
-                    <i class="fa-solid fa-house"></i>
-                </a>
+    <div class="main-wrapper d-flex mt-5 pt-3">
+        <nav class="dashboard-sidebar shadow-sm bg-white border-end">
+            <ul class="nav flex-row flex-md-column align-items-center h-100 list-unstyled justify-content-around justify-content-md-evently px-2 py-0 py-md-5 gap-md-4"">
 
-                <a href="{% url 'inventario' %}" class="nav-icon {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}" title="Inventario">
-                    <i class="fa-solid fa-file-circle-plus"></i>
+                <li class=" nav-item-container">
+                <a href="{% url 'index' %}"
+                    class="nav-link-stokka {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+                    <i class="fa-solid fa-house"></i>
+                    <span class="nav-text">Inicio</span>
                 </a>
+                </li>
+
+                <li class="nav-item-container">
+                    <a href="{% url 'inventario' %}"
+                        class="nav-link-stokka {% if request.resolver_match.url_name == 'inventario' %}active{% endif %}">
+                        <i class="fa-solid fa-list"></i>
+                        <span class="nav-text">Stock</span>
+                    </a>
+                </li>
 
                 {% if user.es_admin_o_dueño %}
-                <a href="{% url 'gestion_usuarios' %}"
-                    class="nav-icon {% if request.resolver_match.url_name == 'gestion_usuarios' %}active{% endif %}"
-                    title="Gestión Usuarios">
-                    <i class="fa-solid fa-users-gear"></i>
-                </a>
+                <li class="nav-item-container">
+                    <a href="{% url 'gestion_usuarios' %}"
+                        class="nav-link-stokka {% if request.resolver_match.url_name == 'gestion_usuarios' %}active{% endif %}">
+                        <i class="fa-solid fa-users-gear"></i>
+                        <span class="nav-text">Usuarios</span>
+                    </a>
+                </li>
                 {% endif %}
 
-                <a href="#" class="nav-icon" title="Mensajes">
-                    <i class="fa-solid fa-envelope"></i>
-                </a>
+                <li class="nav-item-container">
+                    <a href="#" class="nav-link-stokka">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span class="nav-text">Mensajes</span>
+                    </a>
+                </li>
 
-                <a href="#" class="nav-icon" title="Editar">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                </a>
+                <li class="nav-item-container">
+                    <a href="#" class="nav-link-stokka">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                        <span class="nav-text">Editar</span>
+                    </a>
+                </li>
 
-                <a href="{% url 'perfil' %}"
-                    class="nav-icon {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}"
-                    title="Ajustes">
-                    <i class="fa-solid fa-gear"></i>
-                </a>
-            </div>
+                <li class="nav-item-container">
+                    <a href="{% url 'perfil' %}"
+                        class="nav-link-stokka {% if request.resolver_match.url_name == 'perfil' %}active{% endif %}">
+                        <i class="fa-solid fa-gear"></i>
+                        <span class="nav-text">Ajustes</span>
+                    </a>
+                </li>
+            </ul>
         </nav>
 
         <main class="dashboard-content flex-grow-1">
-            <div class="container-fluid px-4 py-4">
-
-                <div class="container mt-2" id="container-mensajes">
+            <div class="container-fluid p-3 p-md-4">
+                <div id="container-mensajes" class="mb-4">
                     {% if messages %}
                     {% for message in messages %}
-                    <div class="alert {% if message.tags == 'success' %}alert-success-stokka{% elif message.tags == 'error' %}alert-error-stokka{% else %}alert-info{% endif %} alert-dismissible fade show shadow-sm rounded-3 custom-alert"
+                    <div class="alert alert-stokka-base alert-dismissible fade show shadow-sm rounded-3 {% if 'success' in message.tags %}alert-success-stokka{% elif 'error' in message.tags or 'danger' in message.tags %}alert-error-stokka{% endif %}"
                         role="alert">
-
-                        {% if message.tags == 'success' %}
-                        <i class="fa-solid fa-circle-check me-2"></i>
-                        {% elif message.tags == 'error' %}
-                        <i class="fa-solid fa-circle-exclamation me-2"></i>
-                        {% else %}
-                        <i class="fa-solid fa-info-circle me-2"></i>
-                        {% endif %}
-
+                        <i
+                            class="fa-solid {% if 'success' in message.tags %}fa-circle-check{% else %}fa-circle-exclamation{% endif %} me-2"></i>
                         <span class="fw-bold">{{ message }}</span>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                     {% endfor %}
                     {% endif %}
@@ -147,18 +138,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Auto-cerrar mensajes después de 3 segundos (3000ms)
-        document.addEventListener("DOMContentLoaded", function () {
-            const alerts = document.querySelectorAll('.custom-alert');
-            alerts.forEach(function (alert) {
-                setTimeout(function () {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                }, 3000);
-            });
-        });
-    </script>
+    <script src="{% static 'js/dashboard.js' %}"></script>
 </body>
 
 </html>

@@ -1,15 +1,23 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-from django.contrib.auth import login, authenticate, get_user_model, update_session_auth_hash
-from .models import Producto, Perfil, Usuario
+# 1. Standard Library Imports
+import json
+
+# 2. Django Core & Common Imports
 from django.contrib import messages
-from django.core.exceptions import ValidationError
-from django.core.exceptions import PermissionDenied
-from .forms import RegistroUsuarioForm, EditarUsuarioAdminForm, ProductoForm
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import models
+from django.db.models import Count, Max, Q, Sum
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
+
+# 3. Django Auth & Security
+from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 
-from django.db import models
+# 4. Local App Imports
+from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroUsuarioForm
+from .models import Perfil, Producto, Usuario
 
 # Esto detecta automáticamente el Usuario personalizado
 User = get_user_model()
@@ -137,8 +145,62 @@ def eliminar_usuario(request, user_id):
 @login_required
 def index(request):
     productos = Producto.objects.all()
-    return render(request, 'stokka/index.html', {'productos': productos})
+    
+    # 1. KPIs y Semáforo
+    criticos_cont = 0
+    aviso_cont = 0
+    ok_cont = 0
+    
+    uds_criticas = 0
+    uds_aviso = 0
+    uds_ok = 0
+    stock_total = 0
 
+    for p in productos:
+        stock_total += p.stock_actual
+        if p.stock_actual <= p.umbrales_rojo:
+            criticos_cont += 1
+            uds_criticas += p.stock_actual
+        elif p.stock_actual <= p.umbrales_amarillo:
+            aviso_cont += 1
+            uds_aviso += p.stock_actual
+        else:
+            ok_cont += 1
+            uds_ok += p.stock_actual
+
+    # 2. Top 5 y Recientes
+    top_5 = productos.order_by('-stock_actual')[:5]
+    ultimos = productos.order_by('-fecha_registro')[:5]
+    
+    # 3. Métricas extra para tarjetas (KPIs)
+    # Productos sin referencia o referencia vacía
+    sin_ref = productos.filter(models.Q(referencia__isnull=True) | models.Q(referencia='')).count()    # Productos creados en los últimos 7 días
+    hace_una_semana = timezone.now() - timezone.timedelta(days=7)
+    nuevos_7d = productos.filter(fecha_registro__gte=timezone.now() - timezone.timedelta(days=7)).count()
+
+    stats_categoria = productos.values('nombre')[:5] # Ejemplo rápido
+    # Lo ideal es: Producto.objects.values('categoria').annotate(total=Count('id'))
+    # --- 4. ÚLTIMOS REGISTROS (NUEVO) ---
+    ultimos_productos = productos.order_by('-fecha_registro')[:5]
+    # 4. Lógica de Roles STOKKA
+
+    es_jefe = request.user.es_admin_o_dueño()
+    total_empleados = Usuario.objects.filter(rol='empleado').count() if es_jefe else 0
+
+    context = {
+        'semaforo_data': [criticos_cont, aviso_cont, ok_cont],
+        'balance_data': [uds_criticas, uds_aviso, uds_ok], # DATOS REALES
+        'nombres_top_json': json.dumps([p.nombre for p in top_5]),
+        'valores_top_json': json.dumps([p.stock_actual for p in top_5]),
+        'stock_total': stock_total,
+        'sin_ref': sin_ref,
+        'nuevos_7d': nuevos_7d,
+        'ultimos_productos': ultimos_productos,
+        'es_jefe': es_jefe,
+        'total_empleados': total_empleados,
+        'stats_categoria' : stats_categoria,
+    }
+    return render(request, 'stokka/index.html', context)
 
 # LÓGICA DEL LOGIN Y REGISTRO 
 def login_view(request):
@@ -245,12 +307,12 @@ def editar_perfil_view(request):
         
         if password:
             if check_password(password, request.user.password):
-                messages.error(request, "La nueva contraseña debe ser diferente a la actual.")
-                return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
+                messages.error(request, "La nueva contraseña debe ser diferente a la actual.", extra_tags='danger open_edit_modal')
+                return redirect('perfil')
             
             if password != confirm_password:
-                messages.error(request, "Las nuevas contraseñas no coinciden.")
-                return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
+                messages.error(request, "Las nuevas contraseñas no coinciden.", extra_tags='danger open_edit_modal')
+                return redirect('perfil')
             
             # Si pasa las validaciones, la preparamos
             request.user.set_password(password)
@@ -307,6 +369,7 @@ def inventario_view(request):
     filtro = request.GET.get('filtro')
     query = request.GET.get('q')
     producto = Producto.objects.all().order_by('-fecha_registro')
+    max_stock_real = producto.aggregate(Max('stock_actual'))['stock_actual__max'] or 0
 
     if query:
         producto = producto.filter(
@@ -324,6 +387,7 @@ def inventario_view(request):
 
     return render(request, 'stokka/inventario.html', {
         'productos': producto,
+        'max_stock_real': max_stock_real,
         'filtro_actual': filtro,
         'query_actual': query,
         'form_añadir': form_añadir
@@ -336,10 +400,17 @@ def añadir_producto(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Producto añadido correctamente")
-            return redirect('inventario') 
-    else:
-        form = ProductoForm()
-    return render(request, 'stokka/form_producto.html', {'form':form, 'titulo': 'Añadir producto'})
+            return redirect('inventario')
+        else:
+            # SI HAY ERROR DE UMBRALES:
+            # Volvemos al inventario pasándole el formulario con los errores
+            productos = Producto.objects.all()
+            return render(request, 'stokka/inventario.html', {
+                'productos': productos,
+                'form_añadir': form, # Pasamos el form con errores
+                'titulo': 'Inventario'
+            })
+    return redirect('inventario')
 
 @login_required
 def eliminar_producto(request, pk):

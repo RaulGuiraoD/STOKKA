@@ -124,6 +124,22 @@ class ProductoForm(forms.ModelForm):
         model = Producto
         fields = ['nombre', 'referencia', 'descripcion', 'stock_actual', 'umbrales_amarillo', 'umbrales_rojo', 'factura']
         widgets = {
-            'nombre': forms.TextInput(attrs={'placeholder': 'Ej: Lápices'}),
-            'descripcion': forms.Textarea(attrs={'rows':2}),
+            'nombre': forms.TextInput(attrs={'class': 'firn-control', 'placeholder': 'Ej: Lápices'}),
+            'referencia': forms.TextInput(attrs={'class': 'form-control'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'stock_actual': forms.NumberInput(attrs={'class': 'form-control'}),
+            'umbrales_amarillo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'umbrales_rojo': forms.NumberInput(attrs={'class': 'form-control'}),
+            'factura': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        amarillo = cleaned_data.get("umbrales_amarillo")
+        rojo = cleaned_data.get("umbrales_rojo")
+
+        if amarillo is not None and rojo is not None and amarillo <= rojo:
+            self.add_error('umbrales_amarillo', "Debe ser mayor al umbral crítico")
+        
+        return cleaned_data
+    
