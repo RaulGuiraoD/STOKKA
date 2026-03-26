@@ -1,283 +1,94 @@
+/* ==========================================
+   STOKKA - DASHBOARD MINIMAL CORE
+   ========================================== */
+
 :root {
     --header-height: 70px;
-    --sidebar-collapsed: 60px;
-    --sidebar-expanded: 95px;
-    --verde-stokka-light: #e6f0e6;
-    --bg-gris: #F2F4F6;
+    --sidebar-w: 75px;
+    --sidebar-w-expand: 110px;
 }
 
-/* ==========================================================================
-   ESTILOS PERTENECIENTES AL BASE.HTML (Layout Principal)
-   ========================================================================== */
-
-/* Aseguramos la fuente en todo el proyecto */
-body,
-input,
-button,
-select,
-textarea {
-    font-family: 'Merriweather', serif !important;
+/* 1. HEADER (Fijo arriba) */
+.dashboard-header { 
+    height: var(--header-height); 
+    background-color: var(--verde-stokka); 
+    z-index: 1050; 
 }
 
-.dashboard-header {
-    height: var(--header-height);
-    background-color: var(--verde-stokka);
-    color: white;
-    z-index: 30;
-}
+.mini-logo { width: 35px; filter: brightness(0) invert(1); }
 
-.mini-logo {
-    width: 35px;
-    filter: brightness(0) invert(1);
-}
-
-/* BARRA DE BÚSQUEDA: Más larga y grande */
-.search-bar {
-    max-width: 700px !important;
-    width: 60% !important;
-    height: 45px;
-    font-size: 1rem;
-}
-
-.search-bar input {
-    font-size: 1rem;
-}
-
-.brand-name {
-    font-size: 24px;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-
-.user-name {
-    font-size: 8px;
-    letter-spacing: 1px;
-}
-
-.user-identity {
-    background: rgba(255, 255, 255, 0.1);
-}
-
-.user-avatar-circle {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-}
-
-/* SIDEBAR */
+/* 2. SIDEBAR (Solo estructura esencial) */
 .dashboard-sidebar {
-    width: var(--sidebar-collapsed);
-    background-color: white;
-    height: calc(100vh - var(--header-height));
+    width: var(--sidebar-w);
+    height: calc(100vh - var(--header-height)); 
     position: fixed;
     top: var(--header-height);
     left: 0;
-    transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    overflow: hidden;
+    z-index: 1040;
+    background: #fff;
     border-right: 1px solid #eee;
-    z-index: 1020;
+    transition: width 0.3s ease;
 }
 
-/* HOVER EXPAND */
-.dashboard-sidebar:hover {
-    width: var(--sidebar-expanded);
-}
+.dashboard-sidebar:hover { width: var(--sidebar-w-expand); }
 
-/* NAV */
-.nav-links {
+/* 3. ENLACES (Estilo Stokka) */
+.nav-link-stokka {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-evenly;
-    height: 100%;
-}
-
-/* ITEM */
-.nav-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    width: 100%;
-    padding: 6px 0;
     color: var(--verde-stokka);
-    text-decoration: none;
+    text-decoration: none !important;
 }
 
-/* CONTENEDOR VISUAL */
-.nav-item i {
-    font-size: 18px;
-    width: 42px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 12px;
-    transition: all 0.2s ease;
+.nav-link-stokka i { 
+    font-size: 1.2rem; 
+    padding: 10px; 
+    border-radius: 12px; 
+    transition: 0.2s; 
 }
 
-/* TEXTO */
-.nav-text {
-    font-size: 10px;
-    opacity: 0;
-    transition: opacity 0.2s ease;
+.nav-link-stokka .nav-text { 
+    font-size: 0.65rem; 
+    font-weight: 700; 
+    opacity: 0; /* Oculto por defecto en escritorio */
+    transition: opacity 0.2s;
 }
 
-/* SHOW TEXT */
-.dashboard-sidebar:hover .nav-text {
-    opacity: 1;
+.dashboard-sidebar:hover .nav-text { opacity: 1; }
+
+.nav-link-stokka:hover i { background: var(--verde-stokka-light); }
+.nav-link-stokka.active i { background: var(--verde-stokka); color: #fff; }
+
+/* 4. CONTENIDO (Eliminamos márgenes manuales) */
+.dashboard-content { 
+    margin-left: var(--sidebar-w); 
+    /* El padding-top de Bootstrap en el HTML manejará el resto */
+    transition: margin-left 0.3s ease; 
 }
 
-/* HOVER ICON */
-.nav-item:hover i {
-    background-color: var(--verde-stokka-light);
-}
+.dashboard-sidebar:hover ~ .dashboard-content { margin-left: var(--sidebar-w-expand); }
 
-/* ACTIVE SOLO EN ICONO (NO TODO EL ITEM) */
-.nav-item.active i {
-    background-color: var(--verde-stokka);
-    color: white;
-}
+/* ==========================================
+   RESPONSIVE (Móvil)
+   ========================================== */
 
-/* TEXTO ACTIVE */
-.nav-item.active .nav-text {
-    font-weight: bold;
-}
-
-/* CONTENT SHIFT */
-.dashboard-content {
-    margin-left: var(--sidebar-collapsed);
-    margin-top: var(--header-height);
-    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.dashboard-sidebar:hover ~ .dashboard-content {
-    margin-left: var(--sidebar-expanded);
-}
-
-
-/* --- BOTTOM NAVIGATION BAR REFINADA Y OCULTABLE  --- */
-@media (max-width: 991px) {
-    
-    /* 1. EL CONTENEDOR PRINCIPAL: Pasa de lateral a barra inferior fija con animación de ocultación */
+@media (max-width: 991.98px) {
     .dashboard-sidebar {
-        position: fixed !important;
-        bottom: 0 !important;
-        left: 0 !important;
-        top: auto !important; 
-        width: 100% !important; 
-        height: 60px !important; /*  Reducimos altura para mayor compacidad */
-        background-color: white !important;
-        box-shadow: 0 -4px 15px rgba(0,0,0,0.08) !important; 
-        z-index: 2000 !important; /* Aumentamos z-index para asegurar que está encima */
-        border-top: 1px solid rgba(0,0,0,0.05);
-        border-radius: 18px 18px 0 0 !important; /* Bordes suaves */
-        padding: 0 !important;
-        overflow: hidden;
-        
-        /* --- LÓGICA PARA EL OCULTADO AUTOMÁTICO --- */
-        transition: transform 0.3s ease-in-out !important; /* Animación suave de movimiento */
-        transform: translateY(0); /* Estado por defecto: visible */
+        top: auto !important; bottom: 0 !important;
+        width: 100% !important; height: 65px !important;
+        border-top: 1px solid #eee;
+        border-radius: 20px 20px 0 0;
+        transform: translateY(0);
+        transition: transform 0.3s ease;
     }
 
-    /* Clase que añadiremos con JS para ocultar la barra */
-    .dashboard-sidebar.sidebar-hidden {
-        transform: translateY(100%) !important; /* Se esconde hacia abajo */
-    }
+    .dashboard-sidebar.sidebar-hidden { transform: translateY(100%); }
 
-    /* 2. LOS ENLACES: Flex horizontal distribuido uniformemente */
-    .nav-links {
-        flex-direction: row !important; 
-        justify-content: space-around !important; 
-        align-items: center !important;
-        width: 100%;
-        height: 100%;
-        padding: 0 5px !important; /* Padding lateral mínimo */
-    }
-
-    /* 3. CADA ITEM: Flex vertical (Icono arriba, Texto abajo) */
-    .nav-item {
-        flex-direction: column !important; 
-        justify-content: center !important;
-        align-items: center !important;
-        flex: 1; 
-        height: 100%;
-        padding: 2px 0 !important; /* Padding vertical mínimo */
-        gap: 2px !important; /* Espacio mínimo controlado entre icono y texto */
-        border-radius: 12px;
-        text-decoration: none !important; /* Asegurar que no hay subrayado */
-        transition: all 0.2s ease;
-    }
-
-    /* 4. ICONOS: Más compactos */
-    .nav-item i {
-        font-size: 1.1rem !important; 
-        color: var(--verde-stokka); 
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: color 0.2s ease;
-    }
-
-    /* 5. TEXTO: EFECTO FADE-IN (APARICIÓN SUAVE) */
-    .nav-text {
-        font-size: 0.6rem !important; /* REDUCIDO y forzado */
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: var(--verde-stokka); 
-        display: block !important;
-        
-        /* Animación Fade-In */
-        opacity: 0;
-        animation: fadeInText 0.5s ease forwards;
-    }
-
-    @keyframes fadeInText {
-        from { opacity: 0; transform: translateY(2px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* 7. AJUSTE DE CONTENIDO: Dejamos espacio abajo para la barra */
-    .dashboard-content, #main-content {
-        margin-left: 0 !important;
-        padding-bottom: 75px !important;
-        /* Aseguramos que el scroll sea fluido para que el JS lo detecte siempre */
-        overflow-y: visible !important; 
-        height: auto !important;
-    }
-
-    /* Evitamos que el scroll horizontal de la tabla bloquee el vertical */
-    .table-responsive {
-        -webkit-overflow-scrolling: touch;
-    }
-
-    /* Anulamos el overlay de móvil del sidebar lateral */
-    .sidebar-overlay { display: none !important; }
-
+    .nav-link-stokka .nav-text { opacity: 1 !important; font-size: 0.6rem; }
     
-}
-
-/* ==========================================================================
-   ESTILOS NO PERTENECIENTES AL BASE.HTML
-   ========================================================================== */
-
-/* Aquí se pueden añadir otros estilos específicos de vistas si los hubiera */
-
-/* --- Títulos y Tipografía --- */
-h1,
-.h1 {
-    font-size: 1.75rem !important;
-}
-
-/* Tamaño más contenido para h1 */
-h2,
-.h2 {
-    font-size: 1.5rem !important;
-}
-
-h3,
-.h3 {
-    font-size: 1.25rem !important;
+    .dashboard-content { 
+        margin-left: 0 !important; 
+        padding-bottom: 80px !important; 
+    }
 }
