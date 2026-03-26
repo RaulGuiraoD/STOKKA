@@ -20,17 +20,19 @@
     <header class="dashboard-header fixed-top d-flex align-items-center justify-content-between px-3 px-md-4 shadow">
         <div class="header-left d-flex align-items-center gap-2 cursor-pointer"
             onclick="location.href='{% url 'index' %}'">
-            <img src="{% static 'assets/Logo stokka.png' %}" class="mini-logo" alt="Logo">
-            <span class="brand-name d-none d-md-block text-white">STOKKA</span>
+            <img src="{% static 'assets/Logo stokka.png' %}" style="width: 42px;" class="mini-logo" alt="Logo">
+            <span class="brand-name d-none d-md-block text-white fs-3 fw-bolder" style="letter-spacing: 1.5px;">
+                STOKKA
+            </span>
         </div>
 
         <div class="header-center flex-grow-1 d-flex justify-content-center px-2 px-md-5">
             <form action="{% url 'inventario' %}" method="GET" class="search-bar-container w-100"
-                style="max-width: 600px;">
-                <div class="input-group bg-white rounded-pill overflow-hidden shadow-sm">
-                    <input type="text" name="q" class="form-control border-0 px-3" placeholder="Buscar productos..."
-                        aria-label="Buscar">
-                    <button class="btn border-0 text-success bg-white" type="submit">
+                style="max-width: 800px;">
+                <div class="input-group bg-white rounded-pill overflow-hidden shadow-sm py-1">
+                    <input type="text" name="q" class="form-control border-0 px-4 fs-6"
+                        placeholder="Buscar productos...">
+                    <button class="btn border-0 text-success bg-white pe-4" type="submit">
                         <i class="fa-solid fa-magnifying-glass"></i>
                     </button>
                 </div>
@@ -39,22 +41,21 @@
 
         <div class="header-right">
             <a href="{% url 'perfil' %}"
-                class="user-identity d-flex align-items-center gap-2 gap-md-3 px-3 py-1 rounded-pill text-decoration-none"
+                class="user-identity d-flex align-items-center gap-3 px-4 py-2 rounded-pill text-decoration-none"
                 style="background: rgba(255, 255, 255, 0.1);">
                 <div class="user-text text-end d-none d-sm-block">
-                    <span class="user-name d-block fw-bold text-white" style="font-size: 0.8rem; line-height: 1.2;">
+                    <span class="user-name d-block fw-bold text-white fs-6 mb-0" style="line-height: 1.1;">
                         Hola, {{ user.first_name|capfirst }}
                     </span>
-                    <span class="user-role d-block opacity-75 text-white" style="font-size: 0.7rem;">
+                    <span class="user-role d-block text-white-50" style="font-size: 0.75rem;">
                         {{ user.get_rol_display|capfirst }}
                     </span>
                 </div>
                 <div class="bg-white border border-2 border-white shadow-sm rounded-circle overflow-hidden d-flex align-items-center justify-content-center"
-                    style="width: 40px; height: 40px;">
-                    {% if user.perfil.foto %}
+                    style="width: 45px; height: 45px;"> {% if user.perfil.foto %}
                     <img src="{{ user.perfil.foto.url }}" alt="Avatar" class="w-100 h-100 object-fit-cover">
                     {% else %}
-                    <i class="fa-solid fa-circle-user text-secondary fs-4"></i>
+                    <i class="fa-solid fa-circle-user text-secondary fs-3"></i>
                     {% endif %}
                 </div>
             </a>
@@ -63,15 +64,14 @@
 
     <div class="main-wrapper d-flex mt-5 pt-3">
         <nav class="dashboard-sidebar shadow-sm bg-white border-end">
-            <ul
-                class="nav flex-row flex-md-column align-items-center h-100 list-unstyled justify-content-around justify-content-md-evenly py-0 py-md-5">
+            <ul class="nav flex-row flex-md-column align-items-center h-100 list-unstyled justify-content-around justify-content-md-evently px-2 py-0 py-md-5 gap-md-4"">
 
-                <li class="nav-item-container">
-                    <a href="{% url 'index' %}"
-                        class="nav-link-stokka {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
-                        <i class="fa-solid fa-house"></i>
-                        <span class="nav-text">Inicio</span>
-                    </a>
+                <li class=" nav-item-container">
+                <a href="{% url 'index' %}"
+                    class="nav-link-stokka {% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+                    <i class="fa-solid fa-house"></i>
+                    <span class="nav-text">Inicio</span>
+                </a>
                 </li>
 
                 <li class="nav-item-container">

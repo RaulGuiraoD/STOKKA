@@ -10,6 +10,15 @@
     --gris-fondo: #F2F4F6;
     --verde-stokka-light: #e6f0e6;
     --rojo-alerta-light: #fce8e6;
+
+    --header-height: 85px; 
+    --sidebar-w: 65px;     
+    --sidebar-w-expand: 100px;
+}
+body {
+    font-family: 'Merriweather', serif !important;
+    font-weight: 400; 
+    color: black;
 }
 
 /* --- SOMBRA STOKKA GLOBAL --- 
@@ -24,20 +33,19 @@
     box-shadow: 0 15px 35px rgba(0, 61, 0, 0.15) !important;
 }
 
-/* --- BOTONES STOKKA --- 
-   Mantenemos tus clases pero integradas con el comportamiento de Bootstrap */
+/* --- BOTONES STOKKA --- */
 .btn-stokka, .btn-cancelar-stokka, .btn-cancelar2-stokka, .btn-editar-stokka {
     font-weight: 600 !important;
     text-transform: uppercase;
     letter-spacing: 0.3px;
     transition: all 0.3s ease !important;
-    border-radius: 10px; /* Consistencia en todos los botones */
+    border-radius: 10px; 
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Botón Principal (Verde) */
+/* Botón Principal  */
 .btn-stokka {
     background-color: var(--verde-stokka) !important;
     color: white !important;
@@ -49,7 +57,7 @@
     box-shadow: 0 5px 15px rgba(0, 61, 0, 0.2) !important;
 }
 
-/* Botón Cancelar (Rojo) */
+/* Botón Cancelar  */
 .btn-cancelar-stokka {
     color: var(--rojo-alerta) !important;
     border: 2px solid var(--rojo-alerta) !important;
@@ -61,7 +69,7 @@
     transform: translateY(-2px);
 }
 
-/* Botón Cancelar Alternativo (Verde Borde) */
+/* Botón Cancelar Alternativo (Verde) */
 .btn-cancelar2-stokka {
     color: var(--verde-stokka) !important;
     border: 2px solid var(--verde-stokka) !important;
@@ -73,7 +81,7 @@
     transform: translateY(-2px);
 }
 
-/* Botón Editar (Amarillo) */
+/* Botón Editar  */
 .btn-editar-stokka {
     color: var(--amarillo-alerta) !important;
     border: 2px solid var(--amarillo-alerta) !important;
@@ -109,8 +117,7 @@
     border: 2px solid var(--rojo-alerta) !important;
 }
 
-/* --- MODALES E INPUTS --- 
-   Estilo unificado para que todos los formularios se vean igual */
+/* --- MODALES E INPUTS --- */
 .modal-content { border-radius: 15px; border: none; }
 
 .stokka-input, .modal-body input, .modal-body select {
@@ -128,18 +135,17 @@
 
 /* --- MEDIA QUERY: BOTONES RESPONSIVOS --- */
 @media (max-width: 991.98px) {
-    /* Contenedores de botones se adaptan */
     .btn-container-stokka {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 20px;
         justify-content: center;
     }
 
     .btn-stokka, .btn-cancelar-stokka, .btn-cancelar2-stokka, .btn-editar-stokka {
         flex: 1 1 auto;
         min-width: 130px;
-        height: 48px; /* Tamaño dedo */
+        height: 48px;
         font-size: 0.85rem !important;
     }
 }

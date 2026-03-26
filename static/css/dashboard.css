@@ -1,25 +1,18 @@
 /* ==========================================
    STOKKA - DASHBOARD MINIMAL CORE
-   ========================================== */
+   ========================================== 
 
-:root {
-    --header-height: 70px;
-    --sidebar-w: 75px;
-    --sidebar-w-expand: 110px;
-}
-
-/* 1. HEADER (Fijo arriba) */
+/* 1. HEADER  */
 .dashboard-header { 
     height: var(--header-height); 
     background-color: var(--verde-stokka); 
     z-index: 1050; 
 }
 
-.mini-logo { width: 35px; filter: brightness(0) invert(1); }
-
-/* 2. SIDEBAR (Solo estructura esencial) */
+/* 2. SIDEBAR  */
 .dashboard-sidebar {
     width: var(--sidebar-w);
+    padding-top: 20px;
     height: calc(100vh - var(--header-height)); 
     position: fixed;
     top: var(--header-height);
@@ -29,10 +22,22 @@
     border-right: 1px solid #eee;
     transition: width 0.3s ease;
 }
+.nav.flex-md-column {
+    gap: 25px !important; 
+}
+
+.nav-link-stokka i {
+    font-size: 1.4rem; 
+    padding: 12px;
+}
+
+.dashboard-content {
+    margin-left: var(--sidebar-w);
+}
 
 .dashboard-sidebar:hover { width: var(--sidebar-w-expand); }
 
-/* 3. ENLACES (Estilo Stokka) */
+/* 3. ENLACES  */
 .nav-link-stokka {
     display: flex;
     flex-direction: column;
@@ -51,7 +56,7 @@
 .nav-link-stokka .nav-text { 
     font-size: 0.65rem; 
     font-weight: 700; 
-    opacity: 0; /* Oculto por defecto en escritorio */
+    opacity: 0; 
     transition: opacity 0.2s;
 }
 
@@ -60,10 +65,9 @@
 .nav-link-stokka:hover i { background: var(--verde-stokka-light); }
 .nav-link-stokka.active i { background: var(--verde-stokka); color: #fff; }
 
-/* 4. CONTENIDO (Eliminamos márgenes manuales) */
+/* 4. CONTENIDO */
 .dashboard-content { 
     margin-left: var(--sidebar-w); 
-    /* El padding-top de Bootstrap en el HTML manejará el resto */
     transition: margin-left 0.3s ease; 
 }
 
@@ -76,19 +80,20 @@
 @media (max-width: 991.98px) {
     .dashboard-sidebar {
         top: auto !important; bottom: 0 !important;
-        width: 100% !important; height: 65px !important;
+        width: 100% !important; height: 75px !important;
         border-top: 1px solid #eee;
         border-radius: 20px 20px 0 0;
         transform: translateY(0);
         transition: transform 0.3s ease;
+        padding-top: 8px; z-index: 1060;
     }
 
     .dashboard-sidebar.sidebar-hidden { transform: translateY(100%); }
 
-    .nav-link-stokka .nav-text { opacity: 1 !important; font-size: 0.6rem; }
+    .nav-link-stokka .nav-text { opacity: 1 !important; font-size: 0.8rem; margin-top: -2px; }
     
     .dashboard-content { 
         margin-left: 0 !important; 
-        padding-bottom: 80px !important; 
+        padding-bottom: 90px !important; 
     }
 }

@@ -31,7 +31,18 @@
     color: inherit;
 }
 
-/* Botón Nuevo Usuario */
+/* Botones Inventario */
+.btn-inventario-cancelar-stokka, .btn-inventario-cancelar2-stokka, .btn-inventario-stokka, .btn-inventario-editar-stokka{
+font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease !important;
+    border-radius: 10px; 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .btn-inventario-stokka {
     background-color: var(--verde-stokka) !important;
     color: white !important;
