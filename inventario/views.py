@@ -50,7 +50,7 @@ def gestion_usuarios(request):
         # Y aquí también para el formulario vacío
         form = RegistroUsuarioForm(user_request=request.user)
 
-    return render(request, 'stokka/gestion_usuarios.html', {
+    return render(request, 'stokka/pages/gestion_usuarios.html', {
         'usuarios': usuarios,
         'form': form
     })
@@ -109,7 +109,7 @@ def editar_usuario_admin(request, user_id):
     else:
         form = EditarUsuarioAdminForm(instance=usuario_a_editar, user_request=request.user)
         
-    return render(request, 'stokka/editar_usuario_admin.html', {
+    return render(request, 'stokka/modales/editar_usuario_admin.html', {
         'form': form,
         'usuario_editado': usuario_a_editar
     })
@@ -203,7 +203,7 @@ def index(request):
         'total_empleados': total_empleados,
         'stats_categoria' : stats_categoria,
     }
-    return render(request, 'stokka/index.html', context)
+    return render(request, 'stokka/pages/index.html', context)
 
 # LÓGICA DEL LOGIN Y REGISTRO 
 def login_view(request):
@@ -294,7 +294,7 @@ def registro_view(request):
 def perfil_view(request):
     # Aseguramos que el objeto perfil exista para pasárselo al template
     perfil, created = Perfil.objects.get_or_create(user=request.user)
-    return render(request, 'stokka/perfil.html', {'perfil': perfil})
+    return render(request, 'stokka/pages/perfil.html', {'perfil': perfil})
 
 # LÓGICA DE EDITAR PERFIL
 @login_required
@@ -337,7 +337,7 @@ def editar_perfil_view(request):
         messages.success(request, "Perfil actualizado con éxito.")
         return redirect('perfil')
     
-    return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
+    return render(request, 'stokka/modales/editar_perfil.html', {'perfil': perfil})
 
 
 # LÓGICA DEL CAMBIO DE FOTO
@@ -388,7 +388,7 @@ def inventario_view(request):
     # formulario vacio que usará el modal de "Añadir"
     form_añadir = ProductoForm()
 
-    return render(request, 'stokka/inventario.html', {
+    return render(request, 'stokka/pages/inventario.html', {
         'productos': producto,
         'max_stock_real': max_stock_real,
         'filtro_actual': filtro,
@@ -408,7 +408,7 @@ def añadir_producto(request):
             # SI HAY ERROR DE UMBRALES:
             # Volvemos al inventario pasándole el formulario con los errores
             productos = Producto.objects.all()
-            return render(request, 'stokka/inventario.html', {
+            return render(request, 'stokka/pages/inventario.html', {
                 'productos': productos,
                 'form_añadir': form, # Pasamos el form con errores
                 'titulo': 'Inventario'
@@ -422,7 +422,7 @@ def eliminar_producto(request, pk):
         producto.delete()
         messages.success(request, "Producto eliminado.")
         return redirect('inventario')
-    return render(request, 'stokka/comfirmar_eliminar.html', {'producto': producto})
+    return render(request, 'stokka/pages/comfirmar_eliminar.html', {'producto': producto})
 
 @login_required
 def eliminar_masivo(request):
@@ -449,13 +449,13 @@ def editar_producto(request, pk):
     
     # SI ES AJAX, devolvemos un template parcial (solo el formulario)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return render(request, 'stokka/partials/form_editar_parcial.html', {
+        return render(request, 'stokka/modales/form_editar_parcial.html', {
             'form': form,
             'producto': producto
         })
     
     # Si alguien entra por URL directa, sigue funcionando la página completa
-    return render(request, 'stokka/form_producto.html', {'form': form, 'titulo': 'Editar'})
+    return render(request, 'stokka/pages/form_producto.html', {'form': form, 'titulo': 'Editar'})
 
 @login_required
 def aumentar_stock(request, pk):
