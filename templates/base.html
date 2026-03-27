@@ -121,10 +121,9 @@
                 <div id="container-mensajes" class="mb-4">
                     {% if messages %}
                     {% for message in messages %}
-                    <div class="alert alert-stokka-base alert-dismissible fade show shadow-sm rounded-3 {% if 'success' in message.tags %}alert-success-stokka{% elif 'error' in message.tags or 'danger' in message.tags %}alert-error-stokka{% endif %}"
+                    <div class="alert {% if message.tags == 'success' %}alert-success-stokka{% elif message.tags == 'error' %}alert-error-stokka{% else %}alert-info{% endif %} alert-dismissible fade show shadow-sm rounded-3 custom-alert"
                         role="alert">
-                        <i
-                            class="fa-solid {% if 'success' in message.tags %}fa-circle-check{% else %}fa-circle-exclamation{% endif %} me-2"></i>
+                        <i class="fa-solid {% if 'success' in message.tags %}fa-circle-check{% else %}fa-circle-exclamation{% endif %} me-2"></i>
                         <span class="fw-bold">{{ message }}</span>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
