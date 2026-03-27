@@ -110,11 +110,13 @@ body {
     background-color: var(--verde-stokka-light) !important;
     color: var(--verde-stokka) !important;
     border: 2px solid var(--verde-stokka) !important;
+    margin-top: 15px;
 }
 .alert-error-stokka {
     background-color: var(--rojo-alerta-light) !important;
     color: var(--rojo-alerta) !important;
     border: 2px solid var(--rojo-alerta) !important;
+    margin-top: 15px;
 }
 
 /* --- MODALES E INPUTS --- */

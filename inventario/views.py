@@ -101,7 +101,10 @@ def editar_usuario_admin(request, user_id):
             # Si el formulario no es válido, mandamos los errores a los mensajes flash superiores
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, f"{error}")
+                    # Ejemplo: "Username: Este campo es obligatorio."
+                    label = form.fields[field].label or field.capitalize()
+                    messages.error(request, f"{label}: {error}")
+            return redirect('gestion_usuarios')
             # Importante: No redirigimos aquí, dejamos que baje al render final para mostrar el form con errores
     else:
         form = EditarUsuarioAdminForm(instance=usuario_a_editar, user_request=request.user)
