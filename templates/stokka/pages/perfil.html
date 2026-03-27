@@ -39,36 +39,35 @@
             <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 bg-white">
 
                 <div class="py-3 border-bottom">
-                    <label class="small text-uppercase fw-bold text-muted d-block mb-1">Nombre</label>
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Usuario</label>
+                    <span class="fs-5 text-dark text-uppercase">{{ user.username }}</span>
+                </div>
+
+                <div class="py-3 border-bottom">
+                    <label class="small text-uppercase fw-bold text-dark d-block mb-1" style="color: var(--verde-stokka) !important;">Rol</label>
+                    <span class="fs-5 text-dark text-uppercase">{{ user.rol }}</span>
+                </div>
+
+                <div class="py-3 border-bottom">
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Nombre</label>
                     <span class="fs-5 text-dark">{{ user.get_full_name }}</span>
                 </div>
 
                 <div class="py-3 border-bottom">
-                    <label class="small text-uppercase fw-bold text-muted d-block mb-1">Correo electrónico</label>
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Correo electrónico</label>
                     <span class="fs-5 text-dark">{{ user.email }}</span>
                 </div>
 
                 <div class="py-3 border-bottom">
-                    <label class="small text-uppercase fw-bold text-muted d-block mb-1">Teléfono</label>
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Teléfono</label>
                     <span class="fs-5 text-dark">{{ user.perfil.telefono|default:"+34 000-000-000" }}</span>
                 </div>
 
-                <div class="py-3 border-bottom">
-                    <label class="small text-uppercase fw-bold text-muted d-block mb-1">Idioma</label>
+                <div class="py-3">
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Idioma</label>
                     <select class="form-select w-auto border-0 bg-light fw-bold shadow-none" disabled>
                         <option>Español (España)</option>
                     </select>
-                </div>
-
-                <div class="py-3">
-                    <label class="small text-uppercase fw-bold text-muted d-block mb-2">Cuentas vinculadas</label>
-                    <div class="d-flex align-items-center bg-light p-3 rounded-4 border border-white shadow-sm gap-3">
-                        <i class="fa-brands fa-google fs-3 text-danger"></i>
-                        <div class="flex-grow-1">
-                            <span class="fw-bold d-block text-uppercase small">{{ user.first_name }} {{ user.last_name }}</span>
-                        </div>
-                        <button class="btn btn-white btn-sm border rounded-pill shadow-sm" disabled>Desvincular</button>
-                    </div>
                 </div>
 
                 <div class="d-flex flex-wrap justify-content-between align-items-center mt-5 pt-4 border-top gap-3">
