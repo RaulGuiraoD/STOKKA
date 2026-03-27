@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 # 3. Django Auth & Security
-from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash
+from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 
@@ -207,8 +207,11 @@ def index(request):
 
 # LÓGICA DEL LOGIN Y REGISTRO 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('index')
+
     if request.method == 'POST':
-        email_ingresado = request.POST.get('username') # Asumimos que meten el email en el campo 'usuario'
+        email_ingresado = request.POST.get('username')
         password_ingresado = request.POST.get('password')
 
         try:
@@ -217,13 +220,26 @@ def login_view(request):
 
             if user is not None:
                 login(request, user)
+                
+                # Usamos el nombre si existe, si no, el nombre de usuario
+                nombre_mostrar = user.first_name if user.first_name else user.username
+                messages.success(request, f"¡Hola de nuevo, {nombre_mostrar}! Bienvenida/o a Stokka.")
+                
                 return redirect('index')
             else:
-                return render(request, 'registration/login.html', {'error': 'Contraseña incorrecta'})
-        except User.DoesNotExist:
-            return render(request, 'registration/login.html', {'error': 'El email no está registrado'})
+                messages.error(request, "La contraseña introducida es incorrecta.")
         
+        except User.DoesNotExist:
+            messages.error(request, "Este correo electrónico no está registrado en el sistema.")
+        
+        return redirect('login')
+
     return render(request, 'registration/login.html')
+
+def logout_view(request):
+    logout(request)
+    # Al borrar la sesión, redirigimos al login
+    return redirect('login')
 
 def registro_view(request):
     if request.method == 'POST':    # 1. Recoger datos

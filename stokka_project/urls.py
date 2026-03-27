@@ -27,6 +27,7 @@ urlpatterns = [
     
     # --- CORE / DASHBOARD ---
     path('', views.index, name='index'),
+    path('login/', views.login_view, name='login'),
 
     # --- AUTENTICACIÓN ---
     path('registro/', views.registro_view, name='registro'),
