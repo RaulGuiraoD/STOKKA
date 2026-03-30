@@ -3,56 +3,74 @@
 
 {% block content %}
 <div class="register-box text-center pb-5 mx-auto" style="max-width: 1100px; width: 100%;">
-    
-    <h2 class="auth-subtitle mb-5 text-white" style="letter-spacing: 4px; font-weight: 400; text-transform: uppercase;">REGISTRARSE</h2>
+
+    <h2 class="auth-subtitle mb-5 text-white" style="letter-spacing: 4px; font-weight: 400; text-transform: uppercase;">
+        REGISTRARSE</h2>
 
     <form method="POST">
         {% csrf_token %}
         <div class="row align-items-center justify-content-center gx-lg-5 gy-4">
-            
+
             <div class="col-12 col-md-5 text-start" style="max-width: 380px;">
                 <div class="mb-3">
                     <label class="text-white small mb-1 d-block">Nombre *</label>
-                    <input type="text" name="nombre" class="form-control border-0 rounded-2 py-2" placeholder="Tu nombre" style="background: white;" required>
+                    <input type="text" name="nombre" class="form-control border-0 rounded-2 py-2"
+                        placeholder="Tu nombre" style="background: white;" required>
                 </div>
                 <div class="mb-3">
                     <label class="text-white small mb-1 d-block">Apellido (Opcional)</label>
-                    <input type="text" name="apellido" class="form-control border-0 rounded-2 py-2" placeholder="Tu apellido" style="background: white;">
+                    <input type="text" name="apellido" class="form-control border-0 rounded-2 py-2"
+                        placeholder="Tu apellido" style="background: white;">
                 </div>
                 <div class="mb-3">
                     <label class="text-white small mb-1 d-block">Nombre Usuario *</label>
-                    <input type="text" name="usuario" class="form-control border-0 rounded-2 py-2" placeholder="Nombre de usuario" style="background: white;" required>
+                    <input type="text" name="usuario" class="form-control border-0 rounded-2 py-2"
+                        placeholder="Nombre de usuario" style="background: white;" required>
                 </div>
             </div>
 
             <div class="col-12 col-md-2 d-flex justify-content-center align-items-center my-3 my-md-0">
                 <a href="{% url 'login' %}">
-                    <img src="{% static 'assets/Logo stokka.png' %}" class="stokka-icon" style="width: 110px;" alt="Logo">
+                    <img src="{% static 'assets/Logo stokka.png' %}" class="stokka-icon" style="width: 110px;"
+                        alt="Logo">
                 </a>
             </div>
 
             <div class="col-12 col-md-5 text-start" style="max-width: 380px;">
                 <div class="mb-3">
                     <label class="text-white small mb-1 d-block">Email *</label>
-                    <input type="email" name="email" class="form-control border-0 rounded-2 py-2" placeholder="email@ejemplo.com" style="background: white;" required>
+                    <input type="email" name="email" class="form-control border-0 rounded-2 py-2"
+                        placeholder="email@ejemplo.com" style="background: white;" required>
                 </div>
                 <div class="mb-3">
                     <label class="text-white small mb-1 d-block">Contraseña *</label>
-                    <input type="password" name="password" class="form-control border-0 rounded-2 py-2" placeholder="********" style="background: white;" required>
+                    <div class="input-group">
+                        <input type="password" name="password" id="id_password"
+                            class="form-control border-0 rounded-start-2 py-2 pe-5 shadow-none" placeholder="********"
+                            style="background: white;" required>
+
+                        <span class="input-group-text border-0 rounded-end-2 d-flex justify-content-center"
+                            style="background: white; cursor: pointer; min-width: 45px;"
+                            onclick="togglePassword('id_password', 'toggleIcon')">
+                            <i class="fa-regular fa-eye" id="toggleIcon" style="color: var(--verde-stokka);"></i>
+                        </span>
+                    </div>
                 </div>
                 <div class="mb-3">
                     <label class="text-white small mb-1 d-block">Teléfono (Opcional)</label>
-                    <input type="tel" name="telefono" class="form-control border-0 rounded-2 py-2" placeholder="600 000 000" style="background: white;">
+                    <input type="tel" name="telefono" class="form-control border-0 rounded-2 py-2"
+                        placeholder="600 000 000" style="background: white;">
                 </div>
             </div>
 
             <div class="col-12 mt-5">
-                <button type="submit" class="btn btn-light fw-bold text-uppercase py-2" 
-                        style="color: var(--verde-stokka); border-radius: 10px; padding: 12px 60px; width: 100%; max-width: 400px;">
+                <button type="submit" class="btn btn-light fw-bold text-uppercase py-2"
+                    style="color: var(--verde-stokka); border-radius: 10px; padding: 12px 60px; width: 100%; max-width: 400px;">
                     Confirmar
                 </button>
-                
-                <a href="{% url 'login' %}" class="d-block mt-4 text-white text-decoration-underline" style="font-size: 13px;">
+
+                <a href="{% url 'login' %}" class="d-block mt-4 text-white text-decoration-underline"
+                    style="font-size: 13px;">
                     Ya estoy registrado, iniciar sesión
                 </a>
             </div>

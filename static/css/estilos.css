@@ -144,16 +144,61 @@ body {
 .modal-content { border-radius: 15px; border: none; }
 
 .stokka-input, .modal-body input, .modal-body select {
-    border-radius: 10px !important;
-    border: 1px solid #dee2e6 !important;
-    padding: 10px !important;
-    transition: all 0.2s;
+    border-radius: 10px !important; border: 1px solid #dee2e6 !important; padding: 10px !important; transition: all 0.2s;
 }
 
-.stokka-input:focus, .modal-body input:focus {
+/* 1. Reset para que el ojo no cree un "recuadro" aparte */
+.input-group-text {
+    border: none !important;
+    background: white !important;
+    padding-left: 0 !important; /* Acerca el ojo al texto */
+}
+
+/* 2. Evita que el input pierda su forma al unirse al ojo */
+.input-group > .form-control {
+    border-right: none !important; /* Quitamos la raya divisoria */
+}
+
+/* 3. El Foco de Stokka (Brillo verde sin saltos) */
+.stokka-input:focus, 
+.form-control:focus,
+.input-group:focus-within {
     border-color: var(--verde-stokka) !important;
     box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
     outline: none;
+    
+}
+
+.input-group .input-group-text {
+    border-left: none !important;
+    background-color: white !important;
+}
+
+/* Centrado universal para ojos en posición absoluta */
+.position-relative i.position-absolute {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Forzamos que CUALQUIER input de texto en el modal muestre caracteres */
+.modal-body input[type="text"] {
+    -webkit-text-security: none !important;
+    text-security: none !important;
+    font-family: inherit !important;
+    color: #212529 !important; /* Color oscuro estándar */
+}
+
+/* Evita que el navegador oculte texto por "estilos de sistema" */
+input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    pointer-events: none;
+    position: absolute; 
+    right: 0;
+}
+
+/* Espacio extra para el ojo y evitar solapamientos */
+.stokka-input {
+    padding-right: 40px !important;
 }
 
 /* --- MEDIA QUERY: BOTONES RESPONSIVOS --- */
