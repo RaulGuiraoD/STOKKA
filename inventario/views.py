@@ -326,11 +326,11 @@ def editar_perfil_view(request):
         
         if password:
             if check_password(password, request.user.password):
-                messages.error(request, "La nueva contraseña debe ser diferente a la actual.", extra_tags='danger open_edit_modal')
+                messages.error(request, "La nueva contraseña debe ser diferente a la actual.", extra_tags='open_edit_modal')
                 return redirect('perfil')
             
             if password != confirm_password:
-                messages.error(request, "Las nuevas contraseñas no coinciden.", extra_tags='danger open_edit_modal')
+                messages.error(request, "Las nuevas contraseñas no coinciden.", extra_tags='open_edit_modal')
                 return redirect('perfil')
             
             # Si pasa las validaciones, la preparamos
