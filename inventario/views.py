@@ -37,7 +37,6 @@ def gestion_usuarios(request):
     usuarios = User.objects.all().order_by('id')
     
     if request.method == 'POST':
-        # Pasamos user_request aquí
         form = RegistroUsuarioForm(request.POST, user_request=request.user)
         if form.is_valid():
             nuevo_usuario = form.save(commit=False)
@@ -46,8 +45,19 @@ def gestion_usuarios(request):
             Perfil.objects.get_or_create(user=nuevo_usuario)
             messages.success(request, f"Usuario {nuevo_usuario.username} creado.")
             return redirect('gestion_usuarios')
+        else:
+            # CORRECCIÓN DEL KEYERROR '__all__'
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field == '__all__':
+                        # Errores generales del formulario (ej: contraseñas no coinciden)
+                        messages.error(request, f"Error: {error}", extra_tags='open_add_modal')
+                    else:
+                        # Errores de campos específicos (ej: email duplicado)
+                        label = form.fields[field].label or field.capitalize()
+                        messages.error(request, f"{label}: {error}", extra_tags='open_add_modal')
+            return redirect('gestion_usuarios')
     else:
-        # Y aquí también para el formulario vacío
         form = RegistroUsuarioForm(user_request=request.user)
 
     return render(request, 'stokka/pages/gestion_usuarios.html', {
