@@ -26,16 +26,15 @@
 
         <div class="text-start mb-4">
             <label class="text-white small mb-1 d-block">Contraseña</label>
-            <div class="input-group">
+            <div class="position-relative d-flex align-items-center">
                 <input type="password" name="password" id="id_password"
-                    class="form-control border-0 rounded-start-2 py-2 pe-5 shadow-none" placeholder="********"
-                    style="background: white;" required>
-
-                <span class="input-group-text border-0 rounded-end-2 d-flex justify-content-center"
-                    style="background: white; cursor: pointer; min-width: 45px;"
-                    onclick="togglePassword('id_password', 'toggleIcon')">
-                    <i class="fa-regular fa-eye" id="toggleIcon" style="color: var(--verde-stokka);"></i>
-                </span>
+                    class="form-control border-0 rounded-2 py-2 pe-5 shadow-none" 
+                    placeholder="********" style="background: white;" required>
+                
+                <i class="fa-regular fa-eye position-absolute d-none stokka-eye-icon" 
+                id="toggleIcon" 
+                style="right: 15px; cursor: pointer; color: var(--verde-stokka); z-index: 10;"
+                onclick="togglePassword('id_password', 'toggleIcon')"></i>
             </div>
             <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 12px;">
                 <label class="text-white"><input type="checkbox" class="form-check-input me-1"> Recuérdame</label>
