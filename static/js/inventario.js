@@ -218,7 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         // Evento para la LUPA
-        const btnLupa = sidebar.querySelector("button.btn-success") ||
+       /* const btnLupa = sidebar.querySelector("button.btn-success") ||
             sidebar.querySelector(".input-group button");
 
         if (btnLupa) {
@@ -227,7 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 e.stopPropagation();
                 ejecutarBusquedaYCierre();
             });
-        }
+        }*/
     }
 
 
