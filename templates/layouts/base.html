@@ -26,7 +26,7 @@
             </span>
         </div>
 
-        <div class="header-center flex-grow-1 d-flex justify-content-center px-2 px-md-5">
+    <!--<div class="header-center flex-grow-1 d-flex justify-content-center px-2 px-md-5">
             <form action="{% url 'inventario' %}" method="GET" class="search-bar-container w-100"
                 style="max-width: 800px;">
                 <div class="input-group bg-white rounded-pill overflow-hidden shadow-sm py-1">
@@ -37,6 +37,19 @@
                     </button>
                 </div>
             </form>
+        </div>-->
+
+        <div class="header-center flex-grow-1 d-flex justify-content-center px-2 px-md-5">
+            <div class="search-bar-container w-100" style="max-width: 800px;">
+                <div class="input-group bg-white rounded-pill overflow-hidden shadow-sm py-1">
+                    <input type="text" class="form-control border-0 px-4 fs-6"
+                        placeholder="Buscar productos (desactivado)..." readonly> 
+                    
+                    <button class="btn border-0 text-muted bg-white pe-4" type="button">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div class="header-right">

@@ -2,7 +2,7 @@
 function toggleFiltros() {
     const sidebar = document.getElementById('sidebar-filtros');
     const main = document.getElementById('main-content');
-    
+
     if (sidebar) {
         const isActive = sidebar.classList.toggle('active');
         if (main) main.classList.toggle('sidebar-active');
@@ -35,7 +35,6 @@ function getCookie(name) {
 document.addEventListener("DOMContentLoaded", function () {
     const sidebar = document.getElementById('sidebar-filtros');
     const searchInput = sidebar ? sidebar.querySelector("input[name='q']") : null;
-    const headerSearch = document.querySelector(".header-center input[name='q']");
 
     // --- ELEMENTOS DEL RANGO DE STOCK ---
     const stockMin = document.getElementById("stockMin");
@@ -150,14 +149,13 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // --- FUNCIÓN FILTRAR  ---
+    // --- FUNCIÓN FILTRAR (Cero dependencias externas) ---
     function aplicarFiltros() {
-        // Si por algún motivo searchInput es null, salimos para no dar error
         if (!searchInput) return;
 
         const term = searchInput.value.toLowerCase().trim();
-        const minLimit = parseInt(stockMin.value) || 0;
-        const maxLimit = parseInt(stockMax.value) || 0;
+        const minLimit = parseInt(document.getElementById("stockMin").value) || 0;
+        const maxLimit = parseInt(document.getElementById("stockMax").value) || 0;
 
         rows.forEach(row => {
             const contenidoFila = row.textContent.toLowerCase();
@@ -171,9 +169,48 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // El evento ahora solo escuchará al del sidebar
+    // --- LÓGICA DE BÚSUEDA UNIFICADA (ENTER = LUPA) ---
+
     if (searchInput) {
-        searchInput.addEventListener("input", aplicarFiltros);
+        // 1. Filtrado en tiempo real mientras escribes
+        searchInput.addEventListener("input", function() {
+            aplicarFiltros();
+        });
+
+        // 2. Función interna para ejecutar la acción completa
+        // Así nos aseguramos de que el Enter y la Lupa hagan exactamente lo mismo
+        const ejecutarBusquedaYCierre = () => {
+            aplicarFiltros(); // Primero filtramos la tabla
+            
+            // Si el sidebar está abierto, lo cerramos
+            if (sidebar.classList.contains('active')) {
+                toggleFiltros();
+            }
+            
+            // Quitamos el foco para que el teclado móvil desaparezca
+            searchInput.blur();
+        };
+
+        // Evento para el ENTER
+        searchInput.addEventListener("keydown", function(e) {
+            if (e.key === "Enter") {
+                e.preventDefault(); 
+                e.stopPropagation();
+                ejecutarBusquedaYCierre();
+            }
+        });
+
+        // Evento para la LUPA
+        const btnLupa = sidebar.querySelector("button.btn-success") || 
+                        sidebar.querySelector(".input-group button");
+
+        if (btnLupa) {
+            btnLupa.addEventListener("click", function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                ejecutarBusquedaYCierre();
+            });
+        }
     }
 
 
