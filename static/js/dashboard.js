@@ -216,33 +216,63 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // --- CARGA DINÁMICA MODAL EDITAR PERFIL ---
-    const btnEditarPerfil = document.querySelector('.btn-cargar-editar-perfil');
+
+    // 1. SELECTORES DE SEÑALES 
+    const errorPerfil = document.querySelector('.open_edit_modal');
+    const errorNuevoUsuario = document.querySelector('.open_add_modal');
+
+    // 2. LÓGICA: ERROR EN EDITAR MI PERFIL (
+    if (errorPerfil) {
+        const btnPerfil = document.querySelector('.btn-cargar-editar-perfil');
+        if (btnPerfil) {
+            setTimeout(() => {
+                btnPerfil.click(); // Esto disparará tu lógica de fetch automática
+            }, 400);
+        }
+    }
+
+    // 3. LÓGICA: ERROR EN NUEVO USUARIO (ESTÁTICO)
+    if (errorNuevoUsuario) {
+        const modalElement = document.getElementById('modalNuevoUsuario');
+        if (modalElement) {
+            console.log("Reabriendo modal Nuevo Usuario...");
+            setTimeout(() => {
+                const modalAdd = new bootstrap.Modal(modalElement);
+                modalAdd.show();
+            }, 400);
+        }
+    }
+
+    // 4. REVISIÓN DEL FETCH 
+    const btnCargarPerfil = document.querySelector('.btn-cargar-editar-perfil');
     const bodyPerfil = document.getElementById('bodyEditarPerfil');
 
-    // 1. Lógica para abrir automáticamente si hay error
-    const señalErrorPerfil = document.querySelector('.open_edit_modal');
-    if (señalErrorPerfil && btnEditarPerfil) {
-        setTimeout(() => {
-            btnEditarPerfil.click();
-            console.log("Abriendo modal por error detectado...");
-        }, 200); // Un pelín más de delay para asegurar
-    }
-
-    // 2. Lógica del click manual 
-    if (btnEditarPerfil) {
-        btnEditarPerfil.addEventListener('click', function () {
+    if (btnCargarPerfil && bodyPerfil) {
+        btnCargarPerfil.addEventListener('click', function() {
             const url = this.getAttribute('data-url');
-            if (bodyPerfil) {
-                bodyPerfil.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-success"></div></div>';
-                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(response => response.text())
-                    .then(html => { bodyPerfil.innerHTML = html; })
-                    .catch(err => { bodyPerfil.innerHTML = '<div class="alert alert-danger">Error al cargar el formulario.</div>'; });
-            }
+            console.log("Cargando contenido desde:", url);
+            
+            // Ponemos el spinner
+            bodyPerfil.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-success"></div></div>';
+            
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(response => {
+                    if (!response.ok) throw new Error('Error en red');
+                    return response.text();
+                })
+                .then(html => {
+                    bodyPerfil.innerHTML = html;
+                    console.log("Contenido del perfil cargado con éxito.");
+                })
+                .catch(err => {
+                    console.error("Error Fetch:", err);
+                    bodyPerfil.innerHTML = '<div class="alert alert-danger m-3">Error al cargar el formulario.</div>';
+                });
         });
     }
-
+    
 });
+
 function submitFotoForm() {
     document.getElementById('fotoForm').submit();
 }

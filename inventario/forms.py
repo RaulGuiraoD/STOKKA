@@ -50,12 +50,20 @@ class RegistroUsuarioForm(forms.ModelForm):
 class EditarUsuarioAdminForm(forms.ModelForm):
 
     password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Nueva contraseña'}),
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control stokka-input shadow-none', 
+            'placeholder': 'Nueva contraseña',
+            'oninput': "checkInput(this, 'toggleIconAdmin1')" # 'this' pasa el elemento actual
+        }),
         required=False,
         label="Nueva contraseña"
     )
     confirm_password = forms.CharField(
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Repite la contraseña'}),
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control stokka-input shadow-none', 
+            'placeholder': 'Repite la contraseña',
+            'oninput': "checkInput(this, 'toggleIconAdmin2')"
+        }),
         required=False,
         label="Confirmar Nueva contraseña"
     )

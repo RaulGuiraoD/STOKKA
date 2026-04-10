@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 # 3. Django Auth & Security
-from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash
+from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 
@@ -37,7 +37,6 @@ def gestion_usuarios(request):
     usuarios = User.objects.all().order_by('id')
     
     if request.method == 'POST':
-        # Pasamos user_request aquí
         form = RegistroUsuarioForm(request.POST, user_request=request.user)
         if form.is_valid():
             nuevo_usuario = form.save(commit=False)
@@ -46,11 +45,22 @@ def gestion_usuarios(request):
             Perfil.objects.get_or_create(user=nuevo_usuario)
             messages.success(request, f"Usuario {nuevo_usuario.username} creado.")
             return redirect('gestion_usuarios')
+        else:
+            # CORRECCIÓN DEL KEYERROR '__all__'
+            for field, errors in form.errors.items():
+                for error in errors:
+                    if field == '__all__':
+                        # Errores generales del formulario (ej: contraseñas no coinciden)
+                        messages.error(request, f"Error: {error}", extra_tags='open_add_modal')
+                    else:
+                        # Errores de campos específicos (ej: email duplicado)
+                        label = form.fields[field].label or field.capitalize()
+                        messages.error(request, f"{label}: {error}", extra_tags='open_add_modal')
+            return redirect('gestion_usuarios')
     else:
-        # Y aquí también para el formulario vacío
         form = RegistroUsuarioForm(user_request=request.user)
 
-    return render(request, 'stokka/gestion_usuarios.html', {
+    return render(request, 'stokka/pages/gestion_usuarios.html', {
         'usuarios': usuarios,
         'form': form
     })
@@ -101,12 +111,15 @@ def editar_usuario_admin(request, user_id):
             # Si el formulario no es válido, mandamos los errores a los mensajes flash superiores
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, f"{error}")
+                    # Ejemplo: "Username: Este campo es obligatorio."
+                    label = form.fields[field].label or field.capitalize()
+                    messages.error(request, f"{label}: {error}")
+            return redirect('gestion_usuarios')
             # Importante: No redirigimos aquí, dejamos que baje al render final para mostrar el form con errores
     else:
         form = EditarUsuarioAdminForm(instance=usuario_a_editar, user_request=request.user)
         
-    return render(request, 'stokka/editar_usuario_admin.html', {
+    return render(request, 'stokka/modales/editar_usuario_admin.html', {
         'form': form,
         'usuario_editado': usuario_a_editar
     })
@@ -200,12 +213,15 @@ def index(request):
         'total_empleados': total_empleados,
         'stats_categoria' : stats_categoria,
     }
-    return render(request, 'stokka/index.html', context)
+    return render(request, 'stokka/pages/index.html', context)
 
 # LÓGICA DEL LOGIN Y REGISTRO 
 def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('index')
+
     if request.method == 'POST':
-        email_ingresado = request.POST.get('username') # Asumimos que meten el email en el campo 'usuario'
+        email_ingresado = request.POST.get('username')
         password_ingresado = request.POST.get('password')
 
         try:
@@ -214,13 +230,26 @@ def login_view(request):
 
             if user is not None:
                 login(request, user)
+                
+                # Usamos el nombre si existe, si no, el nombre de usuario
+                nombre_mostrar = user.first_name if user.first_name else user.username
+                messages.success(request, f"¡Hola de nuevo, {nombre_mostrar}! Bienvenida/o a Stokka.")
+                
                 return redirect('index')
             else:
-                return render(request, 'registration/login.html', {'error': 'Contraseña incorrecta'})
-        except User.DoesNotExist:
-            return render(request, 'registration/login.html', {'error': 'El email no está registrado'})
+                messages.error(request, "La contraseña introducida es incorrecta.")
         
+        except User.DoesNotExist:
+            messages.error(request, "Este correo electrónico no está registrado en el sistema.")
+        
+        return redirect('login')
+
     return render(request, 'registration/login.html')
+
+def logout_view(request):
+    logout(request)
+    # Al borrar la sesión, redirigimos al login
+    return redirect('login')
 
 def registro_view(request):
     if request.method == 'POST':    # 1. Recoger datos
@@ -291,7 +320,7 @@ def registro_view(request):
 def perfil_view(request):
     # Aseguramos que el objeto perfil exista para pasárselo al template
     perfil, created = Perfil.objects.get_or_create(user=request.user)
-    return render(request, 'stokka/perfil.html', {'perfil': perfil})
+    return render(request, 'stokka/pages/perfil.html', {'perfil': perfil})
 
 # LÓGICA DE EDITAR PERFIL
 @login_required
@@ -307,11 +336,11 @@ def editar_perfil_view(request):
         
         if password:
             if check_password(password, request.user.password):
-                messages.error(request, "La nueva contraseña debe ser diferente a la actual.", extra_tags='danger open_edit_modal')
+                messages.error(request, "La nueva contraseña debe ser diferente a la actual.", extra_tags='open_edit_modal')
                 return redirect('perfil')
             
             if password != confirm_password:
-                messages.error(request, "Las nuevas contraseñas no coinciden.", extra_tags='danger open_edit_modal')
+                messages.error(request, "Las nuevas contraseñas no coinciden.", extra_tags='open_edit_modal')
                 return redirect('perfil')
             
             # Si pasa las validaciones, la preparamos
@@ -334,7 +363,7 @@ def editar_perfil_view(request):
         messages.success(request, "Perfil actualizado con éxito.")
         return redirect('perfil')
     
-    return render(request, 'stokka/editar_perfil.html', {'perfil': perfil})
+    return render(request, 'stokka/modales/editar_perfil.html', {'perfil': perfil})
 
 
 # LÓGICA DEL CAMBIO DE FOTO
@@ -385,7 +414,7 @@ def inventario_view(request):
     # formulario vacio que usará el modal de "Añadir"
     form_añadir = ProductoForm()
 
-    return render(request, 'stokka/inventario.html', {
+    return render(request, 'stokka/pages/inventario.html', {
         'productos': producto,
         'max_stock_real': max_stock_real,
         'filtro_actual': filtro,
@@ -405,7 +434,7 @@ def añadir_producto(request):
             # SI HAY ERROR DE UMBRALES:
             # Volvemos al inventario pasándole el formulario con los errores
             productos = Producto.objects.all()
-            return render(request, 'stokka/inventario.html', {
+            return render(request, 'stokka/pages/inventario.html', {
                 'productos': productos,
                 'form_añadir': form, # Pasamos el form con errores
                 'titulo': 'Inventario'
@@ -419,7 +448,7 @@ def eliminar_producto(request, pk):
         producto.delete()
         messages.success(request, "Producto eliminado.")
         return redirect('inventario')
-    return render(request, 'stokka/comfirmar_eliminar.html', {'producto': producto})
+    return render(request, 'stokka/pages/comfirmar_eliminar.html', {'producto': producto})
 
 @login_required
 def eliminar_masivo(request):
@@ -446,13 +475,13 @@ def editar_producto(request, pk):
     
     # SI ES AJAX, devolvemos un template parcial (solo el formulario)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return render(request, 'stokka/partials/form_editar_parcial.html', {
+        return render(request, 'stokka/modales/form_editar_parcial.html', {
             'form': form,
             'producto': producto
         })
     
     # Si alguien entra por URL directa, sigue funcionando la página completa
-    return render(request, 'stokka/form_producto.html', {'form': form, 'titulo': 'Editar'})
+    return render(request, 'stokka/pages/form_producto.html', {'form': form, 'titulo': 'Editar'})
 
 @login_required
 def aumentar_stock(request, pk):

@@ -1,4 +1,4 @@
-{% extends "base_auth.html" %}
+{% extends 'layouts/base_auth.html' %}
 {% load static %}
 
 {% block content %}
@@ -8,29 +8,48 @@
     </a>
     <h2 class="auth-subtitle mb-4 text-white" style="letter-spacing: 4px; font-weight: 400;">INICIO DE SESIÓN</h2>
 
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} py-2 small mb-3" role="alert">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
     <form method="POST">
         {% csrf_token %}
         <div class="text-start mb-3">
             <label class="text-white small mb-1 d-block">Email</label>
-            <input type="email" name="username" class="form-control border-0 rounded-2 py-2" placeholder="user@gmail.com" style="background: white;">
+            <input type="email" name="username" class="form-control border-0 rounded-2 py-2"
+                placeholder="user@gmail.com" style="background: white;">
         </div>
-        
+
         <div class="text-start mb-4">
             <label class="text-white small mb-1 d-block">Contraseña</label>
-            <input type="password" name="password" class="form-control border-0 rounded-2 py-2" placeholder="itaca1234" style="background: white;">
-            
+            <div class="input-group">
+                <input type="password" name="password" id="id_password"
+                    class="form-control border-0 rounded-start-2 py-2 pe-5 shadow-none" placeholder="********"
+                    style="background: white;" required>
+
+                <span class="input-group-text border-0 rounded-end-2 d-flex justify-content-center"
+                    style="background: white; cursor: pointer; min-width: 45px;"
+                    onclick="togglePassword('id_password', 'toggleIcon')">
+                    <i class="fa-regular fa-eye" id="toggleIcon" style="color: var(--verde-stokka);"></i>
+                </span>
+            </div>
             <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 12px;">
                 <label class="text-white"><input type="checkbox" class="form-check-input me-1"> Recuérdame</label>
                 <a href="#" class="text-white text-decoration-none">¿Olvidaste la contraseña?</a>
             </div>
         </div>
 
-        <button type="submit" class="btn btn-light fw-bold text-uppercase w-100 py-2 mt-3" 
-                style="color: var(--verde-stokka); border-radius: 10px; padding: 12px 60px;">
+        <button type="submit" class="btn btn-light fw-bold text-uppercase w-100 py-2 mt-3"
+            style="color: var(--verde-stokka); border-radius: 10px; padding: 12px 60px;">
             Confirmar
         </button>
-        
-        <a href="{% url 'registro' %}" class="d-block mt-4 text-white text-decoration-underline" style="font-size: 13px;">
+
+        <a href="{% url 'registro' %}" class="d-block mt-4 text-white text-decoration-underline"
+            style="font-size: 13px;">
             No estoy registrado
         </a>
     </form>
