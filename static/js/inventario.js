@@ -1,9 +1,20 @@
-// Función para el sidebar (debe estar fuera)
+// AUTO-FOCO EN EL BUSCADOR AL ABRIR SIDEBAR
 function toggleFiltros() {
     const sidebar = document.getElementById('sidebar-filtros');
     const main = document.getElementById('main-content');
-    if (sidebar) sidebar.classList.toggle('active');
-    if (main) main.classList.toggle('sidebar-active');
+    
+    if (sidebar) {
+        const isActive = sidebar.classList.toggle('active');
+        if (main) main.classList.toggle('sidebar-active');
+
+        // Buscamos el input específicamente dentro del sidebar
+        const sidebarSearch = sidebar.querySelector("input[name='q']");
+
+        if (isActive && sidebarSearch) {
+            // El foco ahora irá directo al del sidebar, no al del header
+            setTimeout(() => sidebarSearch.focus(), 600);
+        }
+    }
 }
 
 function getCookie(name) {
@@ -22,7 +33,9 @@ function getCookie(name) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    const searchInput = document.querySelector("input[name='q']");
+    const sidebar = document.getElementById('sidebar-filtros');
+    const searchInput = sidebar ? sidebar.querySelector("input[name='q']") : null;
+    const headerSearch = document.querySelector(".header-center input[name='q']");
 
     // --- ELEMENTOS DEL RANGO DE STOCK ---
     const stockMin = document.getElementById("stockMin");
@@ -64,27 +77,45 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     checkboxes.forEach(cb => cb.addEventListener('change', actualizarBotón));
 
+    // 1. MEJORA DE AUTOCERRADO AL CLICAR FUERA (Solo móvil)
+    document.addEventListener('click', function (event) {
+        const sidebar = document.getElementById('sidebar-filtros');
+        const btnFiltros = document.querySelector('button[onclick="toggleFiltros()"]');
+        const isMobile = window.innerWidth <= 992;
+
+        if (isMobile && sidebar && sidebar.classList.contains('active')) {
+            // Si el clic NO es dentro del sidebar y NO es en el botón de abrir...
+            if (!sidebar.contains(event.target) && !btnFiltros.contains(event.target)) {
+                toggleFiltros();
+            }
+        }
+    });
+
     // --- LÓGICA DE SINCRONIZACIÓN Y FILTRADO ---
     function sincronizarYAplicar(origen, destino) {
         destino.value = origen.value;
 
-        let vMin = parseInt(stockMin.value);
-        let vMax = parseInt(stockMax.value);
+        let vMin = parseInt(stockMin.value) || 0;
+        let vMax = parseInt(stockMax.value) || 0;
 
-        // Validar que min no supere a max
-        if (vMin > vMax) {
-            if (origen === stockMin || origen === numMin) {
-                stockMax.value = origen.value;
-                numMax.value = origen.value;
-            } else {
-                stockMin.value = origen.value;
-                numMin.value = origen.value;
+        // Lógica para que los sliders no se crucen
+        if (origen === stockMin || origen === numMin) {
+            if (vMin > vMax) {
+                stockMax.value = vMin;
+                numMax.value = vMin;
+            }
+        } else {
+            if (vMax < vMin) {
+                stockMin.value = vMax;
+                numMin.value = vMax;
             }
         }
 
         if (rangoTexto) {
             rangoTexto.innerText = `${stockMin.value} y ${stockMax.value}`;
         }
+
+        // Aplicamos el filtro visual sin recargar la página
         aplicarFiltros();
     }
 
@@ -121,6 +152,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // --- FUNCIÓN FILTRAR  ---
     function aplicarFiltros() {
+        // Si por algún motivo searchInput es null, salimos para no dar error
+        if (!searchInput) return;
+
         const term = searchInput.value.toLowerCase().trim();
         const minLimit = parseInt(stockMin.value) || 0;
         const maxLimit = parseInt(stockMax.value) || 0;
@@ -137,7 +171,10 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    if (searchInput) searchInput.addEventListener("input", aplicarFiltros);
+    // El evento ahora solo escuchará al del sidebar
+    if (searchInput) {
+        searchInput.addEventListener("input", aplicarFiltros);
+    }
 
 
     // --- ORDENACIÓN VISUAL MEJORADA ---
@@ -290,7 +327,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const tableBody = document.querySelector("#tabla-inventario tbody");
 
     if (tableBody) {
-        tableBody.addEventListener("click", function(e) {
+        tableBody.addEventListener("click", function (e) {
             // Solo actuamos si estamos en móvil
             if (window.innerWidth <= 992) {
                 const row = e.target.closest("tr");
