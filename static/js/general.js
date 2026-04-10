@@ -104,6 +104,36 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+    const errorAdminSignal = document.querySelector('[class*="open_admin_edit_modal_"]');
+
+    if (errorAdminSignal) {
+        // Extraemos el ID del nombre de la clase (ej: de 'open_admin_edit_modal_5' sacamos '5')
+        const classList = errorAdminSignal.className.split(' ');
+        const targetClass = classList.find(c => c.startsWith('open_admin_edit_modal_'));
+        const userId = targetClass.split('_').pop();
+
+        // 2. Buscamos el botón de editar de ESE usuario específico en la tabla
+        // Usamos el atributo data-url que ya tienes para localizarlo
+        const btnEditar = document.querySelector(`.btn-cargar-editar[data-url*="/${userId}/"]`);
+
+        if (btnEditar) {
+            setTimeout(() => {
+                btnEditar.click(); // Esto dispara tu función fetch automáticamente
+                
+                // 3. El "Trim" / Auto-focus: 
+                // Esperamos un poco a que el fetch termine de cargar el HTML en el modal
+                setTimeout(() => {
+                    const passInput = document.getElementById('id_password');
+                    if (passInput) {
+                        passInput.focus();
+                        // Opcional: si quieres limpiar el campo si hubo error
+                        passInput.value = ''; 
+                    }
+                }, 600); // Un pelín más de tiempo para asegurar que el fetch terminó
+            }, 400);
+        }
+    }
+
     // --- CARGA DINÁMICA MODAL EDITAR PERFIL ---
 
     // 1. SELECTORES DE SEÑALES 
