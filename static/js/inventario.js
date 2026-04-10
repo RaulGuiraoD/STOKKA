@@ -90,42 +90,47 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // --- LÓGICA DE SINCRONIZACIÓN Y FILTRADO ---
-    function sincronizarYAplicar(origen, destino) {
-        destino.value = origen.value;
-
-        let vMin = parseInt(stockMin.value) || 0;
-        let vMax = parseInt(stockMax.value) || 0;
-
-        // Lógica para que los sliders no se crucen
-        if (origen === stockMin || origen === numMin) {
-            if (vMin > vMax) {
-                stockMax.value = vMin;
-                numMax.value = vMin;
-            }
-        } else {
-            if (vMax < vMin) {
-                stockMin.value = vMax;
-                numMin.value = vMax;
-            }
-        }
-
-        if (rangoTexto) {
-            rangoTexto.innerText = `${stockMin.value} y ${stockMax.value}`;
-        }
-
-        // Aplicamos el filtro visual sin recargar la página
-        aplicarFiltros();
-    }
-
     // Eventos para Sincronizar Sliders con Números
-    if (stockMin && numMin) {
-        stockMin.addEventListener("input", () => sincronizarYAplicar(stockMin, numMin));
-        numMin.addEventListener("input", () => sincronizarYAplicar(numMin, stockMin));
-    }
-    if (stockMax && numMax) {
-        stockMax.addEventListener("input", () => sincronizarYAplicar(stockMax, numMax));
-        numMax.addEventListener("input", () => sincronizarYAplicar(numMax, stockMax));
+    // --- LÓGICA DE STOCK CON FORZADO DE RENDERIZADO ---
+    if (stockMin && numMin && stockMax && numMax) {
+        const elementosStock = [stockMin, numMin, stockMax, numMax];
+
+        elementosStock.forEach(el => {
+            el.addEventListener("input", () => {
+                // Sincronizar inputs
+                if (el === stockMin || el === numMin) {
+                    stockMin.value = el.value;
+                    numMin.value = el.value;
+                } else {
+                    stockMax.value = el.value;
+                    numMax.value = el.value;
+                }
+
+                // Validar que no se crucen
+                if (parseInt(stockMin.value) > parseInt(stockMax.value)) {
+                    if (el === stockMin || el === numMin) {
+                        stockMax.value = stockMin.value;
+                        numMax.value = stockMin.value;
+                    } else {
+                        stockMin.value = stockMax.value;
+                        numMin.value = stockMax.value;
+                    }
+                }
+
+                if (rangoTexto) rangoTexto.innerText = `${stockMin.value} y ${stockMax.value}`;
+
+                aplicarFiltros();
+
+                // Forzar refresco visual (Fix para emuladores)
+                const tbody = document.querySelector("#tabla-inventario tbody");
+                if (tbody) {
+                    const prevDisplay = tbody.style.display;
+                    tbody.style.display = 'none';
+                    tbody.offsetHeight;
+                    tbody.style.display = prevDisplay;
+                }
+            });
+        });
     }
 
     // Resetear visualmente al hacer clic en limpiar
@@ -154,18 +159,30 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!searchInput) return;
 
         const term = searchInput.value.toLowerCase().trim();
-        const minLimit = parseInt(document.getElementById("stockMin").value) || 0;
-        const maxLimit = parseInt(document.getElementById("stockMax").value) || 0;
+        const minLimit = parseInt(stockMin.value) || 0;
+        const maxLimit = parseInt(stockMax.value) || 0;
 
         rows.forEach(row => {
-            const contenidoFila = row.textContent.toLowerCase();
             const stockElement = row.querySelector(".stock-number");
-            const stock = stockElement ? parseInt(stockElement.innerText) : 0;
+            let stock = 0;
 
+            if (stockElement) {
+                stock = parseInt(stockElement.innerText);
+            } else {
+                const cells = row.getElementsByTagName("td");
+                if (cells.length > 0) stock = parseInt(cells[cells.length - 2].innerText) || 0;
+            }
+
+            const contenidoFila = row.textContent.toLowerCase();
             const coincideTexto = term === "" || contenidoFila.includes(term);
             const coincideStock = (stock >= minLimit && stock <= maxLimit);
 
-            row.style.display = (coincideTexto && coincideStock) ? "" : "none";
+            // Uso de !important para asegurar la visibilidad
+            if (coincideTexto && coincideStock) {
+                row.style.setProperty("display", "", "important");
+            } else {
+                row.style.setProperty("display", "none", "important");
+            }
         });
     }
 
@@ -173,7 +190,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (searchInput) {
         // 1. Filtrado en tiempo real mientras escribes
-        searchInput.addEventListener("input", function() {
+        searchInput.addEventListener("input", function () {
             aplicarFiltros();
         });
 
@@ -181,31 +198,31 @@ document.addEventListener("DOMContentLoaded", function () {
         // Así nos aseguramos de que el Enter y la Lupa hagan exactamente lo mismo
         const ejecutarBusquedaYCierre = () => {
             aplicarFiltros(); // Primero filtramos la tabla
-            
+
             // Si el sidebar está abierto, lo cerramos
             if (sidebar.classList.contains('active')) {
                 toggleFiltros();
             }
-            
+
             // Quitamos el foco para que el teclado móvil desaparezca
             searchInput.blur();
         };
 
         // Evento para el ENTER
-        searchInput.addEventListener("keydown", function(e) {
+        searchInput.addEventListener("keydown", function (e) {
             if (e.key === "Enter") {
-                e.preventDefault(); 
+                e.preventDefault();
                 e.stopPropagation();
                 ejecutarBusquedaYCierre();
             }
         });
 
         // Evento para la LUPA
-        const btnLupa = sidebar.querySelector("button.btn-success") || 
-                        sidebar.querySelector(".input-group button");
+        const btnLupa = sidebar.querySelector("button.btn-success") ||
+            sidebar.querySelector(".input-group button");
 
         if (btnLupa) {
-            btnLupa.addEventListener("click", function(e) {
+            btnLupa.addEventListener("click", function (e) {
                 e.preventDefault();
                 e.stopPropagation();
                 ejecutarBusquedaYCierre();
