@@ -48,37 +48,6 @@ function submitFotoForm() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    
-    //  OCULTAR BARRA INFERIOR AL HACER SCROLL (Mobile)
-    let lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollThreshold = 15;
-
-    window.addEventListener('scroll', function (e) {
-        if (!sidebar) return; // Si no hay sidebar, no hacemos nada
-
-        let currentScrollY = window.pageYOffset || document.documentElement.scrollTop || (e.target.scrollTop > 0 ? e.target.scrollTop : 0);
-
-        // Si estamos arriba del todo, siempre mostrar
-        if (currentScrollY <= 10) {
-            sidebar.classList.remove('sidebar-hidden');
-            lastScrollY = currentScrollY;
-            return;
-        }
-
-        const delta = currentScrollY - lastScrollY;
-
-        if (Math.abs(delta) > scrollThreshold) {
-            // Solo ocultamos si estamos en formato móvil (barra inferior)
-            if (window.innerWidth <= 991) {
-                if (delta > 0) {
-                    sidebar.classList.add('sidebar-hidden');
-                } else {
-                    sidebar.classList.remove('sidebar-hidden');
-                }
-            }
-            lastScrollY = currentScrollY;
-        }
-    }, true);
 
     // --- CARGA DINÁMICA DE MODAL EDITAR USUARIO (ADMIN)---
     const modalBody = document.getElementById('bodyEditarUsuario');
