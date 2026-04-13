@@ -260,7 +260,11 @@
                         {% for field in form_añadir %}
                         <div
                             class="col-{% if field.name == 'descripcion' or field.name == 'nombre' or field.name == 'foto' %}12{% else %}6{% endif %}">
-                            <label class="small text-dark fw-bold">{{ field.label }}</label>
+                            <label class="small text-dark fw-bold">{{ field.label }} 
+                                {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
                             {{ field }}
                             {% if field.errors %}
                             <div class="text-danger small">{{ field.errors.0 }}</div>
