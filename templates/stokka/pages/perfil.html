@@ -70,17 +70,17 @@
                     </select>
                 </div>
 
-                <div class="d-flex flex-wrap justify-content-between align-items-center mt-5 pt-4 border-top gap-3">
-                    <form action="{% url 'logout' %}" method="post" id="form-logout" class="m-0">
+                <div class="d-flex flex-column-reverse flex-sm-row justify-content-between align-items-center mt-5 pt-4 border-top gap-3">
+                    <form action="{% url 'logout' %}" method="post" id="form-logout" class="m-0 w-100 w-sm-auto">
                         {% csrf_token %}
                         <button type="button" data-bs-toggle="modal" data-bs-target="#modalLogout"
-                                class="btn btn-cancelar-stokka px-4 py-2 fw-bold small text-uppercase">
+                                class="btn btn-cancelar-stokka w-100 px-4 py-2 fw-bold small text-uppercase">
                             Cerrar Sesión
                         </button>
                     </form>
 
                     <button type="button"
-                            class="btn btn-stokka px-4 py-2 fw-bold shadow-sm btn-cargar-editar-perfil text-uppercase"
+                            class="btn btn-stokka w-100 w-sm-auto px-4 py-2 fw-bold shadow-sm btn-cargar-editar-perfil text-uppercase"
                             data-url="{% url 'editar_perfil' %}" data-bs-toggle="modal" data-bs-target="#modalEditarPerfil">
                         Editar Perfil
                     </button>
