@@ -339,6 +339,13 @@ body.modal-open {
     color: var(--verde-stokka);
 }
 
+.nombre-producto-truncate {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 /*-------------------------------------------------------------------*/
 /* MEDIA QUERY FILTROS Y TABLA */
 
@@ -496,9 +503,12 @@ body.modal-open {
         align-items: flex-start !important;
         padding-left: 5px !important;
         min-width: 0 !important;
-        /* Crucial para que flex permita encoger el texto */
+        max-width: 200px !important;
         overflow: hidden;
         padding-left: 15px !important;
+        word-break: break-word;
+        text-overflow: ellipsis;
+        white-space: normal;
     }
 
     #tabla-inventario td[data-label="PRODUCTO"] .fw-bold {
@@ -582,6 +592,13 @@ body.modal-open {
     /* Botones de acción */
     #tabla-inventario td[data-label="ACCIONES"] .btn-group {
         max-width: 140px;
+    }
+
+    #tabla-inventario {
+    table-layout: fixed; /* Clave: las columnas respetan el ancho asignado */
+    width: 100% !important;
+    word-wrap: break-word; 
+    overflow-wrap: break-word;
     }
 }
 

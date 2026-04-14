@@ -20,6 +20,11 @@ body {
     font-weight: 400; 
     color: black;
 }
+/* Evita que cualquier contenido desborde el ancho de la pantalla */
+main, .container-fluid, .card {
+    min-width: 0; 
+    overflow-wrap: break-word;
+}
 /* LOGIN Y REGISTRO */
 /* Creamos las utilidades de Bootstrap personalizadas */
 .bg-stokka { background-color: var(--verde-stokka) !important; }

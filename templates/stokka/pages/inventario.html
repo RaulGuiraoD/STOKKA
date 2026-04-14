@@ -137,7 +137,9 @@
                                 </td>
 
                                 <td data-label="PRODUCTO">
-                                    <div class="fw-bold text-truncate">{{ p.nombre }}</div>
+                                    <span class="fw-bold text-dark d-block text-truncate" style="max-width: 250px;">
+                                        {{ p.nombre }}
+                                    </span>
                                     <small class="desc-text">{{ p.descripcion|truncatechars:50 }}</small>
                                 </td>
 
