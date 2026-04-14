@@ -145,6 +145,48 @@ main, .container-fluid, .card {
     margin-top: 15px;
 }
 
+.alert-success-stokka, .alert-error-stokka {
+    margin-top: 0 !important; 
+}
+
+.custom-alert {
+    pointer-events: auto;
+    margin: 0 !important;
+    text-align: center;      /* Centramos el texto dentro de la alerta */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
+    border-radius: 15px !important;
+    backdrop-filter: blur(4px); /* Efecto cristal muy sutil */
+    animation: fadeInDown 0.4s ease-out; /* Animación desde arriba */
+}
+
+/* Animación: Aparece arriba y baja a su sitio */
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#container-mensajes {
+    position: fixed;
+    top: 100px;             /* Un poco por debajo del header */
+    left: 50%;              /* Lo movemos a la mitad horizontal */
+    transform: translateX(-50%); /* Truco para centrarlo exactamente */
+    z-index: 10000;
+    width: auto;            /* Que se adapte al contenido */
+    min-width: 320px;       /* Pero con un mínimo para que no sea muy estrecho */
+    max-width: 90vw;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+
 /* --- MODALES E INPUTS --- */
 .modal-content { border-radius: 15px; border: none; }
 
