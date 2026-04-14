@@ -460,3 +460,32 @@ document.addEventListener("DOMContentLoaded", function () {
         tableBody.addEventListener("touchmove", () => clearTimeout(longPressTimer));
     }
 });
+
+function autoActualizarStocks() {
+    fetch('/actualizar-stocks/') 
+        .then(response => response.json())
+        .then(data => {
+            Object.keys(data).forEach(id => {
+                const info = data[id];
+                const span = document.getElementById(`stock-val-${id}`);
+                const fila = document.getElementById(`producto-row-${id}`);
+
+                // 1. Actualizar el número de stock
+                if (span && span.innerText != info.stock) {
+                    span.innerText = info.stock;
+                }
+
+                // 2. Actualizar el color del semáforo en la fila
+                if (fila) {
+                    // Eliminamos las clases antiguas
+                    fila.classList.remove('stokka-critico', 'stokka-aviso', 'stokka-ok');
+                    // Añadimos la nueva clase según el servidor
+                    fila.classList.add(`stokka-${info.color}`);
+                }
+            });
+        })
+        .catch(error => console.error('Error en actualización visual:', error));
+}
+
+// Ejecutar cada 7 segundos para probar 
+setInterval(autoActualizarStocks, 7000);    

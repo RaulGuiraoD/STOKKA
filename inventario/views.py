@@ -450,6 +450,17 @@ def inventario_view(request):
         'form_añadir': form_añadir
     })
 
+def actualizar_stocks_ajax(request):
+    productos = Producto.objects.all()
+    # Enviamos un diccionario con el stock y el estado del semáforo
+    data = {
+        p.id: {
+            'stock': p.stock_actual,
+            'color': p.semaforo  # Esto devuelve 'critico', 'aviso' o 'ok'
+        } for p in productos
+    }
+    return JsonResponse(data)
+
 @login_required
 def añadir_producto(request):
     if request.method == 'POST':
