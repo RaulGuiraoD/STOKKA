@@ -15,9 +15,16 @@
         </div>
     </div>
     <div class="modal-footer border-0 p-4 pt-0">
-        <button type="button" class="btn btn-cancelar-stokka px-3 py-2 rounded-3 fw-bold text-uppercase small"
-            data-bs-dismiss="modal">CANCELAR</button>
-        <button type="submit" class="btn btn-stokka px-4 py-2 rounded-3 fw-bold text-uppercase shadow-sm"><i
-                class="fa-solid fa-floppy-disk me-2"></i>ACTUALIZAR CAMBIOS</button>
+        <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
+            <button type="submit"
+                class="btn btn-stokka w-100 w-md-auto px-md-4 py-2 rounded-3 fw-bold text-uppercase shadow-sm order-1 order-md-2 text-nowrap">
+                <i class="fa-solid fa-floppy-disk me-2"></i>ACTUALIZAR CAMBIOS
+            </button>
+            <button type="button"
+                class="btn btn-cancelar-stokka w-100 w-md-auto px-md-4 py-2 rounded-3 fw-bold text-uppercase small order-2 order-md-1 text-nowrap"
+                data-bs-dismiss="modal">
+                CANCELAR
+            </button>
+        </div>
     </div>
 </form>
