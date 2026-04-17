@@ -12,8 +12,8 @@
             <i class="fa-solid fa-filter me-2"></i> FILTROS
         </button>
         <div class="d-flex gap-2">
-            <button id="btn-eliminar-masivo" class="btn btn-inventario-cancelar-stokka shadow-stokka d-none" data-bs-toggle="modal"
-                data-bs-target="#modalEliminarMasivo">
+            <button id="btn-eliminar-masivo" class="btn btn-inventario-cancelar-stokka shadow-stokka d-none"
+                data-bs-toggle="modal" data-bs-target="#modalEliminarMasivo">
                 <i class="fa-solid fa-trash-can me-2"></i> ELIMINAR (<span id="count-seleccionados">0</span>)
             </button>
             <button class="btn btn-inventario-stokka shadow-stokka" data-bs-toggle="modal" data-bs-target="#modalAñadir"
@@ -137,7 +137,9 @@
                                 </td>
 
                                 <td data-label="PRODUCTO">
-                                    <div class="fw-bold">{{ p.nombre }}</div>
+                                    <span class="fw-bold text-dark d-block text-truncate" style="max-width: 250px;">
+                                        {{ p.nombre }}
+                                    </span>
                                     <small class="desc-text">{{ p.descripcion|truncatechars:50 }}</small>
                                 </td>
 
@@ -152,8 +154,9 @@
 
                                 <td style="width: 160px;" data-label="STOCK ACTUAL">
                                     <div class="d-flex align-items-center justify-content-center gap-2">
-                                        <a href="javascript:void(0);" data-url="{% url 'disminuir_stock' p.pk %}" data-pk="{{ p.pk }}"
-                                            class="btn-adjust-stock shadow-sm"><i class="fa-solid fa-minus"></i></a>
+                                        <a href="javascript:void(0);" data-url="{% url 'disminuir_stock' p.pk %}"
+                                            data-pk="{{ p.pk }}" class="btn-adjust-stock shadow-sm"><i
+                                                class="fa-solid fa-minus"></i></a>
 
                                         <span id="stock-val-{{ p.pk }}"
                                             class="stock-number d-inline-block text-center mx-2"
@@ -161,8 +164,9 @@
                                             {{p.stock_actual}}
                                         </span>
 
-                                        <a href="javascript:void(0);" data-url="{% url 'aumentar_stock' p.pk %}" data-pk="{{ p.pk }}"
-                                            class="btn-adjust-stock shadow-sm"><i class="fa-solid fa-plus"></i></a>
+                                        <a href="javascript:void(0);" data-url="{% url 'aumentar_stock' p.pk %}"
+                                            data-pk="{{ p.pk }}" class="btn-adjust-stock shadow-sm"><i
+                                                class="fa-solid fa-plus"></i></a>
                                     </div>
                                 </td>
 
@@ -260,7 +264,11 @@
                         {% for field in form_añadir %}
                         <div
                             class="col-{% if field.name == 'descripcion' or field.name == 'nombre' or field.name == 'foto' %}12{% else %}6{% endif %}">
-                            <label class="small text-dark fw-bold">{{ field.label }}</label>
+                            <label class="small text-dark fw-bold">{{ field.label }}
+                                {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
                             {{ field }}
                             {% if field.errors %}
                             <div class="text-danger small">{{ field.errors.0 }}</div>
@@ -270,11 +278,17 @@
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-inventario-cancelar-stokka fw-bold"
-                        data-bs-dismiss="modal">CERRAR</button>
-                    <button type="submit"
-                        class="bbtn btn-inventario-stokka px-5 py-2 rounded-3 fw-bold text-uppercase shadow-sm"><i
-                            class="fa-solid fa-floppy-disk me-2"></i>GUARDAR PRODUCTO</button>
+                    <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
+                        <button type="submit"
+                            class="btn btn-inventario-stokka w-100 w-md-auto px-md-4 py-2 rounded-3 fw-bold text-uppercase shadow-sm order-1 order-md-2 text-nowrap">
+                            <i class="fa-solid fa-floppy-disk me-2"></i>GUARDAR PRODUCTO
+                        </button>
+                        <button type="button"
+                            class="btn btn-inventario-cancelar-stokka w-100 w-md-auto px-md-4 py-2 rounded-3 fw-bold text-uppercase small order-2 order-md-1 text-nowrap"
+                            data-bs-dismiss="modal">
+                            CANCELAR
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>

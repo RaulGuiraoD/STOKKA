@@ -53,6 +53,10 @@ urlpatterns = [
     path('inventario/stock/subir/<int:pk>/', views.aumentar_stock, name='aumentar_stock'),
     path('inventario/stock/bajar/<int:pk>/', views.disminuir_stock, name='disminuir_stock'),
     path('inventario/eliminar-masivo/', views.eliminar_masivo, name='eliminar_masivo'),
+    path('actualizar-stocks/', views.actualizar_stocks_ajax, name='actualizar_stocks_ajax'),
+
+    # --- BARRA BUSQUEDA HEADER ---
+    path('buscar/', views.buscador_global, name='buscador_global'),
 ]
 
 # Esto es para que se vean el Logo y las Facturas en desarrollo

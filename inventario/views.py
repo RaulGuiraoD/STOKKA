@@ -34,8 +34,14 @@ def admin_required(view_func):
 @login_required
 @admin_required
 def gestion_usuarios(request):
+    query = request.GET.get('q')
     usuarios = User.objects.all().order_by('id')
     
+    if query:
+        usuarios = usuarios.filter(
+            Q(username__icontains=query) | Q(first_name__icontains=query) | Q(email__icontains=query)
+        )
+
     if request.method == 'POST':
         form = RegistroUsuarioForm(request.POST, user_request=request.user)
         if form.is_valid():
@@ -215,6 +221,27 @@ def index(request):
         'stats_categoria' : stats_categoria,
     }
     return render(request, 'stokka/pages/index.html', context)
+
+# LÓGICA DE LA BARRA DE BUSQUEDA 
+@login_required
+def buscador_global(request):
+    query = request.GET.get('q', '').strip()
+    
+    if not query:
+        return redirect(request.META.get('HTTP_REFERER', 'index'))
+
+    # 1. Prioridad: ¿Es un producto? (Nombre o Referencia)
+    if Producto.objects.filter(Q(nombre__icontains=query) | Q(referencia__icontains=query)).exists():
+        return redirect(f'/inventario/?q={query}')
+
+    # 2. Segunda opción: ¿Es un usuario? (Solo si el que busca tiene permisos)
+    if request.user.es_admin_o_dueño():
+        if Usuario.objects.filter(Q(username__icontains=query) | Q(first_name__icontains=query) | Q(email__icontains=query)).exists():
+            return redirect(f'/gestion-usuarios/?q={query}')
+
+    # 3. Si no encuentra nada
+    messages.error(request, f"No se encontraron resultados para '{query}'")
+    return redirect(request.META.get('HTTP_REFERER', 'index'))
 
 # LÓGICA DEL LOGIN Y REGISTRO 
 def login_view(request):
@@ -422,6 +449,17 @@ def inventario_view(request):
         'query_actual': query,
         'form_añadir': form_añadir
     })
+
+def actualizar_stocks_ajax(request):
+    productos = Producto.objects.all()
+    # Enviamos un diccionario con el stock y el estado del semáforo
+    data = {
+        p.id: {
+            'stock': p.stock_actual,
+            'color': p.semaforo  # Esto devuelve 'critico', 'aviso' o 'ok'
+        } for p in productos
+    }
+    return JsonResponse(data)
 
 @login_required
 def añadir_producto(request):

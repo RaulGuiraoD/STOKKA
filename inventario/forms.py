@@ -14,6 +14,11 @@ class RegistroUsuarioForm(forms.ModelForm):
         label="Confirmar Contraseña",
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
+    email = forms.EmailField(
+        label="Email Corporativo",
+        required=True, 
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'ejemplo@stokka.com'})
+    )
 
     class Meta:
         model = User
@@ -29,6 +34,7 @@ class RegistroUsuarioForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         user_request = kwargs.pop('user_request', None) # Extraer antes del super
         super().__init__(*args, **kwargs)
+        self.fields['first_name'].required = True
         if user_request and not user_request.es_dueño():
             self.fields['rol'].choices = [c for c in User.ROL_CHOICES if c[0] != 'dueño']
 
@@ -36,6 +42,11 @@ class RegistroUsuarioForm(forms.ModelForm):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
+        email = cleaned_data.get("email")
+
+        if not email:
+            self.add_error('email', "El correo electrónico es imprescindible para el acceso.")
+
         if password != confirm_password:
             raise forms.ValidationError("Las contraseñas no coinciden")
         return cleaned_data

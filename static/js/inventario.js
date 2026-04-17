@@ -218,16 +218,16 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         // Evento para la LUPA
-       /* const btnLupa = sidebar.querySelector("button.btn-success") ||
-            sidebar.querySelector(".input-group button");
-
-        if (btnLupa) {
-            btnLupa.addEventListener("click", function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                ejecutarBusquedaYCierre();
-            });
-        }*/
+        /* const btnLupa = sidebar.querySelector("button.btn-success") ||
+             sidebar.querySelector(".input-group button");
+ 
+         if (btnLupa) {
+             btnLupa.addEventListener("click", function (e) {
+                 e.preventDefault();
+                 e.stopPropagation();
+                 ejecutarBusquedaYCierre();
+             });
+         }*/
     }
 
 
@@ -285,6 +285,9 @@ document.addEventListener("DOMContentLoaded", function () {
     // --- AJUSTE DE STOCK ---
     const stockButtons = document.querySelectorAll('.btn-adjust-stock');
     function realizarAjuste(url, productId) {
+        // --- BLOQUEO EN MODO SELECCIÓN ---
+        const haySeleccionados = document.querySelectorAll('.checkbox-producto:checked').length > 0;
+        if (haySeleccionados) return; // Si hay algo seleccionado, abortamos la función
         const csrftoken = getCookie('csrftoken');
         fetch(url, {
             method: 'POST',
@@ -307,12 +310,23 @@ document.addEventListener("DOMContentLoaded", function () {
     stockButtons.forEach(btn => {
         let timer, interval;
         const url = btn.dataset.url, pk = btn.dataset.pk;
+
         const start = (e) => {
+            const haySeleccionados = document.querySelectorAll('.checkbox-producto:checked').length > 0;
+            if (haySeleccionados) {
+                return;
+            }
+
             e.preventDefault();
+            e.stopPropagation();
             realizarAjuste(url, pk);
-            timer = setTimeout(() => { interval = setInterval(() => realizarAjuste(url, pk), 150); }, 500);
+            timer = setTimeout(() => {
+                interval = setInterval(() => realizarAjuste(url, pk), 150);
+            }, 500);
         };
+
         const stop = () => { clearTimeout(timer); clearInterval(interval); };
+
         btn.addEventListener('mousedown', start);
         btn.addEventListener('mouseup', stop);
         btn.addEventListener('mouseleave', stop);
@@ -380,18 +394,98 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const tableBody = document.querySelector("#tabla-inventario tbody");
 
+    // --- LÓGICA MÓVIL: PULSADO LARGO, SELECCIÓN Y DESPLEGABLE ---
     if (tableBody) {
+        let longPressTimer;
+        const LONG_PRESS_DURATION = 600;
+
+        const toggleSeleccionManual = (row) => {
+            const cb = row.querySelector('.checkbox-producto');
+            if (cb) {
+                cb.checked = !cb.checked;
+                actualizarBotón();
+                if (window.navigator.vibrate) window.navigator.vibrate(40);
+            }
+        };
+
+        // EVENTO CLICK (Para escritorio y móvil)
         tableBody.addEventListener("click", function (e) {
-            // Solo actuamos si estamos en móvil
+            const row = e.target.closest("tr");
+            if (!row) return;
+
+            // Detectamos si hay elementos seleccionados en este momento
+            const haySeleccionados = document.querySelectorAll('.checkbox-producto:checked').length > 0;
+            const isAction = e.target.closest("button") || e.target.closest("a");
+            const isCheckbox = e.target.closest(".form-check-input");
+
+            // 1. Si clicamos directamente en el checkbox, dejamos que funcione normal (actualizarBotón se encarga)
+            if (isCheckbox) return;
+
+            // 2. Si clicamos en la fila (pero no en un botón)
+            if (!isAction) {
+                const isMobile = window.innerWidth <= 992;
+
+                if (haySeleccionados) {
+                    // MODO SELECCIÓN ACTIVO: Cualquier clic en la fila selecciona/deselecciona
+                    e.preventDefault();
+                    toggleSeleccionManual(row);
+                } else if (isMobile) {
+                    // MODO MÓVIL LECTURA: Si no hay selección, el clic abre el acordeón
+                    row.classList.toggle("is-open");
+                }
+                // En Escritorio, si no hay seleccionados, el clic normal en la fila no hace nada 
+                // (así permitimos que el usuario use el checkbox para empezar).
+            }
+        });
+
+        // LÓGICA MÓVIL (Touchstart para el pulsado largo)
+        tableBody.addEventListener("touchstart", function (e) {
             if (window.innerWidth <= 992) {
                 const row = e.target.closest("tr");
                 const isAction = e.target.closest("button") || e.target.closest("a") || e.target.closest(".form-check-input");
 
-                // Si tocamos la fila pero NO un botón o checkbox
                 if (row && !isAction) {
-                    row.classList.toggle("is-open");
+                    longPressTimer = setTimeout(() => {
+                        const cb = row.querySelector('.checkbox-producto');
+                        // Si mantenemos pulsado y no estaba seleccionado, activamos el modo selección
+                        if (cb && !cb.checked) {
+                            toggleSeleccionManual(row);
+                        }
+                    }, LONG_PRESS_DURATION);
                 }
             }
-        });
+        }, { passive: true });
+
+        tableBody.addEventListener("touchend", () => clearTimeout(longPressTimer));
+        tableBody.addEventListener("touchmove", () => clearTimeout(longPressTimer));
     }
 });
+
+function autoActualizarStocks() {
+    fetch('/actualizar-stocks/') 
+        .then(response => response.json())
+        .then(data => {
+            Object.keys(data).forEach(id => {
+                const info = data[id];
+                const span = document.getElementById(`stock-val-${id}`);
+                const fila = document.getElementById(`producto-row-${id}`);
+
+                // 1. Actualizar el número de stock
+                if (span && span.innerText != info.stock) {
+                    span.innerText = info.stock;
+                }
+
+                // 2. Actualizar el color del semáforo en la fila
+                if (fila) {
+                    // Eliminamos las clases antiguas
+                    fila.classList.remove('stokka-critico', 'stokka-aviso', 'stokka-ok');
+                    // Añadimos la nueva clase según el servidor
+                    fila.classList.add(`stokka-${info.color}`);
+                }
+            });
+        })
+        .catch(error => console.error('Error en actualización visual:', error));
+}
+
+// Ejecutar cada 7 segundos para probar 
+setInterval(autoActualizarStocks, 7000);    
