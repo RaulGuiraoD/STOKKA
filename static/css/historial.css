@@ -1,0 +1,24 @@
+/* Estilos extra-pequeños para el historial */
+.extra-small { font-size: 0.7rem; }
+
+/* Badge personalizado para el historial */
+.badge-stokka-mov {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 4px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    display: inline-block;
+}
+
+/* Colores usando tus variables root */
+.mov-ajuste_rapido { background: #e8f5e9; color: var(--verde-secundario); border-color: var(--verde-secundario); }
+.mov-modal_editar { background: #fffde7; color: #856404; border-color: var(--amarillo-alerta); }
+.mov-creacion { background: var(--verde-stokka-light); color: var(--verde-stokka); border-color: var(--verde-stokka); }
+.mov-eliminacion { background: var(--rojo-alerta-light); color: var(--rojo-alerta); border-color: var(--rojo-alerta); }
+
+/* Ajuste sutil para la tabla */
+#tabla-historial tbody tr:hover {
+    background-color: rgba(0, 61, 0, 0.02);
+}

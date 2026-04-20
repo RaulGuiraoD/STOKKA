@@ -1,0 +1,102 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block title %}Historial - STOKKA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/historial.css' %}">
+{% endblock %}
+
+{% block content %}
+<main id="main-content" class="flex-grow-1 p-3 p-md-4">
+    <div class="container-fluid">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 mb-0 fw-bold text-stokka">Historial de Actividad</h2>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-12 col-md-5 col-lg-4">
+                <div class="input-group shadow-sm">
+                    <span class="input-group-text border-end-0 bg-white">
+                        <i class="fa-solid fa-search text-muted"></i>
+                    </span>
+                    <input type="text" id="filtro-historial" class="form-control stokka-input border-start-0 ps-0" placeholder="Filtrar por producto o usuario...">
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-stokka border-0 rounded-4 overflow-hidden bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tabla-historial">
+                    <thead class="bg-light text-secondary">
+                        <tr class="text-uppercase small fw-bold">
+                            <th class="ps-4 py-3">Fecha</th>
+                            <th>Usuario</th>
+                            <th>Producto</th>
+                            <th>Acción</th>
+                            <th>Cambio</th>
+                            <th class="pe-4 text-center">Stock Final</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top-0">
+                        {% for mov in movimientos %}
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="d-flex flex-column">
+                                    <span class="fw-bold small text-dark">{{ mov.fecha|date:"d M, Y" }}</span>
+                                    <span class="text-muted extra-small">{{ mov.fecha|date:"H:i" }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-stokka text-white d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; font-size: 11px; font-weight: 700;">
+                                        {{ mov.usuario.username|slice:":1"|upper|default:"S" }}
+                                    </div>
+                                    <span class="small fw-medium">{{ mov.usuario.username|default:"Sistema" }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="small fw-bold text-dark">{{ mov.producto_nombre }}</div>
+                                <div class="text-muted extra-small">ID Ref: #{{ mov.producto_id|default:"---" }}</div>
+                            </td>
+                            <td>
+                                <span class="badge-stokka-mov mov-{{ mov.tipo_accion|lower }}">
+                                    {{ mov.get_tipo_accion_display }}
+                                </span>
+                            </td>
+                            <td class="fw-bold">
+                                {% if mov.cambio > 0 %}
+                                    <span class="text-success small">+{{ mov.cambio }}</span>
+                                {% elif mov.cambio < 0 %}
+                                    <span class="text-danger small">{{ mov.cambio }}</span>
+                                {% else %}
+                                    <span class="text-muted small">0</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-4 text-center">
+                                <span class="badge bg-dark rounded-pill px-3" style="font-size: 11px; min-width: 45px;">
+                                    {{ mov.stock_resultante }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fa-solid fa-clock-rotate-left fa-2x mb-3 d-block"></i>
+                                    <p class="mb-0">No se han registrado movimientos todavía.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/historial.js' %}"></script>
+{% endblock %}

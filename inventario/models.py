@@ -102,3 +102,35 @@ class Perfil(models.Model):
 
     def __str__(self):
         return f"Perfil de {self.user.username}"
+    
+# MODELOS HISTORIAL
+class HistorialMovimiento(models.Model):
+
+    TIPOS_ACCION = [
+        ('AJUSTE_RAPIDO', 'Ajuste rápido (+/-)'),
+        ('MODAL_EDITAR', 'Edición en Modal'),
+        ('CREACION', 'Producto Creado'),
+        ('ELIMINACION', 'Producto Eliminado'),
+    ]
+
+    producto_nombre = models.CharField(max_length=255)
+    producto_id = models.IntegerField(null=True, blank=True)
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        related_name='movimientos'
+    )
+    tipo_accion = models.CharField(max_length=20, choices=TIPOS_ACCION)
+    cambio = models.IntegerField(default=0) 
+    stock_resultante = models.IntegerField()
+    fecha = models.DateTimeField(auto_now_add=True)
+    detalles = models.TextField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-fecha']
+        verbose_name = "Historial de Movimiento"
+        verbose_name_plural = "Historial de Movimientos"
+
+    def __str__(self):
+        return f"{self.producto_nombre} | {self.tipo_accion} | {self.cambio}"

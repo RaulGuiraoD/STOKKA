@@ -17,12 +17,12 @@ from django.contrib.auth.hashers import check_password
 
 # 4. Local App Imports
 from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroUsuarioForm
-from .models import Perfil, Producto, Usuario
+from .models import Perfil, Producto, Usuario, HistorialMovimiento
 
 # Esto detecta automáticamente el Usuario personalizado
 User = get_user_model()
 
-#Permisos de administrador
+# PERMISOS DE ADMINISTRADOR
 def admin_required(view_func):
     def _wrapped_view_func(request, *args, **kwarsg):
         if request.user.is_authenticated and (request.user.es_admin_o_dueño()):
@@ -466,7 +466,15 @@ def añadir_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            nuevo_p = form.save()
+            HistorialMovimiento.objects.create(
+                producto_nombre=nuevo_p.nombre,
+                producto_id=nuevo_p.id,
+                usuario=request.user,
+                tipo_accion='CREACION',
+                cambio=nuevo_p.stock_actual,
+                stock_resultante=nuevo_p.stock_actual
+            )
             messages.success(request, "Producto añadido correctamente")
             return redirect('inventario')
         else:
@@ -484,6 +492,16 @@ def añadir_producto(request):
 def eliminar_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
     if request.method == 'POST':
+        # REGISTRO EN HISTORIAL ANTES DE BORRAR
+        HistorialMovimiento.objects.create(
+            producto_nombre=producto.nombre,
+            producto_id=producto.id,
+            usuario=request.user,
+            tipo_accion='ELIMINACION',
+            cambio=0,
+            stock_resultante=0,
+            detalles="Eliminación individual"
+        )
         producto.delete()
         messages.success(request, "Producto eliminado.")
         return redirect('inventario')
@@ -495,18 +513,49 @@ def eliminar_masivo(request):
         ids_raw = request.POST.get('ids', '')
         if ids_raw:
             ids_list = ids_raw.split(',')
-            # Eliminamos todos los productos cuyos IDs estén en la lista
-            Producto.objects.filter(id__in=ids_list).delete()
-            messages.success(request, f"Se han eliminado {len(ids_list)} productos correctamente.")
+            productos_a_borrar = Producto.objects.filter(id__in=ids_list)
+            
+            cantidad = productos_a_borrar.count()
+            
+            # Registramos cada uno en el historial
+            for p in productos_a_borrar:
+                HistorialMovimiento.objects.create(
+                    producto_nombre=p.nombre,
+                    producto_id=p.id,
+                    usuario=request.user,
+                    tipo_accion='ELIMINACION',
+                    cambio=0,
+                    stock_resultante=0,
+                    detalles="Eliminación masiva"
+                )
+            
+            # Ahora sí, borramos todos de golpe
+            productos_a_borrar.delete()
+            messages.success(request, f"Se han eliminado {cantidad} productos correctamente.")
     return redirect('inventario')
 
 @login_required
 def editar_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
     if request.method == 'POST':
+        # Guardamos el stock inicial para comparar
+        stock_inicial = producto.stock_actual
+
         form = ProductoForm(request.POST, request.FILES, instance=producto)
         if form.is_valid():
-            form.save()
+            producto_editado = form.save()
+            # Calculamos la diferencia
+            diferencia = producto_editado.stock_actual - stock_inicial
+            
+            # REGISTRO EN HISTORIAL
+            HistorialMovimiento.objects.create(
+                producto_nombre=producto_editado.nombre,
+                producto_id=producto_editado.id,
+                usuario=request.user,
+                tipo_accion='MODAL_EDITAR',
+                cambio=diferencia,
+                stock_resultante=producto_editado.stock_actual
+            )
             messages.success(request, f"Producto {producto.nombre} actualizado.")
             return redirect('inventario')
     else:
@@ -548,3 +597,33 @@ def disminuir_stock(request, pk):
             return JsonResponse({'stock_actual': producto.stock_actual, 'semaforo': producto.semaforo})
             
     return redirect('inventario')
+
+# HISTORIAL PARA FUNCIONES RÁPIDAS (+/-)
+@login_required
+def registrar_historial_rapido(request, pk):
+    if request.method == 'POST':
+        producto = get_object_or_404(Producto, pk=pk)
+        delta = int(request.POST.get('delta', 0)) # Si delta es -3, se guarda como -3
+        
+        if delta != 0:
+            HistorialMovimiento.objects.create(
+                producto_nombre=producto.nombre,
+                producto_id=producto.id,
+                usuario=request.user,
+                tipo_accion='AJUSTE_RAPIDO',
+                cambio=delta, # Aquí se guarda el signo
+                stock_resultante=producto.stock_actual
+            )
+        return JsonResponse({'status': 'ok'})
+            
+    return JsonResponse({'status': 'error', 'message': 'No se pudo registrar'}, status=400)
+
+@login_required
+def historial_movimientos(request):
+    # Traemos los movimientos, ordenados por fecha descendente
+    movimientos = HistorialMovimiento.objects.all().select_related('usuario').order_by('-fecha')[:100]
+    
+    return render(request, 'stokka/pages/historial.html', {
+        'movimientos': movimientos,
+        'titulo': 'Historial de Actividad'
+    })

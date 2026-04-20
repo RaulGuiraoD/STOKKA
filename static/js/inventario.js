@@ -1,3 +1,7 @@
+// --- VARIABLES PARA HISTORIAL CON DEBOUNCE ---
+let debounceTimers = {};
+let cambiosAcumulados = {};
+
 // AUTO-FOCO EN EL BUSCADOR AL ABRIR SIDEBAR
 function toggleFiltros() {
     const sidebar = document.getElementById('sidebar-filtros');
@@ -289,6 +293,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const haySeleccionados = document.querySelectorAll('.checkbox-producto:checked').length > 0;
         if (haySeleccionados) return; // Si hay algo seleccionado, abortamos la función
         const csrftoken = getCookie('csrftoken');
+        // Detectamos si es aumento o disminución por la URL
+        const esAumento = url.includes('subir') || url.includes('aumentar');
         fetch(url, {
             method: 'POST',
             headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' },
@@ -303,6 +309,8 @@ document.addEventListener("DOMContentLoaded", function () {
                         row.classList.remove('stokka-critico', 'stokka-aviso', 'stokka-ok');
                         row.classList.add('stokka-' + data.semaforo);
                     }
+                    // --- NUEVA LÓGICA DE HISTORIAL ---
+                    acumularHistorialRapido(productId, esAumento);
                 }
             });
     }
@@ -466,6 +474,7 @@ function autoActualizarStocks() {
         .then(response => response.json())
         .then(data => {
             Object.keys(data).forEach(id => {
+                if (debounceTimers[id]) return;
                 const info = data[id];
                 const span = document.getElementById(`stock-val-${id}`);
                 const fila = document.getElementById(`producto-row-${id}`);
@@ -489,3 +498,53 @@ function autoActualizarStocks() {
 
 // Ejecutar cada 7 segundos para probar 
 setInterval(autoActualizarStocks, 7000);    
+
+function acumularHistorialRapido(productId, esAumento) {
+    // 1. Acumular el cambio
+    if (!cambiosAcumulados[productId]) cambiosAcumulados[productId] = 0;
+    cambiosAcumulados[productId] += esAumento ? 1 : -1;
+
+    // 2. Resetear el temporizador de 5 segundos
+    if (debounceTimers[productId]) clearTimeout(debounceTimers[productId]);
+
+    debounceTimers[productId] = setTimeout(() => {
+        enviarHistorialAlServidor(productId);
+    }, 5000);
+}
+
+function enviarHistorialAlServidor(productId) {
+    const deltaFinal = cambiosAcumulados[productId];
+    if (!deltaFinal) return; 
+
+    const formData = new FormData();
+    formData.append('delta', deltaFinal);
+
+    fetch(`/inventario/registrar-historial-rapido/${productId}/`, {
+        method: 'POST',
+        body: formData,
+        keepalive: true, // <--- ESTO permite que la petición termine aunque cierres la pestaña
+        headers: { 
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest' 
+        }
+    });
+    
+    // Limpiamos inmediatamente para evitar duplicados
+    delete cambiosAcumulados[productId];
+    if (debounceTimers[productId]) clearTimeout(debounceTimers[productId]);
+}
+
+
+// Detectar cuando el usuario intenta salir de la página
+window.addEventListener('beforeunload', function (e) {
+    // Revisamos si hay cambios que aún no se han enviado
+    const idsPendientes = Object.keys(cambiosAcumulados);
+    
+    if (idsPendientes.length > 0) {
+        idsPendientes.forEach(productId => {
+            // Usamos sendBeacon si está disponible (es más fiable para salidas)
+            // o forzamos el envío inmediato
+            enviarHistorialAlServidor(productId);
+        });
+    }
+});
