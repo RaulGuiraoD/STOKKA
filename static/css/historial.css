@@ -23,9 +23,43 @@ thead th {
     transition: background-color 0.2s ease;
 }
 
-.fila-movimiento:hover {
-    background-color: rgba(0, 61, 0, 0.03) !important;
+/* --- COLORES DE FILA SEGÚN ACCIÓN --- */
+
+/* Ajuste rápido: Gris */
+.tipo-ajuste_rapido { 
+    background-color: #0000000d !important; 
+    color: #495057 !important;
 }
+
+/* Creación: Verde */
+.tipo-creacion { 
+    background-color: var(--verde-stokka-mid) !important; 
+    color: var(--verde-stokka-light) !important;
+    border-left: 5px solid var(--verde-stokka) !important;
+}
+
+/* Eliminación: Rojo */
+.tipo-eliminacion { 
+    background-color: var(--rojo-alerta-mid) !important; 
+    color: var(--rojo-alerta-light) !important;
+    border-left: 5px solid var(--rojo-alerta) !important;
+}
+
+/* Edición: Amarillo */
+.tipo-modal_editar { 
+    background-color: var(--amarillo-alerta-mid) !important; 
+    color: #856404 !important;
+    border-left: 5px solid #ffc107 !important;
+}
+
+/* IMPORTANTE: Hacer que las celdas sean transparentes para que se vea el fondo de la fila */
+#tabla-historial td {
+    background-color: transparent !important;
+}
+
+/* .fila-movimiento:hover {
+    background-color: rgba(0, 61, 0, 0.015) !important;
+} */
 
 /* --- TIPOGRAFÍA Y TEXTO --- */
 .text-truncate {
@@ -59,11 +93,11 @@ thead th {
     text-transform: uppercase;
     display: inline-block;
 }
-
-.mov-ajuste_rapido { background-color: #e9ecef; color: #495057; }
-.mov-creacion      { background-color: #d1e7dd; color: #0f5132; }
-.mov-eliminacion   { background-color: #f8d7da; color: #842029; }
-.mov-modal_editar  { background-color: #fffde7; color: #856404; border: 1px solid var(--amarillo-alerta); }
+ 
+.mov-ajuste_rapido { background-color: #e9ecef; color: #495057; border: 1px solid var(--gris-fondo);}
+.mov-creacion      { background-color: #d1e7dd; color: #0f5132; border: 1px solid var(--verde-stokka);}
+.mov-eliminacion   { background-color: #f8d7da; color: #842029; border: 1px solid var(--rojo-alerta);}
+.mov-modal_editar  { background-color: #fffde7; color: #856404; border: 1px solid var(--amarillo-alerta); } 
 
 /* --- ACORDEÓN --- */
 .accordion-button:not(.collapsed) {
@@ -75,6 +109,11 @@ thead th {
 .accordion-button:focus {
     box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
     border-color: var(--verde-stokka) !important;
+}
+
+/* Animación más fluida para el acordeón de día */
+.accordion-collapse {
+    transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 /* --- INPUTS --- */
@@ -124,15 +163,17 @@ thead th {
         width: 100% !important;
         background: white;
         border-radius: 12px !important;
-        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        border: none !important;
         overflow: hidden;
         cursor: pointer;
-        transition: box-shadow 0.25s ease;
+        transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        margin-bottom: 10px;
+
     }
 
-    #tabla-historial tbody tr.fila-movimiento:hover {
-        box-shadow: 0 2px 8px rgba(0, 61, 0, 0.08) !important;
-    }
+    /* #tabla-historial tbody tr.fila-movimiento:hover {
+        box-shadow: 0 1px 6px rgba(0, 61, 0, 0.06) !important;
+    } */
 
     /* 3. Ocultar TODAS las celdas por defecto */
     #tabla-historial td {
@@ -181,17 +222,19 @@ thead th {
 
     /* 5. Chevron en celda Producto (inyectado por JS) */
     .chevron-mobile {
+        display: inline-block;
         flex-shrink: 0;
         color: var(--verde-stokka);
-        opacity: 0.4;
+        opacity: 0.35;
         font-size: 11px;
-        transition: transform 0.25s ease, opacity 0.2s ease;
-        margin-left: 4px;
+        margin-left: 6px;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                    opacity 0.3s ease;
     }
 
     tr.is-open .chevron-mobile {
         transform: rotate(180deg);
-        opacity: 0.85;
+        opacity: 0.8;
     }
 
     /* 6. PANEL DETALLE: ocupa toda la segunda fila del grid */
@@ -208,17 +251,17 @@ thead th {
 
     /* Interior del panel */
     .mobile-detail-inner {
-        border-top: 1px solid rgba(0, 0, 0, 0.07);
-        background-color: rgba(0, 61, 0, 0.025);
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        background-color: rgba(255, 255, 255, 0.3) !important;
         padding: 10px 16px 14px;
         display: flex;
         flex-direction: column;
         gap: 10px;
-        animation: historial-slide-down 0.22s ease forwards;
+        animation: historial-slide-down 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
 
     @keyframes historial-slide-down {
-        from { opacity: 0; transform: translateY(-4px); }
+        from { opacity: 0; transform: translateY(-6px); }
         to   { opacity: 1; transform: translateY(0); }
     }
 

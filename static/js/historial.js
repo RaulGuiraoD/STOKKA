@@ -16,14 +16,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /* CALENDARIO */
     const inputSearch = document.getElementById('filtro-historial');
-    const inputDate   = document.getElementById('busqueda-fecha');
+    const inputDate = document.getElementById('busqueda-fecha');
 
-    // Salida limpia si no estamos en la página de historial
     if (!inputSearch || !inputDate) return;
+
+    /* ── CERRAR TODOS LOS ACORDEONES AL ENTRAR ── */
+    document.querySelectorAll('#accordionHistorial .accordion-collapse.show').forEach(collapse => {
+        collapse.classList.remove('show');
+    });
+    document.querySelectorAll('#accordionHistorial .accordion-button').forEach(btn => {
+        btn.classList.add('collapsed');
+    });
 
     /* ── FILTRADO ── */
     function aplicarFiltros() {
-        const term    = inputSearch.value.toLowerCase().trim();
+        const term = inputSearch.value.toLowerCase().trim();
         const dateVal = inputDate.value;
         const accordionItems = document.querySelectorAll('.accordion-item');
 
@@ -66,10 +73,9 @@ document.addEventListener("DOMContentLoaded", function () {
         if (e.key === "Enter") this.blur();
     });
 
-    /* ── INYECCIÓN DEL PANEL Y CHEVRON (una sola vez al cargar) ── */
+    /* ── INYECCIÓN DEL PANEL Y CHEVRON ── */
     document.querySelectorAll('#tabla-historial tbody tr.fila-movimiento').forEach(row => {
 
-        // Chevron en la celda Producto
         const tdProducto = row.querySelector('td[data-label="PRODUCTO"]');
         if (tdProducto) {
             const chevron = document.createElement('i');
@@ -77,9 +83,8 @@ document.addEventListener("DOMContentLoaded", function () {
             tdProducto.appendChild(chevron);
         }
 
-        // Panel detalle con Usuario y Movimiento
         const tdUsuario = row.querySelector('td[data-label="USUARIO"]');
-        const tdMov     = row.querySelector('td[data-label="MOVIMIENTO"]');
+        const tdMov = row.querySelector('td[data-label="MOVIMIENTO"]');
         if (!tdUsuario || !tdMov) return;
 
         const panel = document.createElement('td');
@@ -110,14 +115,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const isOpen = row.classList.contains('is-open');
 
-        // Cerrar todas antes de abrir la nueva
         document.querySelectorAll('#tabla-historial .fila-movimiento.is-open')
             .forEach(r => r.classList.remove('is-open'));
 
         if (!isOpen) row.classList.add('is-open');
     });
 
-    // Limpiar estado al volver a desktop
     window.addEventListener('resize', function () {
         if (window.innerWidth > 992) {
             document.querySelectorAll('#tabla-historial .fila-movimiento.is-open')

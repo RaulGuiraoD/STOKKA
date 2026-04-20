@@ -108,7 +108,7 @@ class HistorialMovimiento(models.Model):
 
     TIPOS_ACCION = [
         ('AJUSTE_RAPIDO', 'Ajuste rápido (+/-)'),
-        ('MODAL_EDITAR', 'Edición en Modal'),
+        ('MODAL_EDITAR', 'Producto Editado'),
         ('CREACION', 'Producto Creado'),
         ('ELIMINACION', 'Producto Eliminado'),
     ]
