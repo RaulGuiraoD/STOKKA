@@ -3,100 +3,115 @@
 
 {% block title %}Historial - STOKKA{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/historial.css' %}">
-{% endblock %}
 
 {% block content %}
-<main id="main-content" class="flex-grow-1 p-3 p-md-4">
+<main class="flex-grow-1 p-3 p-md-4 bg-gris-fondo">
     <div class="container-fluid">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="h4 mb-0 fw-bold text-stokka">Historial de Actividad</h2>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-12 col-md-5 col-lg-4">
-                <div class="input-group shadow-sm">
-                    <span class="input-group-text border-end-0 bg-white">
-                        <i class="fa-solid fa-search text-muted"></i>
-                    </span>
-                    <input type="text" id="filtro-historial" class="form-control stokka-input border-start-0 ps-0" placeholder="Filtrar por producto o usuario...">
+        <div class="row mb-4 gy-3 align-items-center">
+            <div class="col-12 col-md-6">
+                <h2 class="h4 fw-bold text-stokka mb-0">Historial de Actividad</h2>
+            </div>
+            <div class="col-12 col-md-6">
+                <div class="d-flex gap-2 justify-content-md-end">
+                    <div class="input-group" style="max-width: 250px;">
+                        <input type="text" id="filtro-historial" class="form-control stokka-input shadow-focus-stokka"
+                            placeholder="Buscar..." value="{{ query_actual|default:'' }}">
+                    </div>
+                    <input type="date" id="busqueda-fecha" class="form-control stokka-input shadow-focus-stokka w-auto">
                 </div>
             </div>
         </div>
 
-        <div class="card shadow-stokka border-0 rounded-4 overflow-hidden bg-white">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="tabla-historial">
-                    <thead class="bg-light text-secondary">
-                        <tr class="text-uppercase small fw-bold">
-                            <th class="ps-4 py-3">Fecha</th>
-                            <th>Usuario</th>
-                            <th>Producto</th>
-                            <th>Acción</th>
-                            <th>Cambio</th>
-                            <th class="pe-4 text-center">Stock Final</th>
-                        </tr>
-                    </thead>
-                    <tbody class="border-top-0">
-                        {% for mov in movimientos %}
-                        <tr>
-                            <td class="ps-4 py-3">
-                                <div class="d-flex flex-column">
-                                    <span class="fw-bold small text-dark">{{ mov.fecha|date:"d M, Y" }}</span>
-                                    <span class="text-muted extra-small">{{ mov.fecha|date:"H:i" }}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="rounded-circle bg-stokka text-white d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; font-size: 11px; font-weight: 700;">
-                                        {{ mov.usuario.username|slice:":1"|upper|default:"S" }}
-                                    </div>
-                                    <span class="small fw-medium">{{ mov.usuario.username|default:"Sistema" }}</span>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="small fw-bold text-dark">{{ mov.producto_nombre }}</div>
-                                <div class="text-muted extra-small">ID Ref: #{{ mov.producto_id|default:"---" }}</div>
-                            </td>
-                            <td>
-                                <span class="badge-stokka-mov mov-{{ mov.tipo_accion|lower }}">
-                                    {{ mov.get_tipo_accion_display }}
-                                </span>
-                            </td>
-                            <td class="fw-bold">
-                                {% if mov.cambio > 0 %}
-                                    <span class="text-success small">+{{ mov.cambio }}</span>
-                                {% elif mov.cambio < 0 %}
-                                    <span class="text-danger small">{{ mov.cambio }}</span>
-                                {% else %}
-                                    <span class="text-muted small">0</span>
-                                {% endif %}
-                            </td>
-                            <td class="pe-4 text-center">
-                                <span class="badge bg-dark rounded-pill px-3" style="font-size: 11px; min-width: 45px;">
-                                    {{ mov.stock_resultante }}
-                                </span>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="fa-solid fa-clock-rotate-left fa-2x mb-3 d-block"></i>
-                                    <p class="mb-0">No se han registrado movimientos todavía.</p>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="accordion accordion-flush shadow-stokka rounded-4 overflow-hidden" id="accordionHistorial">
+            {% regroup movimientos by fecha|date:"d \d\e F, Y" as movimientos_por_dia %}
+
+            {% for dia in movimientos_por_dia %}
+            <div class="accordion-item border-bottom">
+                <h2 class="accordion-header">
+                    <button class="accordion-button {% if not forloop.first %}collapsed{% endif %} fw-bold bg-white"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}">
+                        <i class="fa-solid fa-calendar-check text-stokka me-2"></i>
+                        {{ dia.grouper }}
+                        {% if forloop.first %}<span class="badge bg-stokka ms-2 small">Hoy</span>{% endif %}
+                    </button>
+                </h2>
+                <div id="collapse-{{ forloop.counter }}"
+                    class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
+                    data-bs-parent="#accordionHistorial">
+                    <div class="accordion-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" id="tabla-historial" style="table-layout: fixed; width: 100%;">
+                                <thead class="bg-light">
+                                    <tr class="text-uppercase fw-bold border-bottom">
+                                        <th style="width: 20%;" class="ps-4 text-stokka text-start">Usuario</th>
+                                        <th style="width: 35%;" class="text-stokka text-start">Producto</th>
+                                        <th style="width: 20%;" class="d-none d-md-table-cell text-stokka text-start ps-3">Movimiento</th>
+                                        <th style="width: 25%;" class="text-stokka text-start">Trayectoria Stock</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mov in dia.list %}
+                                    <tr class="fila-movimiento clickable-row" data-fecha="{{ mov.fecha|date:'Y-m-d' }}">
+                                        <td class="ps-4" data-label="USUARIO">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-white border border-1 border-light shadow-sm rounded-circle overflow-hidden d-flex align-items-center justify-content-center flex-shrink-0 me-2"
+                                                    style="width: 38px; height: 38px;">
+                                                    {% if mov.usuario.perfil.foto %}
+                                                    <img src="{{ mov.usuario.perfil.foto.url }}" alt="Avatar" class="w-100 h-100 object-fit-cover">
+                                                    {% else %}
+                                                    <i class="fa-solid fa-circle-user text-secondary fs-5"></i>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="lh-1 text-truncate">
+                                                    <div class="fw-bold text-uppercase {% if mov.usuario.is_superuser %}text-stokka{% elif mov.usuario.groups.all.0.name == 'Admin' %}text-amarillo-historial{% else %}text-verde-secundario{% endif %}" 
+                                                        style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                                        {{ mov.usuario.username }}
+                                                    </div>
+                                                    <span class="text-muted" style="font-size: 10px;">{{ mov.fecha|date:"H:i" }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td class="text-start" data-label="PRODUCTO">
+                                            <div class="text-truncate fw-bold text-dark w-100 mb-0" style="font-size: 0.95rem;" title="{{ mov.producto_nombre }}">
+                                                {{ mov.producto_nombre }}
+                                            </div>
+                                            <div class="text-muted fw-bold extra-small">ID: #{{ mov.producto_id }}</div>
+                                        </td>
+
+                                        <td class="text-start ps-3" data-label="MOVIMIENTO">
+                                            <span class="badge-stokka-mov mov-{{ mov.tipo_accion|lower }} px-2 py-1">
+                                                {{ mov.get_tipo_accion_display }}
+                                            </span>
+                                        </td>
+
+                                        <td class="text-start" data-label="TRAYECTORIA">
+                                            <div class="d-flex flex-column align-items-start trayectoria-container">
+                                                <div class="fw-bolder {% if mov.cambio > 0 %}text-success{% else %}text-danger{% endif %} val-cambio">
+                                                    {% if mov.cambio > 0 %}+{% endif %}{{ mov.cambio }}
+                                                </div>
+                                                <div class="text-muted trajectory-details" style="font-size: 12px; font-weight: 500;">
+                                                    <span>{{ mov.stock_anterior }}</span> 
+                                                    <i class="fa-solid fa-arrow-right mx-2 text-stokka"></i> 
+                                                    <span class="text-dark fw-bold">{{ mov.stock_resultante }}</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
+            {% empty %}
+            {% endfor %}
         </div>
     </div>
 </main>
-{% endblock %}
 
-{% block extra_js %}
 <script src="{% static 'js/historial.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/historial.css' %}">
+
 {% endblock %}

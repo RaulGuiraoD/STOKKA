@@ -1,24 +1,253 @@
-/* Estilos extra-pequeños para el historial */
-.extra-small { font-size: 0.7rem; }
+/* ==========================================
+   STOKKA - HISTORIAL UI
+   ========================================== */
 
-/* Badge personalizado para el historial */
-.badge-stokka-mov {
-    font-size: 10px;
-    font-weight: 800;
-    padding: 4px 8px;
-    border-radius: 6px;
+/* --- TABLA DESKTOP --- */
+#tabla-historial {
+    table-layout: fixed;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead th {
+    color: var(--verde-stokka) !important;
+    background-color: #f8f9fa !important;
+    font-size: 13px !important;
+    letter-spacing: 1px;
+    padding: 18px 5px !important;
+    border-bottom: 2px solid var(--verde-stokka) !important;
     text-transform: uppercase;
-    border: 1px solid transparent;
+}
+
+.fila-movimiento {
+    transition: background-color 0.2s ease;
+}
+
+.fila-movimiento:hover {
+    background-color: rgba(0, 61, 0, 0.03) !important;
+}
+
+/* --- TIPOGRAFÍA Y TEXTO --- */
+.text-truncate {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.extra-small { font-size: 0.75rem; }
+
+.text-stokka-dueno     { color: var(--verde-stokka) !important; font-weight: 800; }
+.text-verde-secundario { color: var(--verde-secundario) !important; }
+.text-amarillo-historial { color: #d4a017 !important; }
+
+/* --- NÚMEROS Y TRAYECTORIA --- */
+.fw-bolder {
+    font-family: 'Merriweather', serif;
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.fa-arrow-right { opacity: 0.7; font-size: 10px; }
+
+/* --- BADGES DE ACCIÓN --- */
+.badge-stokka-mov {
+    font-size: 11px;
+    font-weight: 800;
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-transform: uppercase;
     display: inline-block;
 }
 
-/* Colores usando tus variables root */
-.mov-ajuste_rapido { background: #e8f5e9; color: var(--verde-secundario); border-color: var(--verde-secundario); }
-.mov-modal_editar { background: #fffde7; color: #856404; border-color: var(--amarillo-alerta); }
-.mov-creacion { background: var(--verde-stokka-light); color: var(--verde-stokka); border-color: var(--verde-stokka); }
-.mov-eliminacion { background: var(--rojo-alerta-light); color: var(--rojo-alerta); border-color: var(--rojo-alerta); }
+.mov-ajuste_rapido { background-color: #e9ecef; color: #495057; }
+.mov-creacion      { background-color: #d1e7dd; color: #0f5132; }
+.mov-eliminacion   { background-color: #f8d7da; color: #842029; }
+.mov-modal_editar  { background-color: #fffde7; color: #856404; border: 1px solid var(--amarillo-alerta); }
 
-/* Ajuste sutil para la tabla */
-#tabla-historial tbody tr:hover {
-    background-color: rgba(0, 61, 0, 0.02);
+/* --- ACORDEÓN --- */
+.accordion-button:not(.collapsed) {
+    background-color: var(--verde-stokka-light) !important;
+    color: var(--verde-stokka) !important;
+    box-shadow: none;
+}
+
+.accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
+    border-color: var(--verde-stokka) !important;
+}
+
+/* --- INPUTS --- */
+.shadow-focus-stokka:focus {
+    border-color: var(--verde-stokka) !important;
+    box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.15) !important;
+}
+
+/* ==========================================
+   PANEL DETALLE MÓVIL
+   (oculto en desktop, inyectado por JS)
+   ========================================== */
+
+.mobile-detail-panel {
+    display: none; /* Invisible fuera del breakpoint móvil */
+}
+
+/* ==========================================
+   MÓVIL ≤ 992px
+   ========================================== */
+
+@media (max-width: 992px) {
+
+    /* 1. Romper el contexto de tabla para poder usar grid/flex */
+    #tabla-historial {
+        display: block !important;
+        table-layout: auto !important;
+        width: 100% !important;
+    }
+
+    #tabla-historial thead {
+        display: none !important;
+    }
+
+    #tabla-historial tbody {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    /* 2. Cada fila = tarjeta con grid de 2 columnas */
+    #tabla-historial tbody tr.fila-movimiento {
+        display: grid !important;
+        grid-template-columns: 1fr auto !important;
+        grid-template-rows: auto !important;    /* Fila visible siempre */
+        width: 100% !important;
+        background: white;
+        border-radius: 12px !important;
+        border: 1px solid rgba(0, 0, 0, 0.1) !important;
+        overflow: hidden;
+        cursor: pointer;
+        transition: box-shadow 0.25s ease;
+    }
+
+    #tabla-historial tbody tr.fila-movimiento:hover {
+        box-shadow: 0 2px 8px rgba(0, 61, 0, 0.08) !important;
+    }
+
+    /* 3. Ocultar TODAS las celdas por defecto */
+    #tabla-historial td {
+        display: none !important;
+        border: none !important;
+        padding: 14px 16px !important;
+        background: transparent !important;
+    }
+
+    /* 4. SIEMPRE VISIBLES: Producto (izquierda) y Trayectoria (derecha) */
+
+    #tabla-historial td[data-label="PRODUCTO"] {
+        display: flex !important;
+        grid-column: 1;
+        grid-row: 1;
+        align-items: center;
+        gap: 6px;
+        min-width: 0; /* Necesario para que text-truncate funcione */
+        padding-right: 8px !important;
+    }
+
+    #tabla-historial td[data-label="TRAYECTORIA"] {
+        display: flex !important;
+        grid-column: 2;
+        grid-row: 1;
+        align-items: center;
+        justify-content: flex-end;
+        white-space: nowrap;
+        padding-left: 8px !important;
+    }
+
+    #tabla-historial td[data-label="TRAYECTORIA"] .trayectoria-container {
+        align-items: flex-end !important;
+    }
+
+    /* Ocultamos el detalle pequeño de stock en estado cerrado */
+    #tabla-historial td[data-label="TRAYECTORIA"] .trajectory-details {
+        display: none !important;
+    }
+
+    /* Mostramos el detalle pequeño de stock al abrir */
+    #tabla-historial tr.is-open td[data-label="TRAYECTORIA"] .trajectory-details {
+        display: block !important;
+        margin-top: 4px;
+    }
+
+    /* 5. Chevron en celda Producto (inyectado por JS) */
+    .chevron-mobile {
+        flex-shrink: 0;
+        color: var(--verde-stokka);
+        opacity: 0.4;
+        font-size: 11px;
+        transition: transform 0.25s ease, opacity 0.2s ease;
+        margin-left: 4px;
+    }
+
+    tr.is-open .chevron-mobile {
+        transform: rotate(180deg);
+        opacity: 0.85;
+    }
+
+    /* 6. PANEL DETALLE: ocupa toda la segunda fila del grid */
+    #tabla-historial td.mobile-detail-panel {
+        display: none !important;
+        grid-column: 1 / -1 !important;
+        grid-row: 2;
+        padding: 0 !important;
+    }
+
+    #tabla-historial tr.is-open td.mobile-detail-panel {
+        display: block !important;
+    }
+
+    /* Interior del panel */
+    .mobile-detail-inner {
+        border-top: 1px solid rgba(0, 0, 0, 0.07);
+        background-color: rgba(0, 61, 0, 0.025);
+        padding: 10px 16px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        animation: historial-slide-down 0.22s ease forwards;
+    }
+
+    @keyframes historial-slide-down {
+        from { opacity: 0; transform: translateY(-4px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .mobile-detail-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .mobile-detail-label {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        color: var(--verde-stokka);
+        opacity: 0.5;
+        flex-shrink: 0;
+    }
+
+    .mobile-detail-value {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* 7. Ajustes de tamaño en móvil */
+    .val-cambio { font-size: 1.2rem !important; }
+    .trajectory-details { font-size: 11px !important; }
 }

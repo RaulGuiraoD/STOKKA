@@ -620,10 +620,10 @@ def registrar_historial_rapido(request, pk):
 
 @login_required
 def historial_movimientos(request):
-    # Traemos los movimientos, ordenados por fecha descendente
-    movimientos = HistorialMovimiento.objects.all().select_related('usuario').order_by('-fecha')[:100]
-    
+    # Traemos los movimientos (el ordenamiento por fecha es vital)
+    movimientos = HistorialMovimiento.objects.all().select_related('usuario').order_by('-fecha')
+    for mov in movimientos:
+        mov.stock_anterior = mov.stock_resultante - mov.cambio
     return render(request, 'stokka/pages/historial.html', {
         'movimientos': movimientos,
-        'titulo': 'Historial de Actividad'
     })
