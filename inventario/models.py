@@ -126,6 +126,7 @@ class HistorialMovimiento(models.Model):
     stock_resultante = models.IntegerField()
     fecha = models.DateTimeField(auto_now_add=True)
     detalles = models.TextField(null=True, blank=True)
+    stock_anterior = models.IntegerField(default=0)
 
     class Meta:
         ordering = ['-fecha']

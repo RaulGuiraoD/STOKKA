@@ -537,38 +537,59 @@ def eliminar_masivo(request):
 @login_required
 def editar_producto(request, pk):
     producto = get_object_or_404(Producto, pk=pk)
+    
     if request.method == 'POST':
-        # Guardamos el stock inicial para comparar
+        # 1. Capturamos el estado REAL antes de cualquier cambio del formulario
         stock_inicial = producto.stock_actual
+        nombre_inicial = producto.nombre
+        ref_inicial = producto.referencia or "Sin referencia"
+        aviso_inicial = producto.umbrales_amarillo
+        critico_inicial = producto.umbrales_rojo
 
         form = ProductoForm(request.POST, request.FILES, instance=producto)
+        
         if form.is_valid():
             producto_editado = form.save()
-            # Calculamos la diferencia
+            
+            # 2. Calcular diferencia de stock real
             diferencia = producto_editado.stock_actual - stock_inicial
             
-            # REGISTRO EN HISTORIAL
+            # 3. Detectar cambios para los detalles
+            cambios = []
+            if nombre_inicial != producto_editado.nombre:
+                cambios.append(f"Nombre: {nombre_inicial} → {producto_editado.nombre}")
+            
+            if ref_inicial != (producto_editado.referencia or "Sin referencia"):
+                cambios.append(f"Ref: {ref_inicial} → {producto_editado.referencia}")
+            
+            if aviso_inicial != producto_editado.umbrales_amarillo or critico_inicial != producto_editado.umbrales_rojo:
+                cambios.append(f"Umbrales ajustados (Aviso: {producto_editado.umbrales_amarillo}, Crítico: {producto_editado.umbrales_rojo})")
+
+            detalles_final = "\n".join(cambios) if cambios else "Información general actualizada"
+
+            # 4. REGISTRO EN HISTORIAL
             HistorialMovimiento.objects.create(
                 producto_nombre=producto_editado.nombre,
                 producto_id=producto_editado.id,
                 usuario=request.user,
                 tipo_accion='MODAL_EDITAR',
                 cambio=diferencia,
-                stock_resultante=producto_editado.stock_actual
+                stock_anterior=stock_inicial,  # <--- VALOR ANTES DE EDITAR
+                stock_resultante=producto_editado.stock_actual, # <--- VALOR DESPUÉS DE EDITAR
+                detalles=detalles_final
             )
+
             messages.success(request, f"Producto {producto.nombre} actualizado.")
             return redirect('inventario')
     else:
         form = ProductoForm(instance=producto)
     
-    # SI ES AJAX, devolvemos un template parcial (solo el formulario)
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, 'stokka/modales/form_editar_parcial.html', {
             'form': form,
             'producto': producto
         })
     
-    # Si alguien entra por URL directa, sigue funcionando la página completa
     return render(request, 'stokka/pages/form_producto.html', {'form': form, 'titulo': 'Editar'})
 
 @login_required
@@ -598,7 +619,8 @@ def disminuir_stock(request, pk):
             
     return redirect('inventario')
 
-# HISTORIAL PARA FUNCIONES RÁPIDAS (+/-)
+# HISTORIAL
+# HISTORIAL FUNCIONES RÁPIDAS
 @login_required
 def registrar_historial_rapido(request, pk):
     if request.method == 'POST':
@@ -618,6 +640,7 @@ def registrar_historial_rapido(request, pk):
             
     return JsonResponse({'status': 'error', 'message': 'No se pudo registrar'}, status=400)
 
+#HISTORIAL GENERAL
 @login_required
 def historial_movimientos(request):
     # Traemos los movimientos (el ordenamiento por fecha es vital)

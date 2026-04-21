@@ -51,26 +51,27 @@
                                 </thead>
                                 <tbody>
                                     {% for mov in dia.list %}
-                                    <tr class="fila-movimiento clickable-row tipo-{{ mov.tipo_accion|lower }}" data-fecha="{{ mov.fecha|date:'Y-m-d' }}">
+                                    <tr class="fila-movimiento clickable-row tipo-{{ mov.tipo_accion|lower }}" 
+                                        data-fecha="{{ mov.fecha|date:'Y-m-d' }}"
+                                        data-bs-toggle="collapse" 
+                                        data-bs-target="#collapse-{{ mov.id }}"
+                                        style="cursor: pointer;">
+                                        
                                         <td class="ps-4" data-label="USUARIO">
                                             <div class="d-flex align-items-center">
                                                 <div class="bg-white border border-1 border-light shadow-sm rounded-circle overflow-hidden d-flex align-items-center justify-content-center flex-shrink-0 me-2"
                                                     style="width: 38px; height: 38px;">
                                                     {% if mov.usuario.perfil.foto %}
-                                                    <img src="{{ mov.usuario.perfil.foto.url }}" alt="Avatar" class="w-100 h-100 object-fit-cover">
+                                                        <img src="{{ mov.usuario.perfil.foto.url }}" alt="Avatar" class="w-100 h-100 object-fit-cover">
                                                     {% else %}
-                                                    <i class="fa-solid fa-circle-user text-secondary fs-5"></i>
+                                                        <i class="fa-solid fa-circle-user text-secondary fs-5"></i>
                                                     {% endif %}
                                                 </div>
                                                 <div class="lh-1 text-truncate">
                                                     <div class="fw-bold text-uppercase 
-                                                        {% if mov.usuario.rol == 'dueño' %}
-                                                            text-stokka
-                                                        {% elif mov.usuario.rol == 'admin' %}
-                                                            text-amarillo-historial
-                                                        {% else %}
-                                                            text-verde-secundario
-                                                        {% endif %}" 
+                                                        {% if mov.usuario.rol == 'dueño' %} text-stokka
+                                                        {% elif mov.usuario.rol == 'admin' %} text-amarillo-historial
+                                                        {% else %} text-verde-secundario {% endif %}" 
                                                         style="font-size: 0.75rem; letter-spacing: 0.5px;">
                                                         {{ mov.usuario.username }}
                                                     </div>
@@ -86,7 +87,7 @@
                                             <div class="text-muted fw-bold extra-small">ID: #{{ mov.producto_id }}</div>
                                         </td>
 
-                                       <td class="text-start ps-3" data-label="MOVIMIENTO">
+                                        <td class="text-start ps-3" data-label="MOVIMIENTO">
                                             <span class="badge-stokka-mov mov-{{ mov.tipo_accion|lower }} px-2 py-1">
                                                 {{ mov.get_tipo_accion_display }}
                                             </span>
@@ -94,21 +95,53 @@
 
                                         <td class="text-start" data-label="TRAYECTORIA">
                                             {% if mov.tipo_accion != 'eliminacion' %}
-                                            <div class="d-flex flex-column align-items-start trayectoria-container">
-                                                <div class="fw-bolder {% if mov.cambio > 0 %}text-success{% else %}text-danger{% endif %} val-cambio">
-                                                    {% if mov.cambio > 0 %}+{% endif %}{{ mov.cambio }}
+                                                <div class="d-flex flex-column align-items-start trayectoria-container">
+                                                    {% if mov.cambio == 0 %}
+                                                        <span class="no-stock-change">Sin cambios de stock</span>
+                                                    {% else %}
+                                                        <div class="fw-bolder {% if mov.cambio > 0 %}text-success{% else %}text-danger{% endif %} val-cambio">
+                                                            {% if mov.cambio > 0 %}+{% endif %}{{ mov.cambio }}
+                                                        </div>
+                                                        <div class="text-muted trajectory-details" style="font-size: 12px; font-weight: 500;">
+                                                            <span>{{ mov.stock_anterior }}</span>
+                                                            <i class="fa-solid fa-arrow-right mx-2 text-stokka"></i>
+                                                            <span class="text-dark fw-bold">{{ mov.stock_resultante }}</span>
+                                                        </div>
+                                                    {% endif %}
                                                 </div>
-                                                <div class="text-muted trajectory-details" style="font-size: 12px; font-weight: 500;">
-                                                    <span>{{ mov.stock_anterior }}</span>
-                                                    <i class="fa-solid fa-arrow-right mx-2 text-stokka"></i>
-                                                    <span class="text-dark fw-bold">{{ mov.stock_resultante }}</span>
-                                                </div>
-                                            </div>
                                             {% else %}
-                                            <div class="text-center w-100" style="opacity: 0.5;">
-                                                <i class="fa-solid fa-trash-can" style="font-size: 1.1rem;"></i>
-                                            </div>
+                                                <div class="text-center w-100" style="opacity: 0.5;">
+                                                    <i class="fa-solid fa-trash-can" style="font-size: 1.1rem;"></i>
+                                                </div>
                                             {% endif %}
+                                        </td>
+                                    </tr>
+
+                                    <tr class="fila-detalle tipo-{{ mov.tipo_accion|lower }}" data-fecha="{{ mov.fecha|date:'Y-m-d' }}">
+                                        <td colspan="4">
+                                            <div id="collapse-{{ mov.id }}" class="collapse">
+                                                <div class="detalle-contenido">
+                                                    <div class="detalle-card shadow-sm"> 
+                                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                                            <span class="extra-small fw-bold text-uppercase opacity-50">Auditoría de cambios</span>
+                                                            <span class="extra-small opacity-75">ID Movimiento: #{{ mov.id }}</span>
+                                                        </div>
+                                                        <ul class="lista-cambios">
+                                                            {% if mov.detalles %}
+                                                                <li class="small">
+                                                                    <i class="fa-solid fa-circle-info me-2"></i>
+                                                                    {{ mov.detalles|linebreaksbr }}
+                                                                </li>
+                                                            {% else %}
+                                                                <li class="small opacity-75">
+                                                                    <i class="fa-solid fa-check-double me-2"></i>
+                                                                    Actualización de información general.
+                                                                </li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}

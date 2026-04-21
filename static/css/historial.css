@@ -23,6 +23,107 @@ thead th {
     transition: background-color 0.2s ease;
 }
 
+/* --- NUEVOS ESTILOS PARA DESPLEGABLE DESKTOP --- */
+/* Fila de detalle (oculta por defecto) */
+.fila-detalle {
+    background-color: white !important;
+}
+
+.fila-detalle td {
+    padding: 0 !important;
+    border: none !important;
+}
+
+/* El contenedor interno del detalle */
+.detalle-contenido {
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.detalle-card {
+    margin: 0px 20px 20px 70px;
+    padding: 18px;
+    border-radius: 0 0 12px 12px; /* Redondeado solo abajo para que parezca que sale de la fila */
+    border-left: 5px solid transparent;
+}
+
+/* Estado de la fila cuando el detalle está abierto */
+.fila-movimiento[aria-expanded="true"] {
+    filter: brightness(0.95); /* Un toque sutil para indicar que está "presionada" */
+    box-shadow: none !important;
+}
+
+/* --- ESTILO PARA "SIN CAMBIOS" --- */
+.no-stock-change {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: rgba(0,0,0,0.4);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* --- LISTA DE CAMBIOS DENTRO DEL DETALLE --- */
+.lista-cambios {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.lista-cambios li {
+    padding: 4px 0;
+    font-size: 0.85rem;
+    color: black;
+    display: flex;
+    align-items: center;
+}
+
+.lista-cambios li i {
+    font-size: 0.7rem;
+    margin-right: 8px;
+    color: var(--verde-stokka);
+}
+
+/* --- COLORES DINÁMICOS PARA EL DESPLEGABLE --- */
+
+/* Si es EDICIÓN (Amarillo) */
+.fila-detalle.tipo-modal_editar {
+    background-color: var(--amarillo-alerta-mid) !important;
+}
+.fila-detalle.tipo-modal_editar .detalle-card {
+    background-color: var(--gris-fondo);
+    border-left-color: #ffc107;
+    color: #856404;
+}
+
+/* Si es CREACIÓN (Verde) */
+.fila-detalle.tipo-creacion {
+    background-color: var(--verde-stokka-mid) !important;
+}
+.fila-detalle.tipo-creacion .detalle-card {
+    background-color:  var(--gris-fondo);
+    border-left-color: var(--verde-stokka);
+    color: var(--verde-stokka);
+}
+
+/* Si es ELIMINACIÓN (Rojo) */
+.fila-detalle.tipo-eliminacion {
+    background-color: var(--rojo-alerta-mid) !important;
+}
+.fila-detalle.tipo-eliminacion .detalle-card {
+    background-color:  var(--gris-fondo);
+    border-left-color: var(--rojo-alerta);
+    color: var(--rojo-alerta);
+}
+
+/* Si es AJUSTE RÁPIDO (Gris) */
+.fila-detalle.tipo-ajuste_rapido {
+    background-color: #f1f3f5 !important;
+}
+.fila-detalle.tipo-ajuste_rapido .detalle-card {
+    background-color:  var(--gris-fondo);
+    border-left-color: #adb5bd;
+    color: #495057;
+}
 /* --- COLORES DE FILA SEGÚN ACCIÓN --- */
 
 /* Ajuste rápido: Gris */
@@ -34,22 +135,20 @@ thead th {
 /* Creación: Verde */
 .tipo-creacion { 
     background-color: var(--verde-stokka-mid) !important; 
-    color: var(--verde-stokka-light) !important;
+    color: var(--verde-stokka) !important; /* Texto oscuro sobre fondo claro */
     border-left: 5px solid var(--verde-stokka) !important;
 }
 
-/* Eliminación: Rojo */
 .tipo-eliminacion { 
     background-color: var(--rojo-alerta-mid) !important; 
-    color: var(--rojo-alerta-light) !important;
+    color: var(--rojo-alerta) !important;
     border-left: 5px solid var(--rojo-alerta) !important;
 }
 
-/* Edición: Amarillo */
 .tipo-modal_editar { 
     background-color: var(--amarillo-alerta-mid) !important; 
     color: #856404 !important;
-    border-left: 5px solid #ffc107 !important;
+    border-left: 5px solid var(--amarillo-alerta) !important;
 }
 
 /* IMPORTANTE: Hacer que las celdas sean transparentes para que se vea el fondo de la fila */
