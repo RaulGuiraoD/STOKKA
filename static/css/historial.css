@@ -17,7 +17,7 @@
 #tabla-historial thead th {
     color: white !important;
     background-color: var(--verde-stokka) !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     letter-spacing: 1.5px;
     padding: 16px 8px !important;
     border-bottom: none !important;
@@ -144,9 +144,9 @@
 .text-amarillo-historial { color: #d4a017 !important; }
 
 .no-stock-change {
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     font-weight: 800;
-    color: rgba(0, 0, 0, 0.35);
+    color: rgba(0, 0, 0, 0.646);
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }
@@ -158,7 +158,7 @@
     line-height: 1;
 }
 
-.fa-arrow-right { opacity: 0.6; font-size: 10px; }
+.fa-arrow-right { opacity: 0.9; font-size: 12px; }
 
 /* ── ACORDEÓN ── */
 .accordion-button:not(.collapsed) {
@@ -208,7 +208,7 @@
 #filtro-tipo {
     min-width: 160px;
     font-weight: 700;
-    font-size: 0.82rem;
+    font-size: 0.9rem;
     cursor: pointer;
     border-radius: 10px !important;
     border: 2px solid var(--verde-stokka) !important;

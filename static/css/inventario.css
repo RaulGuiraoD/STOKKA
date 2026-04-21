@@ -1,4 +1,8 @@
-/* Blindaje de colores estilo semáforo (Inunda toda la fila) */
+/* ==========================================
+   STOKKA - INVENTARIO UI
+   ========================================== */
+
+   /* Blindaje de colores estilo semáforo (Inunda toda la fila) */
 .fila-stokka td {
     transition: background 0.2s;
     border-color: rgba(0, 0, 0, 0.03) !important;
@@ -154,8 +158,6 @@
 .table-custom tbody tr:hover td {
     filter: brightness(0.93);
 }
-
-
 
 /* Botones de filtro activos con tus colores oficiales */
 .active-critico {
