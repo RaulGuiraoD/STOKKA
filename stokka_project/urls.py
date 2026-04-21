@@ -54,9 +54,13 @@ urlpatterns = [
     path('inventario/stock/bajar/<int:pk>/', views.disminuir_stock, name='disminuir_stock'),
     path('inventario/eliminar-masivo/', views.eliminar_masivo, name='eliminar_masivo'),
     path('actualizar-stocks/', views.actualizar_stocks_ajax, name='actualizar_stocks_ajax'),
+    path('inventario/registrar-historial-rapido/<int:pk>/', views.registrar_historial_rapido, name='registrar_historial_rapido'),
 
     # --- BARRA BUSQUEDA HEADER ---
     path('buscar/', views.buscador_global, name='buscador_global'),
+
+    # --- HISTORIAL ---
+    path('historial_movimientos/', views.historial_movimientos, name='historial_movimientos'),
 ]
 
 # Esto es para que se vean el Logo y las Facturas en desarrollo

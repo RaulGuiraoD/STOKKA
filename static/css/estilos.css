@@ -6,10 +6,17 @@
     --verde-secundario: #1CA300;
     --rojo-alerta: #C10D00;
     --amarillo-alerta: #F5C907;
+
     --blanco: #FFFFFF;
     --gris-fondo: #F2F4F6;
+
     --verde-stokka-light: #e6f0e6;
     --rojo-alerta-light: #fce8e6;
+    --amarillo-alerta-light: #fef9e6;
+
+    --verde-stokka-mid: #cce0cc;      
+    --rojo-alerta-mid: #f9cfcc;       
+    --amarillo-alerta-mid: #fdf1b5;
 
     --header-height: 85px; 
     --sidebar-w: 65px;     
@@ -30,7 +37,6 @@ main, .container-fluid, .card {
 .bg-stokka { background-color: var(--verde-stokka) !important; }
 .text-stokka { color: var(--verde-stokka) !important; }
 
-/* El logo es lo único que no puede ser 100% Bootstrap porque quieres que sea GIGANTE */
 .auth-logo-top {
     font-size: clamp(4rem, 15vw, 8rem);
     font-style: italic;
