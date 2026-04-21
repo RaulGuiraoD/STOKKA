@@ -26,7 +26,13 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelectorAll('#accordionHistorial .accordion-collapse.show').forEach(c => c.classList.remove('show'));
     document.querySelectorAll('#accordionHistorial .accordion-button').forEach(b => b.classList.add('collapsed'));
 
-    /* ── FILTRADO ── */
+    /* ── VISIBILIDAD DEL BOTÓN LIMPIAR ── */
+    function actualizarBtnLimpiar() {
+        const hayFiltros = inputSearch.value !== '' || inputDate.value !== '' || selectTipo.value !== '';
+        btnLimpiar?.classList.toggle('visible', hayFiltros);
+    }
+
+    /* ── FILTRADO (función única) ── */
     function aplicarFiltros() {
         const term = inputSearch.value.toLowerCase().trim();
         const dateVal = inputDate.value;
@@ -69,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             item.style.display = hayFilasVisibles ? '' : 'none';
 
-            // FIX 1: Solo abrir acordeón de día con búsqueda de texto o fecha, NUNCA con el selector de tipo
+            // Solo abrir acordeón de día con búsqueda de texto o fecha, NUNCA con el selector
             if (hayFilasVisibles && (term || dateVal)) {
                 const collapse = item.querySelector('.accordion-collapse');
                 if (collapse && !collapse.classList.contains('show')) {
@@ -79,6 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         noResultadosDiv?.classList.toggle('d-none', hayResultados);
+        actualizarBtnLimpiar();
     }
 
     inputSearch.addEventListener('input', aplicarFiltros);
@@ -100,6 +107,9 @@ document.addEventListener("DOMContentLoaded", function () {
         this.style.transform = 'scale(0.88)';
         setTimeout(() => this.style.transform = '', 150);
     });
+
+    // Estado inicial del botón limpiar
+    actualizarBtnLimpiar();
 
     /* ── INYECCIÓN: CHEVRON + PANEL MÓVIL ── */
     document.querySelectorAll('#tabla-historial tbody tr.fila-movimiento').forEach(row => {
@@ -144,18 +154,17 @@ document.addEventListener("DOMContentLoaded", function () {
         row.appendChild(panel);
     });
 
-    /* ── TOGGLE DESKTOP: collapse de detalle gestionado por JS ── */
+    /* ── TOGGLE DESKTOP Y MÓVIL ── */
     const tableBody = document.querySelector('#tabla-historial tbody');
     if (!tableBody) return;
 
     tableBody.addEventListener('click', function (e) {
-        // FIX 2: Cortar la burbuja para que el click NO llegue al acordeón de día
         e.stopPropagation();
 
         const row = e.target.closest('.fila-movimiento');
         if (!row) return;
 
-        // MÓVIL: sistema is-open propio
+        // MÓVIL
         if (window.innerWidth <= 992) {
             const isOpen = row.classList.contains('is-open');
             document.querySelectorAll('#tabla-historial .fila-movimiento.is-open')
@@ -164,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // DESKTOP: toggle del collapse de detalle via JS (sin data-bs-* en el HTML)
+        // DESKTOP: collapse de detalle gestionado por JS
         const targetSelector = row.dataset.collapseTarget;
         if (!targetSelector) return;
 
@@ -173,18 +182,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const isShown = collapseEl.classList.contains('show');
 
-        // Cerrar cualquier otro detalle abierto en la misma tabla
         document.querySelectorAll('#tabla-historial .collapse.show').forEach(c => {
             if (c !== collapseEl) bootstrap.Collapse.getInstance(c)?.hide();
         });
 
-        // Toggle del actual
         let instance = bootstrap.Collapse.getInstance(collapseEl);
         if (!instance) instance = new bootstrap.Collapse(collapseEl, { toggle: false });
         isShown ? instance.hide() : instance.show();
     });
 
-    /* ── LIMPIAR is-open al pasar a desktop ── */
     window.addEventListener('resize', () => {
         if (window.innerWidth > 992) {
             document.querySelectorAll('#tabla-historial .fila-movimiento.is-open')

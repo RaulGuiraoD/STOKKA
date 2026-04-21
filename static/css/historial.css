@@ -9,15 +9,23 @@
     border-collapse: collapse;
 }
 
-thead th {
-    color: var(--verde-stokka) !important;
-    background-color: #f8f9fa !important;
-    font-size: 13px !important;
-    letter-spacing: 1px;
-    padding: 18px 5px !important;
-    border-bottom: 2px solid var(--verde-stokka) !important;
-    text-transform: uppercase;
+/* Cabecera: fondo verde stokka, letras blancas */
+#tabla-historial thead tr {
+    background-color: var(--verde-stokka) !important;
 }
+
+#tabla-historial thead th {
+    color: white !important;
+    background-color: var(--verde-stokka) !important;
+    font-size: 12px !important;
+    letter-spacing: 1.5px;
+    padding: 16px 8px !important;
+    border-bottom: none !important;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+#tabla-historial thead th:first-child { padding-left: 20px !important; }
 
 /* Las celdas heredan el fondo de la fila */
 #tabla-historial td {
@@ -54,7 +62,7 @@ thead th {
     border-left: 4px solid var(--amarillo-alerta) !important;
 }
 
-/* Fila activa (collapse abierto en desktop) */
+/* Fila activa con collapse abierto */
 .fila-movimiento[aria-expanded="true"] {
     filter: brightness(0.95);
 }
@@ -69,19 +77,18 @@ thead th {
     border: none !important;
 }
 
-/* Tarjeta interior del detalle */
 .detalle-card {
     margin: 0 20px 16px 70px;
     padding: 16px 20px;
     border-radius: 0 0 12px 12px;
     border-left: 4px solid transparent;
-    background-color: var(--gris-fondo, #f2f4f6);
+    background-color: var(--gris-fondo, #f2f4f688);
 }
 
-.fila-detalle.tipo-creacion    .detalle-card { border-left-color: var(--verde-stokka); }
-.fila-detalle.tipo-eliminacion .detalle-card { border-left-color: var(--rojo-alerta); }
-.fila-detalle.tipo-modal_editar .detalle-card { border-left-color: var(--amarillo-alerta); }
-.fila-detalle.tipo-ajuste_rapido .detalle-card { border-left-color: #adb5bd; }
+.fila-detalle.tipo-creacion      .detalle-card { border-left-color: var(--verde-stokka); }
+.fila-detalle.tipo-eliminacion   .detalle-card { border-left-color: var(--rojo-alerta); }
+.fila-detalle.tipo-modal_editar  .detalle-card { border-left-color: var(--amarillo-alerta); }
+.fila-detalle.tipo-ajuste_rapido .detalle-card { border-left-color: black; }
 
 /* ── LISTA DE CAMBIOS ── */
 .lista-cambios {
@@ -132,8 +139,8 @@ thead th {
 
 .extra-small { font-size: 0.75rem; }
 
-.text-stokka-dueno      { color: var(--verde-stokka) !important; font-weight: 800; }
-.text-verde-secundario  { color: var(--verde-secundario) !important; }
+.text-stokka-dueno       { color: var(--verde-stokka) !important; font-weight: 800; }
+.text-verde-secundario   { color: var(--verde-secundario) !important; }
 .text-amarillo-historial { color: #d4a017 !important; }
 
 .no-stock-change {
@@ -169,7 +176,7 @@ thead th {
     transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-/* ── INPUTS Y FILTROS ── */
+/* ── INPUTS ── */
 .stokka-input {
     border-radius: 10px !important;
     border: 1px solid rgba(0, 0, 0, 0.1);
@@ -182,18 +189,54 @@ thead th {
     box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.15) !important;
 }
 
-/* Color dinámico del selector de tipo */
-#filtro-tipo option[value="CREACION"]     { color: #0f5132; background: #d1e7dd; }
-#filtro-tipo option[value="MODAL_EDITAR"] { color: #856404; background: #fffde7; }
-#filtro-tipo option[value="ELIMINACION"]  { color: #842029; background: #f8d7da; }
-#filtro-tipo option[value="AJUSTE_RAPIDO"]{ color: #495057; background: #e9ecef; }
+/* ── BARRA DE FILTROS: ancho completo ── */
+.filtros-historial {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
 
-.border-creacion   { border-color: var(--verde-stokka) !important; color: #0f5132 !important; }
-.border-edicion    { border-color: #ffc107 !important;             color: #856404 !important; }
-.border-eliminacion{ border-color: var(--rojo-alerta) !important;  color: #842029 !important; }
-.border-ajuste     { border-color: #adb5bd !important;             color: #495057 !important; }
+/* Select a la izquierda, tamaño fijo */
+.filtros-historial #filtro-tipo      { flex: 1 0 0 auto; }
+/* Barra de búsqueda ocupa todo el espacio restante */
+.filtros-historial #filtro-historial { flex: 1 1 1; min-width: 0; }
+/* Fecha a la derecha, tamaño natural */
+.filtros-historial #busqueda-fecha   { flex: 0 0 auto; }
 
-/* ── BOTÓN LIMPIAR ── */
+/* ── SELECT: colores por tipo + animación ── */
+#filtro-tipo {
+    min-width: 160px;
+    font-weight: 700;
+    font-size: 0.82rem;
+    cursor: pointer;
+    border-radius: 10px !important;
+    border: 2px solid var(--verde-stokka) !important;
+    color: var(--verde-stokka);
+    background-color: white;
+    transition: border-color 0.25s ease, color 0.25s ease,
+                background-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+#filtro-tipo:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.2) !important;
+}
+
+/* Opción "Todos los tipos" */
+#filtro-tipo option[value=""]             { color: #212529; background: white; }
+#filtro-tipo option[value="AJUSTE_RAPIDO"]{ color: black; background: white; font-weight: 700; }
+#filtro-tipo option[value="MODAL_EDITAR"] { color: var(--amarillo-alerta); background: white; font-weight: 700; }
+#filtro-tipo option[value="CREACION"]     { color: var(--verde-stokka); background: white; font-weight: 700; }
+#filtro-tipo option[value="ELIMINACION"]  { color: var(--rojo-alerta); background: white; font-weight: 700; }
+
+/* Color dinámico del select según selección (aplicado por JS) */
+.border-creacion    { border-color: var(--verde-stokka) !important; color: var(--verde-stokka) !important; background-color: #d1e7dd !important; }
+.border-edicion     { border-color: #d4a017 !important;             color: #856404 !important;             background-color: #fffde7 !important; }
+.border-eliminacion { border-color: var(--rojo-alerta) !important;  color: #842029 !important;             background-color: #f8d7da !important; }
+.border-ajuste      { border-color: #adb5bd !important;             color: #495057 !important;             background-color: #e9ecef !important; }
+
+/* ── BOTÓN LIMPIAR: oculto hasta que hay filtros activos ── */
 #btn-limpiar-filtros {
     flex-shrink: 0;
     aspect-ratio: 1 / 1;
@@ -204,10 +247,20 @@ thead th {
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(0, 0, 0, 0.07);
     border: none;
     border-radius: 50%;
-    transition: background-color 0.2s ease, transform 0.15s ease;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.75);
+    transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+                background-color 0.2s ease, color 0.2s ease;
+}
+
+#btn-limpiar-filtros.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
 }
 
 #btn-limpiar-filtros:hover {
@@ -215,9 +268,9 @@ thead th {
     color: white;
 }
 
-/* ── PANEL DETALLE MÓVIL (invisible en desktop) ── */
-.chevron-mobile       { display: none; }
-.mobile-detail-panel  { display: none; }
+/* ── PANEL DETALLE MÓVIL: invisible en desktop ── */
+.chevron-mobile      { display: none; }
+.mobile-detail-panel { display: none; }
 
 /* ==========================================
    MÓVIL ≤ 992px
@@ -225,10 +278,34 @@ thead th {
 
 @media (max-width: 992px) {
 
-    /* Inputs */
-    #filtro-historial { flex: 2; }
-    #busqueda-fecha   { flex: 1; }
-    #filtro-historial, #filtro-tipo, #busqueda-fecha { min-width: 0; }
+    /* Filtros en móvil: primera fila select + fecha, segunda fila búsqueda + botón */
+    .filtros-historial {
+        flex-wrap: wrap;
+    }
+
+    .filtros-historial #filtro-tipo      { flex: 1 1 auto; }
+    .filtros-historial #filtro-historial { flex: 1 1 100%; order: 3; }
+    .filtros-historial #busqueda-fecha   { flex: 0 0 auto; }
+
+    #btn-limpiar-filtros {
+    flex-shrink: 0;
+    aspect-ratio: 1 / 1;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.07);
+    border: none;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.75);
+    transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+                background-color 0.2s ease, color 0.2s ease;
+    }
 
     /* ── Romper contexto de tabla ── */
     #tabla-historial {
@@ -246,7 +323,7 @@ thead th {
         width: 100% !important;
     }
 
-    /* ── Fila detalle: oculta en móvil (el panel JS la reemplaza) ── */
+    /* Fila detalle oculta en móvil — el panel JS la reemplaza */
     #tabla-historial tbody tr.fila-detalle {
         display: none !important;
     }
@@ -258,11 +335,11 @@ thead th {
         grid-template-rows: auto !important;
         width: 100% !important;
         border-radius: 12px !important;
-        border-left-width: 4px !important; /* Mantener el borde de color del tipo */
+        border-left-width: 4px !important;
         overflow: hidden;
         cursor: pointer;
-        transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                    filter 0.2s ease !important;
+        transition: filter 0.2s ease,
+                    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         margin-bottom: 4px;
     }
 
@@ -270,7 +347,7 @@ thead th {
         filter: brightness(0.94);
     }
 
-    /* ── Celdas: ocultar todas por defecto ── */
+    /* Ocultar todas las celdas por defecto */
     #tabla-historial td {
         display: none !important;
         border: none !important;
@@ -278,7 +355,7 @@ thead th {
         background: transparent !important;
     }
 
-    /* ── Siempre visible: Producto + Trayectoria ── */
+    /* ── Siempre visibles: Producto + Trayectoria ── */
     #tabla-historial td[data-label="PRODUCTO"] {
         display: flex !important;
         grid-column: 1;
@@ -303,7 +380,6 @@ thead th {
         align-items: flex-end !important;
     }
 
-    /* Ocultar detalles pequeños de trayectoria en cerrado */
     #tabla-historial td[data-label="TRAYECTORIA"] .trajectory-details {
         display: none !important;
     }
@@ -364,7 +440,6 @@ thead th {
         gap: 12px;
     }
 
-    /* Sección de cambios: columna en lugar de fila */
     .mobile-detail-detalles {
         flex-direction: column;
         align-items: flex-start;
@@ -391,7 +466,6 @@ thead th {
         min-width: 0;
     }
 
-    /* Lista de cambios dentro del panel móvil */
     .lista-cambios.mobile {
         width: 100%;
         margin-top: 2px;
@@ -403,6 +477,6 @@ thead th {
     }
 
     /* Ajustes de tamaño */
-    .val-cambio          { font-size: 1.15rem !important; }
-    .trajectory-details  { font-size: 11px !important; }
+    .val-cambio         { font-size: 1.15rem !important; }
+    .trajectory-details { font-size: 11px !important; }
 }

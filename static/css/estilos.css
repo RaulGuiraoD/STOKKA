@@ -37,7 +37,6 @@ main, .container-fluid, .card {
 .bg-stokka { background-color: var(--verde-stokka) !important; }
 .text-stokka { color: var(--verde-stokka) !important; }
 
-/* El logo es lo único que no puede ser 100% Bootstrap porque quieres que sea GIGANTE */
 .auth-logo-top {
     font-size: clamp(4rem, 15vw, 8rem);
     font-style: italic;
