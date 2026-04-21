@@ -11,13 +11,31 @@
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
                 <h1 class="fw-bold text-dark m-0;">Historial de Actividad</h2>
             </div>
-            <div class="col-12 col-md-6">
-                <div class="d-flex gap-2 justify-content-md-end">
-                    <div class="input-group" style="max-width: 250px;">
-                        <input type="text" id="filtro-historial" class="form-control stokka-input shadow-focus-stokka"
-                            placeholder="Buscar..." value="{{ query_actual|default:'' }}">
+            <div class="col-12 col-md-8"> 
+                <div class="d-flex gap-2 justify-content-md-end align-items-center flex-wrap">
+                    <select id="filtro-tipo" class="form-select stokka-input shadow-focus-stokka w-auto" style="min-width: 140px;">
+                        <option value="">Todos los tipos</option>
+                        <option value="AJUSTE_RAPIDO">Ajustes rápidos</option>
+                        <option value="MODAL_EDITAR">Ediciones</option>
+                        <option value="CREACION">Creaciones</option>
+                        <option value="ELIMINACION">Eliminaciones</option>
+                    </select>
+
+                    <div class="position-relative" style="max-width: 200px;">
+                        <input type="text" id="filtro-historial" 
+                            class="form-control stokka-input shadow-focus-stokka ps-4" 
+                            placeholder="Producto o usuario...">
                     </div>
-                    <input type="date" id="busqueda-fecha" class="form-control stokka-input shadow-focus-stokka w-auto">
+
+                    <input type="date" id="busqueda-fecha" 
+                        class="form-control stokka-input shadow-focus-stokka w-auto">
+
+                    <button type="button" id="btn-limpiar-filtros" 
+                            class="btn btn-stokka border-0 rounded-circle" 
+                            style="width: 38px; height: 38px; min-width: 38px; background-color: rgba(0,0,0,0.05);" 
+                            title="Limpiar filtros">
+                        <i class="fa-solid fa-eraser"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -41,8 +59,8 @@
                     <div class="accordion-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0" id="tabla-historial" style="table-layout: fixed; width: 100%;">
-                                <thead class="bg-light">
-                                    <tr class="text-uppercase fw-bold border-bottom">
+                                <thead class="bg-stokka">
+                                    <tr class="text-uppercase fw-bold border-bottom bg-stokka">
                                         <th style="width: 20%;" class="ps-4 text-stokka text-start">Usuario</th>
                                         <th style="width: 35%;" class="text-stokka text-start">Producto</th>
                                         <th style="width: 20%;" class="d-none d-md-table-cell text-stokka text-start ps-3">Movimiento</th>
@@ -51,10 +69,9 @@
                                 </thead>
                                 <tbody>
                                     {% for mov in dia.list %}
-                                    <tr class="fila-movimiento clickable-row tipo-{{ mov.tipo_accion|lower }}" 
+                                    <tr class="fila-movimiento tipo-{{ mov.tipo_accion|lower }}" 
                                         data-fecha="{{ mov.fecha|date:'Y-m-d' }}"
-                                        data-bs-toggle="collapse" 
-                                        data-bs-target="#collapse-{{ mov.id }}"
+                                        data-collapse-target="#collapse-{{ mov.id }}"
                                         style="cursor: pointer;">
                                         
                                         <td class="ps-4" data-label="USUARIO">
@@ -124,7 +141,8 @@
                                                     <div class="detalle-card shadow-sm"> 
                                                         <div class="d-flex justify-content-between align-items-center mb-2">
                                                             <span class="extra-small fw-bold text-uppercase opacity-50">Auditoría de cambios</span>
-                                                            <span class="extra-small opacity-75">ID Movimiento: #{{ mov.id }}</span>
+                                                            <span class="extra-small opacity-75">Movimiento #{{ forloop.revcounter }}</span>
+
                                                         </div>
                                                         <ul class="lista-cambios">
                                                             {% if mov.detalles %}
@@ -147,6 +165,11 @@
                                     {% endfor %}
                                 </tbody>
                             </table>
+                            <div id="sin-resultados" class="text-center py-5 d-none">
+                                <i class="fa-solid fa-box-open mb-3 opacity-20" style="font-size: 3rem; color: var(--verde-stokka);"></i>
+                                <h5 class="text-muted">No se encontraron movimientos</h5>
+                                <p class="small text-secondary">Prueba a cambiar los filtros o limpiar la búsqueda.</p>
+                            </div>
                         </div>
                     </div>
                 </div>
