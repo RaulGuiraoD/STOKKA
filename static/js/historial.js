@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     /* ── 2. APERTURA AUTOMÁTICA DEL AÑO ACTUAL ── */
     const anioActual = new Date().getFullYear().toString();
-    
+
     // Buscamos el botón del nivel año que contiene el año presente
     const btnAnioActual = Array.from(document.querySelectorAll('.level-year > .accordion-header > .accordion-button'))
         .find(btn => btn.textContent.trim().includes(anioActual));
@@ -25,13 +25,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnAnioActual) {
         const targetId = btnAnioActual.getAttribute('data-bs-target');
         const collapseAnio = document.querySelector(targetId);
-        
+
         if (collapseAnio) {
             // Abrimos SOLO el nivel del año
             btnAnioActual.classList.remove('collapsed');
             btnAnioActual.setAttribute('aria-expanded', 'true');
             collapseAnio.classList.add('show');
-            
+
             // Nota: Al no tocar los .level-month ni .level-day, 
             // estos permanecerán cerrados por el reset del paso 1.
         }
@@ -196,13 +196,22 @@ document.addEventListener("DOMContentLoaded", function () {
             e.stopPropagation();
 
             if (window.innerWidth <= 992) {
+                // En móvil, solo jugamos con la clase 'is-open'
                 const isOpen = row.classList.contains('is-open');
-                document.querySelectorAll('.fila-movimiento.is-open').forEach(r => r.classList.remove('is-open'));
-                if (!isOpen) row.classList.add('is-open');
+
+                // Opcional: Cerrar los demás para que solo uno esté abierto
+                document.querySelectorAll('.fila-movimiento.is-open').forEach(r => {
+                    if (r !== row) r.classList.remove('is-open');
+                });
+
+                row.classList.toggle('is-open');
             } else {
-                const targetId = row.dataset.collapseTarget;
+                /* Lógica Desktop (con Bootstrap Collapse) */
+                const targetId = row.getAttribute('data-bs-target');
                 const collapseEl = document.querySelector(targetId);
-                if (!collapseEl) return;
+                if (collapseEl) {
+                    bootstrap.Collapse.getOrCreateInstance(collapseEl).toggle();
+                }
 
                 // Cerrar otros detalles abiertos en la misma tabla
                 const table = row.closest('table');

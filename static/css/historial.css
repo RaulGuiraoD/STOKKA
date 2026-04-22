@@ -132,15 +132,14 @@ tr.fila-movimiento.tipo-ajuste_rapido {
 }
 
 .fila-detalle td {
-    padding: 0 !important;
     border: none !important;
 }
 
 .detalle-card {
-    margin: 10px 20px 16px 70px;
+    /* margin: 10px 20px 16px 70px; */
     padding: 16px 20px;
     border-radius: 0 0 12px 12px;
-    background-color: var(--gris-fondo, #f8f9fa);
+    background-color: var(--gris-fondo, #f8f9fa9c);
     border-left: 4px solid var(--verde-stokka);
 }
 
@@ -189,10 +188,10 @@ tr.fila-movimiento.tipo-ajuste_rapido {
     white-space: nowrap;
 }
 
-.mov-ajuste_rapido { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da; }
-.mov-creacion      { background-color: #d1e7dd; color: #0f5132; border: 1px solid #a3cfbb; }
-.mov-eliminacion   { background-color: #f8d7da; color: #842029; border: 1px solid #f1aeb5; }
-.mov-modal_editar  { background-color: #fff3cd; color: #856404; border: 1px solid var(--amarillo-alerta); }
+.mov-ajuste_rapido { background-color: #e9ecef; color: #495057; border: 2px solid #ced4da; }
+.mov-creacion      { background-color: #d1e7dd; color: #0f5132; border: 2px solid #a3cfbb; }
+.mov-eliminacion   { background-color: #f8d7da; color: #842029; border: 2px solid #f1aeb5; }
+.mov-modal_editar  { background-color: #fff3cd; color: #856404; border: 2px solid #bbac7e;; }
 
 /* ── TIPOGRAFÍA ── */
 .text-truncate {
@@ -340,16 +339,16 @@ tr.fila-movimiento.tipo-ajuste_rapido {
    ========================================== */
 
 @media (max-width: 992px) {
+
     /* ── 1. AJUSTES DE JERARQUÍA (AÑO > MES > DÍA) ── */
-    
     /* Reducción drástica de indentación para ganar ancho */
     .level-month {
-        margin-left: 0.5rem !important; /* De 1.5rem a 0.5rem */
+        margin-left: 0rem !important; /* De 1.5rem a 0.5rem */
         border-left-width: 3px !important;
     }
 
     .level-day {
-        margin-left: 0.4rem !important; /* De 1.5rem a 0.4rem */
+        margin-left: 0rem !important; /* De 1.5rem a 0.4rem */
         border-left-width: 2px !important;
     }
 
@@ -415,7 +414,7 @@ tr.fila-movimiento.tipo-ajuste_rapido {
         grid-template-columns: 1fr auto !important;
         grid-template-rows: auto !important;
         width: 100% !important;
-        border-radius: 10px !important; /* Un poco más pequeño que 12px para armonizar */
+        border-radius: 10px !important; 
         border-left-width: 4px !important;
         background-color: var(--blanco) !important;
         box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
@@ -457,7 +456,7 @@ tr.fila-movimiento.tipo-ajuste_rapido {
     .chevron-mobile {
         display: inline-block;
         opacity: 0.4;
-        font-size: 10px;
+        font-size: 8px;
         margin-left: 6px;
         transition: transform 0.3s ease;
     }
@@ -467,40 +466,85 @@ tr.fila-movimiento.tipo-ajuste_rapido {
     }
 
     .mobile-detail-panel {
-        display: none !important;
+        display: block !important; /* Siempre en el DOM para poder animar */
         grid-column: 1 / -1 !important;
         padding: 0 !important;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+        opacity: 0;
     }
 
     tr.is-open .mobile-detail-panel {
         display: block !important;
+        max-height: 500px; 
+        opacity: 1;
+        margin-bottom: 10px; /* Separación extra cuando está abierto */
     }
 
     .mobile-detail-inner {
         border-top: 1px solid rgba(0, 0, 0, 0.05);
         background-color: var(--gris-fondo);
-        padding: 12px;
+        padding: 15px 12px;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
+        /* Evita saltos visuales al animar */
+        transform: translateY(-10px);
+        transition: transform 0.4s ease;
     }
 
     .mobile-detail-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Cambiado de center a flex-start para que la etiqueta no flote en el medio */
+    gap: 12px;
+    padding: 2px 0;
+    }   
 
+    tr.is-open .mobile-detail-inner {
+    transform: translateY(0);
+    }
+    
     .mobile-detail-label {
         font-size: 0.6rem;
         font-weight: 800;
         color: var(--verde-stokka);
         text-transform: uppercase;
-        opacity: 0.6;
+        white-space: nowrap; /* Evita que la etiqueta "Usuario" o "Movimiento" se parta en dos */
+        margin-top: 2px;     /* Alineación fina con el texto del valor */
     }
 
     .mobile-detail-value {
         font-size: 0.8rem;
         font-weight: 600;
+        text-align: right;   /* Alinea el valor a la derecha */
+        word-break: break-word; /* Rompe palabras largas si es necesario */
+        max-width: 70%;      /* Evita que el valor aplaste a la etiqueta */
+    }   
+
+    /* Ajuste específico para la fila de CAMBIOS (donde está la lista de iconos) */
+    .mobile-detail-row.mobile-detail-detalles {
+        flex-direction: column; /* En móvil, mejor la etiqueta arriba y la lista abajo */
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .lista-cambios.mobile {
+        width: 100%;
+        margin-top: 5px;
+    }
+
+    .lista-cambios.mobile li {
+        display: flex;
+        align-items: flex-start; /* El icono del check se queda arriba aunque el texto tenga 3 líneas */
+        gap: 8px;
+        padding: 4px 0;
+        border-bottom: 1px solid rgba(0,0,0,0.03); /* Separación sutil entre cambios */
+    }
+
+    .lista-cambios.mobile li i {
+        margin-top: 4px; /* Centra el icono con la primera línea de texto */
+        flex-shrink: 0;  /* Bloquea el icono para que nunca se deforme ni se encoja */
     }
 }

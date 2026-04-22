@@ -563,7 +563,7 @@ def editar_producto(request, pk):
                 cambios.append(f"Ref: {ref_inicial} → {producto_editado.referencia}")
             
             if aviso_inicial != producto_editado.umbrales_amarillo or critico_inicial != producto_editado.umbrales_rojo:
-                cambios.append(f"Umbrales ajustados (Aviso: {producto_editado.umbrales_amarillo}, Crítico: {producto_editado.umbrales_rojo})")
+                cambios.append(f"Umbrales ajustados (Aviso: {aviso_inicial} → {producto_editado.umbrales_amarillo}, Crítico: {critico_inicial} → {producto_editado.umbrales_rojo})")
 
             detalles_final = "\n".join(cambios) if cambios else "Información general actualizada"
 
