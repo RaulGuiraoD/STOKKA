@@ -1,73 +1,132 @@
 /* ==========================================
-   STOKKA — HISTORIAL UI
+   STOKKA — HISTORIAL UI (ESTRUCTURA CORREGIDA)
    ========================================== */
 
 /* ── TABLA DESKTOP ── */
-#tabla-historial {
+/* Cambiado de ID #tabla-historial a clase .tabla-historial-clase */
+.tabla-historial-clase {
     table-layout: fixed;
     width: 100%;
     border-collapse: collapse;
 }
 
-/* Cabecera: fondo verde stokka, letras blancas */
-#tabla-historial thead tr {
-    background-color: var(--verde-stokka) !important;
+/* Cabecera: fondo blanco (como pediste en el nivel día) y texto verde */
+.tabla-historial-clase thead tr {
+    background-color: white !important;
 }
 
-#tabla-historial thead th {
-    color: white !important;
-    background-color: var(--verde-stokka) !important;
-    font-size: 13px !important;
-    letter-spacing: 1.5px;
-    padding: 16px 8px !important;
-    border-bottom: none !important;
+.tabla-historial-clase thead th {
+    color: var(--verde-stokka) !important;
+    background-color: white !important;
+    font-size: 11px !important;
+    letter-spacing: 1px;
+    padding: 12px 8px !important;
+    border-bottom: 1px solid var(--verde-stokka-mid) !important;
     text-transform: uppercase;
     font-weight: 700;
 }
 
-#tabla-historial thead th:first-child { padding-left: 20px !important; }
+/* --- JERARQUÍA DE ACORDEONES ANIDADOS (STOKKA) --- */
 
-/* Las celdas heredan el fondo de la fila */
-#tabla-historial td {
+/* --- NIVEL 1: AÑO --- */
+/* Siempre verde stokka, texto e iconos blancos */
+.level-year > .accordion-header .accordion-button {
+    background-color: var(--verde-stokka) !important;
+    color: white !important;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    padding: 1.25rem 1.5rem;
+    border: none !important;
+}
+
+.level-year > .accordion-header .accordion-button::after {
+    filter: invert(1) brightness(100%) !important;
+}
+
+/* --- NIVEL 2: MES --- */
+/* Siempre blanco, texto e iconos verde-stokka */
+.level-month {
+    margin-left: 0.3rem;
+    border-left: 2px solid var(--verde-stokka) !important;
+    border-bottom: 1px solid var(--gris-fondo) !important;
+}
+
+.level-month .accordion-button {
+    background-color: white !important;
+    color: var(--verde-stokka) !important;
+    font-weight: 700;
+}
+
+.level-month .accordion-button::after {
+    filter: none !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23003D00'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+}
+
+/* --- NIVEL 3: DÍA --- */
+.level-day {
+    margin-left: 1rem; 
+    border-left: 2px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+/* CERRADO: Gris, texto/iconos verde stokka */
+.level-day .accordion-button.collapsed {
+    background-color: var(--gris-fondo) !important;
+    color: var(--verde-stokka) !important;
+}
+
+/* ABIERTO: Verde-stokka-mid, texto negro */
+.level-day .accordion-button:not(.collapsed) {
+    background-color: var(--verde-stokka-mid) !important;
+    color: #000000 !important;
+    font-weight: 700;
+}
+
+.level-day .accordion-button::after {
+    filter: none !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23003D00'%3e%3cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") !important;
+}
+
+/* ── CELDAS Y FILAS (CORRECCIÓN DE COLOR) ── */
+
+/* IMPORTANTE: Las celdas deben ser transparentes para que se vea el fondo del TR */
+.tabla-historial-clase td {
     background-color: transparent !important;
+    background: transparent !important;
+    border-bottom: 1px solid rgba(0,0,0,0.05) !important;
     vertical-align: middle;
 }
 
-/* ── FILAS: COLORES POR TIPO ── */
 .fila-movimiento {
-    transition: filter 0.2s ease, box-shadow 0.2s ease;
+    transition: filter 0.2s ease;
 }
 
 .fila-movimiento:hover {
-    filter: brightness(0.965);
+    filter: brightness(0.97);
 }
 
-.tipo-ajuste_rapido {
-    background-color: #f5f6f7 !important;
-    border-left: 4px solid #ced4da !important;
-}
-
-.tipo-creacion {
+/* Colores específicos por tipo (con alta especificidad) */
+tr.fila-movimiento.tipo-creacion {
     background-color: var(--verde-stokka-mid, #e8f5e9) !important;
     border-left: 4px solid var(--verde-stokka) !important;
 }
 
-.tipo-eliminacion {
+tr.fila-movimiento.tipo-eliminacion {
     background-color: var(--rojo-alerta-mid, #fdecea) !important;
     border-left: 4px solid var(--rojo-alerta) !important;
 }
 
-.tipo-modal_editar {
+tr.fila-movimiento.tipo-modal_editar {
     background-color: var(--amarillo-alerta-mid, #fffde7) !important;
     border-left: 4px solid var(--amarillo-alerta) !important;
 }
 
-/* Fila activa con collapse abierto */
-.fila-movimiento[aria-expanded="true"] {
-    filter: brightness(0.95);
+tr.fila-movimiento.tipo-ajuste_rapido {
+    background-color: #f5f6f7 !important;
+    border-left: 4px solid #ced4da !important;
 }
 
-/* ── FILA DETALLE (DESKTOP) ── */
+/* ── DETALLES Y LISTAS ── */
+
 .fila-detalle {
     background-color: white !important;
 }
@@ -78,19 +137,19 @@
 }
 
 .detalle-card {
-    margin: 0 20px 16px 70px;
+    margin: 10px 20px 16px 70px;
     padding: 16px 20px;
     border-radius: 0 0 12px 12px;
-    border-left: 4px solid transparent;
-    background-color: var(--gris-fondo, #f2f4f688);
+    background-color: var(--gris-fondo, #f8f9fa);
+    border-left: 4px solid var(--verde-stokka);
 }
 
-.fila-detalle.tipo-creacion      .detalle-card { border-left-color: var(--verde-stokka); }
-.fila-detalle.tipo-eliminacion   .detalle-card { border-left-color: var(--rojo-alerta); }
-.fila-detalle.tipo-modal_editar  .detalle-card { border-left-color: var(--amarillo-alerta); }
-.fila-detalle.tipo-ajuste_rapido .detalle-card { border-left-color: black; }
+/* Colores de borde dinámicos para el detalle */
+.fila-detalle.tipo-creacion .detalle-card      { border-left-color: var(--verde-stokka); }
+.fila-detalle.tipo-eliminacion .detalle-card   { border-left-color: var(--rojo-alerta); }
+.fila-detalle.tipo-modal_editar .detalle-card  { border-left-color: var(--amarillo-alerta); }
+.fila-detalle.tipo-ajuste_rapido .detalle-card { border-left-color: #ced4da; }
 
-/* ── LISTA DE CAMBIOS ── */
 .lista-cambios {
     list-style: none;
     padding: 0;
@@ -108,9 +167,15 @@
 
 .lista-cambios li i {
     font-size: 0.7rem;
-    margin-top: 3px;
+    margin-top: 4px;
     color: var(--verde-stokka);
     flex-shrink: 0;
+}
+
+/* Reset de Focus Bootstrap */
+.accordion-button:focus {
+    box-shadow: none !important;
+    border-color: rgba(0,0,0,0.1) !important;
 }
 
 /* ── BADGES DE ACCIÓN ── */
@@ -160,21 +225,6 @@
 
 .fa-arrow-right { opacity: 0.9; font-size: 12px; }
 
-/* ── ACORDEÓN ── */
-.accordion-button:not(.collapsed) {
-    background-color: var(--verde-stokka-light) !important;
-    color: var(--verde-stokka) !important;
-    box-shadow: none;
-}
-
-.accordion-button:focus {
-    box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1) !important;
-    border-color: var(--verde-stokka) !important;
-}
-
-.accordion-collapse {
-    transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
 
 /* ── INPUTS ── */
 .stokka-input {
@@ -272,15 +322,57 @@
 .chevron-mobile      { display: none; }
 .mobile-detail-panel { display: none; }
 
+#sin-resultados {
+    animation: fadeIn 0.4s ease-out;
+}
+
+#sin-resultados i {
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 /* ==========================================
    MÓVIL ≤ 992px
    ========================================== */
 
 @media (max-width: 992px) {
+    /* ── 1. AJUSTES DE JERARQUÍA (AÑO > MES > DÍA) ── */
+    
+    /* Reducción drástica de indentación para ganar ancho */
+    .level-month {
+        margin-left: 0.5rem !important; /* De 1.5rem a 0.5rem */
+        border-left-width: 3px !important;
+    }
 
-    /* Filtros en móvil: primera fila select + fecha, segunda fila búsqueda + botón */
+    .level-day {
+        margin-left: 0.4rem !important; /* De 1.5rem a 0.4rem */
+        border-left-width: 2px !important;
+    }
+
+    /* Optimización de Botones de Acordeón en Móvil */
+    .accordion-button {
+        padding: 0.75rem 0.85rem !important; /* Más compactos */
+        font-size: 0.85rem !important;
+    }
+
+    .level-year > .accordion-header .accordion-button {
+        font-size: 0.95rem !important;
+        padding: 0.9rem 0.85rem !important;
+    }
+
+    .level-day .accordion-button {
+        padding: 0.6rem 0.85rem !important;
+        font-size: 0.8rem !important;
+    }
+
+    /* ── 2. FILTROS RESPONSIVE ── */
     .filtros-historial {
         flex-wrap: wrap;
+        gap: 8px;
     }
 
     .filtros-historial #filtro-tipo      { flex: 1 1 auto; }
@@ -288,195 +380,127 @@
     .filtros-historial #busqueda-fecha   { flex: 0 0 auto; }
 
     #btn-limpiar-filtros {
-    flex-shrink: 0;
-    aspect-ratio: 1 / 1;
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-    padding: 0 !important;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(0, 0, 0, 0.07);
-    border: none;
-    border-radius: 50%;
-    opacity: 0;
-    pointer-events: none;
-    transform: scale(0.75);
-    transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
-                background-color 0.2s ease, color 0.2s ease;
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
     }
 
-    /* ── Romper contexto de tabla ── */
-    #tabla-historial {
+    /* ── 3. ROMPER TABLA (CONVERTIR A TARJETAS) ── */
+    /* Aplicado a la clase general para capturar las tablas anidadas */
+    .tabla-historial-clase {
         display: block !important;
-        table-layout: auto !important;
         width: 100% !important;
     }
 
-    #tabla-historial thead { display: none !important; }
+    .tabla-historial-clase thead { 
+        display: none !important; 
+    }
 
-    #tabla-historial tbody {
+    .tabla-historial-clase tbody {
         display: flex !important;
         flex-direction: column !important;
-        gap: 8px !important;
+        gap: 6px !important;
         width: 100% !important;
+        padding: 8px 4px !important;
     }
 
-    /* Fila detalle oculta en móvil — el panel JS la reemplaza */
-    #tabla-historial tbody tr.fila-detalle {
+    /* Fila detalle oculta (la maneja tu lógica JS de panel móvil) */
+    .tabla-historial-clase tbody tr.fila-detalle {
         display: none !important;
     }
 
-    /* ── Tarjeta de movimiento ── */
-    #tabla-historial tbody tr.fila-movimiento {
+    /* ── 4. TARJETA DE MOVIMIENTO MÓVIL ── */
+    .tabla-historial-clase tbody tr.fila-movimiento {
         display: grid !important;
         grid-template-columns: 1fr auto !important;
         grid-template-rows: auto !important;
         width: 100% !important;
-        border-radius: 12px !important;
+        border-radius: 10px !important; /* Un poco más pequeño que 12px para armonizar */
         border-left-width: 4px !important;
-        overflow: hidden;
-        cursor: pointer;
-        transition: filter 0.2s ease,
-                    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        margin-bottom: 4px;
+        background-color: var(--blanco) !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        margin-bottom: 2px;
     }
 
-    #tabla-historial tbody tr.fila-movimiento:active {
-        filter: brightness(0.94);
-    }
-
-    /* Ocultar todas las celdas por defecto */
-    #tabla-historial td {
+    .tabla-historial-clase td {
         display: none !important;
-        border: none !important;
-        padding: 13px 15px !important;
-        background: transparent !important;
+        padding: 10px 12px !important; /* Padding reducido */
     }
 
-    /* ── Siempre visibles: Producto + Trayectoria ── */
-    #tabla-historial td[data-label="PRODUCTO"] {
+    /* Siempre visibles: Producto y Trayectoria */
+    .tabla-historial-clase td[data-label="PRODUCTO"] {
         display: flex !important;
         grid-column: 1;
-        grid-row: 1;
-        align-items: center;
-        gap: 6px;
+        flex-direction: column;
+        align-items: flex-start;
         min-width: 0;
-        padding-right: 8px !important;
     }
 
-    #tabla-historial td[data-label="TRAYECTORIA"] {
+    .tabla-historial-clase td[data-label="PRODUCTO"] .text-truncate {
+        font-size: 0.85rem !important;
+        max-width: 100%;
+    }
+
+    .tabla-historial-clase td[data-label="TRAYECTORIA"] {
         display: flex !important;
         grid-column: 2;
-        grid-row: 1;
         align-items: center;
         justify-content: flex-end;
-        white-space: nowrap;
-        padding-left: 8px !important;
     }
 
-    #tabla-historial td[data-label="TRAYECTORIA"] .trayectoria-container {
-        align-items: flex-end !important;
+    /* Ajuste de tipografía de stock en móvil */
+    .fw-bolder {
+        font-size: 1.1rem !important; 
     }
 
-    #tabla-historial td[data-label="TRAYECTORIA"] .trajectory-details {
-        display: none !important;
-    }
-
-    #tabla-historial tr.is-open td[data-label="TRAYECTORIA"] .trajectory-details {
-        display: block !important;
-        margin-top: 4px;
-    }
-
-    /* ── Chevron ── */
+    /* ── 5. PANEL DE DETALLE (MÓVIL) ── */
     .chevron-mobile {
         display: inline-block;
-        flex-shrink: 0;
-        color: currentColor;
-        opacity: 0.35;
-        font-size: 11px;
-        margin-left: 5px;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                    opacity 0.25s ease;
+        opacity: 0.4;
+        font-size: 10px;
+        margin-left: 6px;
+        transition: transform 0.3s ease;
     }
 
     tr.is-open .chevron-mobile {
         transform: rotate(180deg);
-        opacity: 0.75;
     }
 
-    /* ── Panel detalle móvil ── */
-    #tabla-historial td.mobile-detail-panel {
+    .mobile-detail-panel {
         display: none !important;
         grid-column: 1 / -1 !important;
-        grid-row: 2;
         padding: 0 !important;
     }
 
-    #tabla-historial tr.is-open td.mobile-detail-panel {
+    tr.is-open .mobile-detail-panel {
         display: block !important;
     }
 
     .mobile-detail-inner {
-        border-top: 1px solid rgba(0, 0, 0, 0.08);
-        background-color: rgba(0, 0, 0, 0.03);
-        padding: 10px 15px 14px;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        background-color: var(--gris-fondo);
+        padding: 12px;
         display: flex;
         flex-direction: column;
-        gap: 9px;
-        animation: historial-slide-down 0.28s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-
-    @keyframes historial-slide-down {
-        from { opacity: 0; transform: translateY(-5px); }
-        to   { opacity: 1; transform: translateY(0); }
+        gap: 8px;
     }
 
     .mobile-detail-row {
         display: flex;
-        align-items: center;
         justify-content: space-between;
-        gap: 12px;
-    }
-
-    .mobile-detail-detalles {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 6px;
-        padding-top: 8px;
-        border-top: 1px dashed rgba(0, 0, 0, 0.1);
+        align-items: center;
     }
 
     .mobile-detail-label {
-        font-size: 0.62rem;
+        font-size: 0.6rem;
         font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.8px;
         color: var(--verde-stokka);
-        opacity: 0.55;
-        flex-shrink: 0;
+        text-transform: uppercase;
+        opacity: 0.6;
     }
 
     .mobile-detail-value {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        flex: 1;
-        min-width: 0;
-    }
-
-    .lista-cambios.mobile {
-        width: 100%;
-        margin-top: 2px;
-    }
-
-    .lista-cambios.mobile li {
         font-size: 0.8rem;
-        color: rgba(0, 0, 0, 0.7);
+        font-weight: 600;
     }
-
-    /* Ajustes de tamaño */
-    .val-cambio         { font-size: 1.15rem !important; }
-    .trajectory-details { font-size: 11px !important; }
 }
