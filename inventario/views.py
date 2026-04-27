@@ -39,12 +39,12 @@ def pasarela_pago_view(request):
         return redirect('index')
 
     if request.method == 'POST':
-        # Simulamos que procesamos el pago...
+        # Simulación de éxito
         empresa = request.user.empresa
         empresa.plan_activo = True
         empresa.save()
         
-        messages.success(request, f"¡Pago confirmado! Bienvenido a STOKKA, {empresa.nombre}.")
+        messages.success(request, f"¡Pago confirmado! Empresa {empresa.nombre} activada.")
         return redirect('index')
 
     return render(request, 'registration/pago_ficticio.html')
@@ -102,15 +102,15 @@ def gestion_usuarios(request):
 @admin_required
 def editar_usuario_admin(request, user_id):
     # Usamos get_object_or_404 por seguridad
-    usuario_a_editar = get_object_or_404(User, id=user_id)
+    usuario_a_editar = get_object_or_404(User, id=user_id, empresa=request.user.empresa)
     
     # --- BLOQUE DE SEGURIDAD DE ACCESO ---
-    # 1. Un Admin NO puede editar al Dueño Primario (ID 1)
-    if usuario_a_editar.id == 1 and request.user.id != 1:
-        messages.error(request, "El Dueño Fundador es intocable.")
+    # 1. Nadie puede editar al Dueño Supremo de la empresa, excepto él mismo
+    if usuario_a_editar.es_dueño_supremo() and request.user != usuario_a_editar:
+        messages.error(request, "El Fundador de la empresa es intocable.")
         return redirect('gestion_usuarios')
     
-    # 2. Solo el Dueño puede editar a otros usuarios con rol 'dueño'
+    # 2. Solo un Dueño puede editar a otros usuarios con rol 'dueño'
     if usuario_a_editar.rol == 'dueño' and not request.user.es_dueño():
         messages.error(request, "No tienes permisos para editar perfiles de nivel Dueño.")
         return redirect('gestion_usuarios')
@@ -126,14 +126,11 @@ def editar_usuario_admin(request, user_id):
             # Gestión de Contraseña
             if nueva_clave:
                 usuario.set_password(nueva_clave)
-                # Si el admin se edita a sí mismo, mantenemos la sesión activa
                 if usuario.id == request.user.id:
                     update_session_auth_hash(request, usuario)
             
-            # Protección de roles (Auto-degradación e ID 1)
-            if usuario.id == request.user.id:
-                usuario.rol = request.user.rol
-            if usuario.id == 1:
+            # Protección de roles: El Dueño Supremo NO puede dejar de ser dueño
+            if usuario.es_dueño_supremo():
                 usuario.rol = 'dueño'
 
             usuario.save()
@@ -143,38 +140,32 @@ def editar_usuario_admin(request, user_id):
             # Si el formulario no es válido, mandamos los errores a los mensajes flash superiores
             for field, errors in form.errors.items():
                 for error in errors:
-                    label = form.fields[field].label or field.capitalize()
-                    # Añadimos 'open_admin_edit_modal' y el ID del usuario para que el JS sepa cuál abrir
-                    messages.error(request, f"{label}: {error}", extra_tags=f'open_admin_edit_modal_{usuario_a_editar.id}')
-            
+                    for error in errors:
+                        messages.error(request, f"{error}", extra_tags=f'open_admin_edit_modal_{usuario_a_editar.id}')
             return redirect('gestion_usuarios')
-            # Importante: No redirigimos aquí, dejamos que baje al render final para mostrar el form con errores
     else:
         form = EditarUsuarioAdminForm(instance=usuario_a_editar, user_request=request.user)
         
-    return render(request, 'stokka/modales/editar_usuario_admin.html', {
-        'form': form,
-        'usuario_editado': usuario_a_editar
-    })
+    return render(request, 'stokka/modales/editar_usuario_admin.html', {'form': form, 'usuario_editado': usuario_a_editar})
 
 # LÓGICA DE GESTIÓN DE USUARIOS -> ELIMINAR USUARIO
 @login_required
 @admin_required
 def eliminar_usuario(request, user_id):
-    usuario_a_eliminar = User.objects.get(id=user_id)
+    usuario_a_eliminar = get_object_or_404(User, id=user_id, empresa=request.user.empresa)
 
-    # 1. El Dueño Primario (ID 1) es el ÚNICO inmortal
-    if usuario_a_eliminar.id == 1:
-        messages.error(request, "El Dueño fundacional no puede ser eliminado.")
+    # 1. El Dueño Supremo de cada empresa es inmortal
+    if usuario_a_eliminar.es_dueño_supremo():
+        messages.error(request, "El Fundador de la empresa no puede ser eliminado.")
         return redirect('gestion_usuarios')
 
-    # 2. Solo el Dueño Primario (ID 1) puede eliminar a otros usuarios con rol 'dueño'
-    if usuario_a_eliminar.rol == 'dueño' and request.user.id != 1:
-        messages.error(request, "Solo el Dueño primario puede eliminar a otros usuarios con rango de Dueño.")
+    # 2. Solo el Dueño Supremo puede eliminar a otros 'dueños' (si los hay)
+    if usuario_a_eliminar.rol == 'dueño' and not request.user.es_dueño_supremo():
+        messages.error(request, "Solo el Fundador puede eliminar a otros usuarios de rango Dueño.")
         return redirect('gestion_usuarios')
 
-    # 3. El resto de reglas se mantienen
-    if request.user.id == user_id:
+    # 3. No auto-eliminación
+    if request.user.id == usuario_a_eliminar.id:
         messages.error(request, "No puedes eliminarte a ti mismo.")
         return redirect('gestion_usuarios')
 
@@ -190,7 +181,7 @@ def eliminar_usuario(request, user_id):
 # LÓGICA DEL INDEX 
 @login_required
 def index(request):
-    productos = Producto.objects.all()
+    productos = Producto.objects.filter(empresa=request.user.empresa)
     
     # 1. KPIs y Semáforo
     criticos_cont = 0
@@ -255,18 +246,21 @@ def buscador_global(request):
     
     if not query:
         return redirect(request.META.get('HTTP_REFERER', 'index'))
-
-    # 1. Prioridad: ¿Es un producto? (Nombre o Referencia)
-    if Producto.objects.filter(Q(nombre__icontains=query) | Q(referencia__icontains=query)).exists():
+    # Añadimos empresa=request.user.empresa para no buscar en datos ajenos
+    if Producto.objects.filter(
+        Q(empresa=request.user.empresa) & 
+        (Q(nombre__icontains=query) | Q(referencia__icontains=query))
+    ).exists():
         return redirect(f'/inventario/?q={query}')
 
-    # 2. Segunda opción: ¿Es un usuario? (Solo si el que busca tiene permisos)
     if request.user.es_admin_o_dueño():
-        if Usuario.objects.filter(Q(username__icontains=query) | Q(first_name__icontains=query) | Q(email__icontains=query)).exists():
+        if Usuario.objects.filter(
+            Q(empresa=request.user.empresa) & 
+            (Q(username__icontains=query) | Q(first_name__icontains=query) | Q(email__icontains=query))
+        ).exists():
             return redirect(f'/gestion-usuarios/?q={query}')
 
-    # 3. Si no encuentra nada
-    messages.error(request, f"No se encontraron resultados para '{query}'")
+    messages.error(request, f"No se encontraron resultados para '{query}' en su empresa.")
     return redirect(request.META.get('HTTP_REFERER', 'index'))
 
 # LÓGICA DEL LOGIN Y REGISTRO 
@@ -401,7 +395,10 @@ def registro_view(request):
 @login_required
 def perfil_view(request):
     # Aseguramos que el objeto perfil exista para pasárselo al template
-    perfil, created = Perfil.objects.get_or_create(user=request.user)
+    perfil, created = Perfil.objects.get_or_create(
+        user=request.user,
+        defaults={'empresa': request.user.empresa}
+    )
     return render(request, 'stokka/pages/perfil.html', {'perfil': perfil})
 
 # LÓGICA DE EDITAR PERFIL
@@ -416,6 +413,11 @@ def editar_perfil_view(request):
         password = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
         
+        # Validación de Email único
+        if User.objects.filter(email=email).exclude(id=request.user.id).exists():
+            messages.error(request, "Este email ya está en uso por otra cuenta.", extra_tags='open_edit_modal')
+            return redirect('perfil')
+
         if password:
             if check_password(password, request.user.password):
                 messages.error(request, "La nueva contraseña debe ser diferente a la actual.", extra_tags='open_edit_modal')
@@ -425,11 +427,8 @@ def editar_perfil_view(request):
                 messages.error(request, "Las nuevas contraseñas no coinciden.", extra_tags='open_edit_modal')
                 return redirect('perfil')
             
-            # Si pasa las validaciones, la preparamos
             request.user.set_password(password)
-            # No guardamos aún, lo haremos al final con el resto de datos
 
-        # Actualizamos el resto de campos
         request.user.first_name = nombre
         request.user.last_name = apellido
         request.user.email = email
@@ -438,7 +437,6 @@ def editar_perfil_view(request):
         request.user.save()
         perfil.save()
 
-        # Si hubo cambio de contraseña, actualizamos sesión
         if password:
             update_session_auth_hash(request, request.user)
 
@@ -452,15 +450,17 @@ def editar_perfil_view(request):
 @login_required
 def cambiar_foto(request):
     if request.method == 'POST' and request.FILES.get('foto'):
-        perfil, created = Perfil.objects.get_or_create(user=request.user)
+        perfil, created = Perfil.objects.get_or_create(
+            user=request.user,
+            defaults={'empresa': request.user.empresa}
+        )
         perfil.foto = request.FILES['foto']
         
         try:
-            perfil.full_clean() # Esto dispara el validador de los 2MB
+            perfil.full_clean() 
             perfil.save()
             messages.success(request, "Foto de perfil actualizada.")
-        except ValidationError as e:
-            # e.message_dict['foto'][0] suele traer el texto del error
+        except ValidationError:
             messages.error(request, "Error: La imagen es demasiado pesada (máximo 2MB).")
             
     return redirect('perfil')
@@ -479,25 +479,28 @@ def eliminar_foto(request):
 def inventario_view(request):
     filtro = request.GET.get('filtro')
     query = request.GET.get('q')
-    producto = Producto.objects.all().order_by('-fecha_registro')
-    max_stock_real = producto.aggregate(Max('stock_actual'))['stock_actual__max'] or 0
+    productos_queryset = Producto.objects.filter(empresa=request.user.empresa).order_by('-fecha_registro')
+    max_stock_real = productos_queryset.aggregate(Max('stock_actual'))['stock_actual__max'] or 0
 
     if query:
-        producto = producto.filter(
+        productos_queryset = productos_queryset.filter(
             models.Q(nombre__icontains=query) | 
             models.Q(referencia__icontains=query)
         )
 
+    # Convertimos a lista solo después de filtrar por empresa en BD para los filtros de semáforo
     if filtro == 'critico':
-        producto = [p for p in producto if p.semaforo == "critico"]
+        productos_final = [p for p in productos_queryset if p.semaforo == "critico"]
     elif filtro == 'aviso':
-        producto = [p for p in producto if p.semaforo == "aviso"]
+        productos_final = [p for p in productos_queryset if p.semaforo == "aviso"]
+    else:
+        productos_final = productos_queryset
 
     # formulario vacio que usará el modal de "Añadir"
     form_añadir = ProductoForm()
 
     return render(request, 'stokka/pages/inventario.html', {
-        'productos': producto,
+        'productos': productos_final,
         'max_stock_real': max_stock_real,
         'filtro_actual': filtro,
         'query_actual': query,
@@ -505,12 +508,12 @@ def inventario_view(request):
     })
 
 def actualizar_stocks_ajax(request):
-    productos = Producto.objects.all()
-    # Enviamos un diccionario con el stock y el estado del semáforo
+    # Solo devolvemos stocks de la empresa del usuario
+    productos = Producto.objects.filter(empresa=request.user.empresa)
     data = {
         p.id: {
             'stock': p.stock_actual,
-            'color': p.semaforo  # Esto devuelve 'critico', 'aviso' o 'ok'
+            'color': p.semaforo
         } for p in productos
     }
     return JsonResponse(data)
@@ -520,11 +523,15 @@ def añadir_producto(request):
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
-            nuevo_p = form.save()
+            nuevo_p = form.save(commit=False)
+            nuevo_p.empresa = request.user.empresa 
+            nuevo_p.save()
+            
             HistorialMovimiento.objects.create(
                 producto_nombre=nuevo_p.nombre,
                 producto_id=nuevo_p.id,
                 usuario=request.user,
+                empresa=request.user.empresa, 
                 tipo_accion='CREACION',
                 cambio=nuevo_p.stock_actual,
                 stock_resultante=nuevo_p.stock_actual
@@ -532,25 +539,23 @@ def añadir_producto(request):
             messages.success(request, "Producto añadido correctamente")
             return redirect('inventario')
         else:
-            # SI HAY ERROR DE UMBRALES:
-            # Volvemos al inventario pasándole el formulario con los errores
-            productos = Producto.objects.all()
+            productos = Producto.objects.filter(empresa=request.user.empresa)
             return render(request, 'stokka/pages/inventario.html', {
                 'productos': productos,
-                'form_añadir': form, # Pasamos el form con errores
+                'form_añadir': form,
                 'titulo': 'Inventario'
             })
     return redirect('inventario')
 
 @login_required
 def eliminar_producto(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
+    producto = get_object_or_404(Producto, pk=pk, empresa=request.user.empresa)
     if request.method == 'POST':
-        # REGISTRO EN HISTORIAL ANTES DE BORRAR
         HistorialMovimiento.objects.create(
             producto_nombre=producto.nombre,
             producto_id=producto.id,
             usuario=request.user,
+            empresa=request.user.empresa,
             tipo_accion='ELIMINACION',
             cambio=0,
             stock_resultante=0,
@@ -567,30 +572,27 @@ def eliminar_masivo(request):
         ids_raw = request.POST.get('ids', '')
         if ids_raw:
             ids_list = ids_raw.split(',')
-            productos_a_borrar = Producto.objects.filter(id__in=ids_list)
+            productos_a_borrar = Producto.objects.filter(id__in=ids_list, empresa=request.user.empresa)
             
             cantidad = productos_a_borrar.count()
-            
-            # Registramos cada uno en el historial
             for p in productos_a_borrar:
                 HistorialMovimiento.objects.create(
                     producto_nombre=p.nombre,
                     producto_id=p.id,
                     usuario=request.user,
+                    empresa=request.user.empresa, 
                     tipo_accion='ELIMINACION',
                     cambio=0,
                     stock_resultante=0,
                     detalles="Eliminación masiva"
                 )
-            
-            # Ahora sí, borramos todos de golpe
             productos_a_borrar.delete()
             messages.success(request, f"Se han eliminado {cantidad} productos correctamente.")
     return redirect('inventario')
 
 @login_required
 def editar_producto(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
+    producto = get_object_or_404(Producto, pk=pk, empresa=request.user.empresa)
     
     if request.method == 'POST':
         # 1. Capturamos el estado REAL antes de cualquier cambio del formulario
@@ -626,11 +628,12 @@ def editar_producto(request, pk):
                 producto_nombre=producto_editado.nombre,
                 producto_id=producto_editado.id,
                 usuario=request.user,
+                empresa=request.user.empresa,
                 tipo_accion='MODAL_EDITAR',
                 cambio=diferencia,
-                stock_anterior=stock_inicial,  # <--- VALOR ANTES DE EDITAR
-                stock_resultante=producto_editado.stock_actual, # <--- VALOR DESPUÉS DE EDITAR
-                detalles=detalles_final
+                stock_anterior=stock_inicial,
+                stock_resultante=producto_editado.stock_actual,
+                detalles="Actualizado desde modal"
             )
 
             messages.success(request, f"Producto {producto.nombre} actualizado.")
@@ -649,7 +652,7 @@ def editar_producto(request, pk):
 @login_required
 def aumentar_stock(request, pk):
     if request.method == 'POST':
-        producto = get_object_or_404(Producto, pk=pk)
+        producto = get_object_or_404(Producto, pk=pk, empresa=request.user.empresa)
         producto.stock_actual += 1
         producto.save()
         
@@ -662,7 +665,7 @@ def aumentar_stock(request, pk):
 @login_required
 def disminuir_stock(request, pk):
     if request.method == 'POST':
-        producto = get_object_or_404(Producto, pk=pk)
+        producto = get_object_or_404(Producto, pk=pk, empresa=request.user.empresa)
         if producto.stock_actual > 0:
             producto.stock_actual -= 1
             producto.save()
@@ -678,29 +681,29 @@ def disminuir_stock(request, pk):
 @login_required
 def registrar_historial_rapido(request, pk):
     if request.method == 'POST':
-        producto = get_object_or_404(Producto, pk=pk)
-        delta = int(request.POST.get('delta', 0)) # Si delta es -3, se guarda como -3
+        producto = get_object_or_404(Producto, pk=pk, empresa=request.user.empresa)
+        delta = int(request.POST.get('delta', 0))
         
         if delta != 0:
             HistorialMovimiento.objects.create(
                 producto_nombre=producto.nombre,
                 producto_id=producto.id,
                 usuario=request.user,
+                empresa=request.user.empresa,
                 tipo_accion='AJUSTE_RAPIDO',
-                cambio=delta, # Aquí se guarda el signo
+                cambio=delta,
                 stock_resultante=producto.stock_actual
             )
         return JsonResponse({'status': 'ok'})
-            
-    return JsonResponse({'status': 'error', 'message': 'No se pudo registrar'}, status=400)
+    return JsonResponse({'status': 'error'}, status=400)
 
 #HISTORIAL GENERAL
 @login_required
 def historial_movimientos(request):
     # Traemos los movimientos (el ordenamiento por fecha es vital)
-    movimientos = HistorialMovimiento.objects.all().select_related('usuario').order_by('-fecha')
+    movimientos = HistorialMovimiento.objects.filter(empresa=request.user.empresa).select_related('usuario').order_by('-fecha')
+    
     for mov in movimientos:
         mov.stock_anterior = mov.stock_resultante - mov.cambio
-    return render(request, 'stokka/pages/historial.html', {
-        'movimientos': movimientos,
-    })
+        
+    return render(request, 'stokka/pages/historial.html', {'movimientos': movimientos})

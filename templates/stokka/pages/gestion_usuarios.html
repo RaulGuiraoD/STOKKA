@@ -64,21 +64,18 @@
                         </div>
 
                         <div class="col-12 col-md-auto d-flex gap-2 justify-content-center justify-content-md-end" style="min-width: 130px;">
-                            {% if request.user.id == 1 or u.rol != 'dueño' %}
-                            <button type="button" class="btn btn-editar-stokka px-3 py-2 btn-cargar-editar"
-                                data-url="{% url 'editar_usuario_admin' u.id %}" data-bs-toggle="modal" data-bs-target="#modalEditarUsuario">
-                                <i class="fa-solid fa-pen-to-square fs-5"></i>
-                            </button>
+                            {% if request.user.es_dueño_supremo or not u.es_dueño_supremo %}
+                                <button type="button" class="btn btn-editar-stokka px-3 py-2 btn-cargar-editar"
+                                    data-url="{% url 'editar_usuario_admin' u.id %}" data-bs-toggle="modal" data-bs-target="#modalEditarUsuario">
+                                    <i class="fa-solid fa-pen-to-square fs-5"></i>
+                                </button>
                             {% endif %}
-
-                            {% if u.id != 1 and u.id != request.user.id %}
-                                {% if request.user.id == 1 or u.rol != 'dueño' %}
-                                    {% if request.user.es_dueño or u.rol == 'empleado' %}
+                            {% if not u.es_dueño_supremo and u.id != request.user.id %}
+                                {% if request.user.es_dueño_supremo or request.user.rol == 'dueño' or u.rol == 'empleado' %}
                                     <button type="button" class="btn btn-cancelar-stokka px-3 py-2" data-bs-toggle="modal"
                                         data-bs-target="#modalEliminarUsuario{{ u.id }}">
                                         <i class="fa-solid fa-user-minus fs-5"></i>
                                     </button>
-                                    {% endif %}
                                 {% endif %}
                             {% endif %}
                         </div>

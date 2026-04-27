@@ -31,8 +31,14 @@ class Usuario(AbstractUser):
     rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='empleado')
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='usuarios', null=True, blank=True)
 
+    def es_dueño_supremo(self):
+        # Es el dueño supremo si es el usuario con el ID más pequeño de SU empresa
+        primer_usuario_empresa = Usuario.objects.filter(empresa=self.empresa).order_by('id').first()
+        return self == primer_usuario_empresa
+
     def es_dueño(self):
-        return self.rol == 'dueño' or self.id == 1
+        # Para lógica general de permisos
+        return self.rol == 'dueño' or self.es_dueño_supremo()
     
     def es_admin_o_dueño(self):
         return self.rol in ['dueño', 'admin']
