@@ -15,18 +15,18 @@
                 <div class="mb-3">
                     <label class="text-white small mb-1 d-block">Nombre *</label>
                     <input type="text" name="nombre" class="form-control border-0 rounded-2 py-2"
-                        placeholder="Tu nombre" style="background: white;" required>
+                        placeholder="Tu nombre" style="background: var(--blanco);" required>
                 </div>
                 <div class="mb-3">
-                    <label class="text-white small mb-1 d-block">Apellido (Opcional)</label>
-                    <input type="text" name="apellido" class="form-control border-0 rounded-2 py-2"
-                        placeholder="Tu apellido" style="background: white;">
+                    <label class="text-white small mb-1 d-block">Nombre de Usuario *</label>
+                    <input type="text" name="username" class="form-control border-0 rounded-2 py-2"
+                        placeholder="Ej: stokka.ejemplo" style="background: var(--blanco);" required>
                 </div>
                 <div class="mb-3">
-                    <label class="text-white small mb-1 d-block">Nombre Usuario *</label>
-                    <input type="text" name="usuario" class="form-control border-0 rounded-2 py-2"
-                        placeholder="Nombre de usuario" style="background: white;" required>
-                </div>
+                <label class="text-white small mb-1 d-block">Email Corporativo *</label>
+                <input type="email" name="email" class="form-control border-0 rounded-2 py-2"
+                    placeholder="ejemplo@stokka.com" style="background: var(--blanco);" required>
+            </div>
             </div>
 
             <div class="col-12 col-md-2 d-flex justify-content-center align-items-center my-3 my-md-0">
@@ -37,10 +37,10 @@
             </div>
 
             <div class="col-12 col-md-5 text-start" style="max-width: 380px;">
-                <div class="mb-3">
-                    <label class="text-white small mb-1 d-block">Email *</label>
-                    <input type="email" name="email" class="form-control border-0 rounded-2 py-2"
-                        placeholder="email@ejemplo.com" style="background: white;" required>
+               <div class="mb-3">
+                    <label class="text-white small mb-1 d-block">Nombre de la Empresa *</label>
+                    <input type="text" name="nombre_empresa" class="form-control border-0 rounded-2 py-2"
+                        placeholder="Stokka Logistics" style="background: var(--blanco);" required>
                 </div>
                 <div class="mb-3">
                     <label class="text-white small mb-1 d-block">Contraseña *</label>
@@ -56,9 +56,17 @@
                     </div>
                 </div>
                 <div class="mb-3">
-                    <label class="text-white small mb-1 d-block">Teléfono (Opcional)</label>
-                    <input type="tel" name="telefono" class="form-control border-0 rounded-2 py-2"
-                        placeholder="600 000 000" style="background: white;">
+                    <label class="text-white small mb-1 d-block">Confirmar Contraseña *</label>
+                    <div class="position-relative d-flex align-items-center">
+                        <input type="password" name="confirm_password" id="id_confirm_password"
+                            class="form-control border-0 rounded-2 py-2 pe-5 shadow-none" 
+                            placeholder="********" style="background: white;" required>
+                        
+                        <i class="fa-regular fa-eye position-absolute d-none stokka-eye-icon" 
+                        id="toggleIconConfirm" 
+                        style="right: 15px; cursor: pointer; color: var(--verde-stokka); z-index: 10;"
+                        onclick="togglePassword('id_confirm_password', 'toggleIconConfirm')"></i>
+                    </div>
                 </div>
             </div>
 

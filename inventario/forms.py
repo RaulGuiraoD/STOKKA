@@ -1,5 +1,5 @@
 from django import forms
-from .models import Producto
+from .models import Producto, Empresa
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 
@@ -19,10 +19,14 @@ class RegistroUsuarioForm(forms.ModelForm):
         required=True, 
         widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'ejemplo@stokka.com'})
     )
+    nombre_empresa = forms.CharField(
+        label="Nombre de tu Empresa",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Stokka Logistics'})
+    )
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'rol', 'password']
+        fields = ['username', 'first_name', 'email', 'password']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -47,8 +51,8 @@ class RegistroUsuarioForm(forms.ModelForm):
         if not email:
             self.add_error('email', "El correo electrónico es imprescindible para el acceso.")
 
-        if password != confirm_password:
-            raise forms.ValidationError("Las contraseñas no coinciden")
+        if password and confirm_password and password != confirm_password:
+            self.add_error('confirm_password', "Las contraseñas no coinciden")
         return cleaned_data
     
     def clean_email(self):
@@ -57,6 +61,12 @@ class RegistroUsuarioForm(forms.ModelForm):
         if User.objects.filter(email=email).exclude(id=usuario_id).exists():
             raise forms.ValidationError("Este email ya está en uso por otro usuario.")
         return email
+    
+    def clean_nombre_empresa(self):
+        nombre = self.cleaned_data.get('nombre_empresa')
+        if Empresa.objects.filter(nombre__iexact=nombre).exists():
+            raise forms.ValidationError("Este nombre de empresa ya está registrado.")
+        return nombre
     
 class EditarUsuarioAdminForm(forms.ModelForm):
 

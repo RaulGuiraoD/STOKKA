@@ -4,7 +4,8 @@ import json
 # 2. Django Core & Common Imports
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import models
+from django.db import models, transaction
+from django.utils.text import slugify
 from django.db.models import Count, Max, Q, Sum
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -17,7 +18,7 @@ from django.contrib.auth.hashers import check_password
 
 # 4. Local App Imports
 from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroUsuarioForm
-from .models import Perfil, Producto, Usuario, HistorialMovimiento
+from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa
 
 # Esto detecta automáticamente el Usuario personalizado
 User = get_user_model()
@@ -281,62 +282,85 @@ def logout_view(request):
 
 def registro_view(request):
     if request.method == 'POST':    # 1. Recoger datos
-        nombre = request.POST.get('nombre')
-        usuario = request.POST.get('usuario')
+        nombre = request.POST.get('first_name') # Cambiado de 'nombre' según tu nuevo HTML
+        usuario = request.POST.get('username')   # Cambiado de 'usuario' según tu nuevo HTML
         email = request.POST.get('email')
         password = request.POST.get('password')
-        apellido = request.POST.get('apellido', '')
-        telefono = request.POST.get('telefono', '')
+        confirm_password = request.POST.get('confirm_password')
+        nombre_empresa = request.POST.get('nombre_empresa')
 
-        # 2. Validación de campos obligatorios (doble seguridad)
-        if not all([nombre, usuario, email, password]):
+        # 1. Validación de campos obligatorios (doble seguridad)
+        if not all([nombre, usuario, email, password, nombre_empresa]):
             return render(request, 'registration/registro.html', {
-                'error': 'Faltan campos obligatorios.',
+                'error': 'Faltan campos obligatorios para registrar tu empresa.',
                 'datos': request.POST
             })
 
-        # 3. COMPROBACIÓN de si existe ya el nombre de usuario
+        if password != confirm_password:
+             return render(request, 'registration/registro.html', {
+                'error': 'Las contraseñas no coinciden.',
+                'datos': request.POST
+            })
+        
+        # 3. COMPROBACIONES (Usuario, Email y Empresa)
         if User.objects.filter(username=usuario).exists():
             return render(request, 'registration/registro.html', {
-                'error': 'Ese nombre de usuario ya está cogido. Prueba otro.',
+                'error': 'Ese nombre de usuario ya está cogido.',
                 'datos': request.POST
             })
 
-        # 4. COMPROBACIÓN de si existe ya el email
+        # 4. COMPROBACIÓN de si existe ya el email y empresa
         if User.objects.filter(email=email).exists():
             return render(request, 'registration/registro.html', {
-                'error': 'Este correo electrónico ya está registrado. Ingresa otro correo para registrarte o inicia sesión',
+                'error': 'Este email ya está registrado.',
+                'datos': request.POST
+            })
+        
+        if Empresa.objects.filter(nombre__iexact=nombre_empresa).exists():
+            return render(request, 'registration/registro.html', {
+                'error': 'Ya existe una empresa registrada con ese nombre.',
                 'datos': request.POST
             })
 
         # 5. Si todo está correcto, creamos el usuario
         try:
-            nuevo_usuario = User.objects.create_user(
-                username=usuario,
-                email=email, 
-                password=password,
-                first_name=nombre,
-                last_name=apellido
-            )
-            
-            # Asignar rol de dueño si es el primero
-            if User.objects.count() == 1:
-                nuevo_usuario.rol = 'dueño'
+            with transaction.atomic():
+                # A. Crear la Empresa
+                nueva_empresa = Empresa.objects.create(
+                    nombre=nombre_empresa,
+                    slug=slugify(nombre_empresa),
+                    plan_activo=False # Se activará en el paso de pago
+                )
+
+                # B. Crear el Usuario vinculado a la empresa
+                nuevo_usuario = User.objects.create_user(
+                    username=usuario,
+                    email=email, 
+                    password=password,
+                    first_name=nombre,
+                    empresa=nueva_empresa, # Vínculo vital
+                    rol='dueño' # Siempre es dueño el que registra la empresa
+                )
+                
+                # Permisos de gestión total para el creador
                 nuevo_usuario.is_staff = True
                 nuevo_usuario.is_superuser = True
-            
-            nuevo_usuario.save()
+                nuevo_usuario.save()
 
-            # 6. Crear el Perfil asociado
-            Perfil.objects.create(user=nuevo_usuario, telefono=telefono)
+                # C. Crear Perfil
+                Perfil.objects.create(user=nuevo_usuario)
 
-            login(request, nuevo_usuario)
-            return redirect('index')
+                # 5. LOGIN Y REDIRECCIÓN
+                login(request, nuevo_usuario)
+                
+                # Aquí podrías redirigir a la página de "PAGO" en el futuro
+                # Por ahora, vamos al index para confirmar que funciona
+                return redirect('index')
 
         except Exception as e:
-            # Captura cualquier otro error inesperado para que no se rompa la web
             return render(request, 'registration/registro.html', {
-                'error': f'Ocurrió un error inesperado: {e}'
+                'error': f'Error en el registro de infraestructura: {e}',
+                'datos': request.POST
             })
             
     return render(request, 'registration/registro.html')

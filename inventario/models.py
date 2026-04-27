@@ -10,15 +10,26 @@ from django.utils import timezone
 
 # 3. Local App Imports 
 
+# MODELO EMPRESA
+class Empresa(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True) # Para la URL: empresa-x.stokka.com
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    plan_activo = models.BooleanField(default=False) # Se activará tras el "pago"
+
+    def __str__(self):
+        return self.nombre
+    
 # MODELO USUARIOS
 class Usuario(AbstractUser):
     ROL_CHOICES = (
-        ('dueño', 'Dueño/Admin Principal'),
+        ('dueño', 'Dueño Principal'),
         ('admin', 'Administrador Delegado'),
         ('empleado', 'Empleado'),
     )
 
     rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='empleado')
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='usuarios', null=True, blank=True)
 
     def es_dueño(self):
         return self.rol == 'dueño' or self.id == 1
@@ -36,6 +47,7 @@ class Producto(models.Model):
     umbrales_rojo = models.PositiveIntegerField(verbose_name="Crítico", default=5)
     factura = models.FileField(upload_to='facturas/%Y/%m/', null=True, blank=True, verbose_name="Factura (Opcional)")
     fecha_registro = models.DateTimeField(default=timezone.now)
+
 
     def __str__(self):
         return self.nombre
@@ -62,6 +74,8 @@ class Producto(models.Model):
         elif self.stock_actual <= self.umbrales_amarillo:
             return "aviso"      #Amarillo
         return "ok"             #Verde
+    
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='productos', null=True, blank=True)
 
 
 
@@ -135,3 +149,5 @@ class HistorialMovimiento(models.Model):
 
     def __str__(self):
         return f"{self.producto_nombre} | {self.tipo_accion} | {self.cambio}"
+    
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='HistorialMovimiento', null=True, blank=True)
