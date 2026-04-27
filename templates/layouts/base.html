@@ -20,10 +20,10 @@
         <div class="header-left d-flex align-items-center gap-2 cursor-pointer" onclick="location.href='{% url 'index' %}'">
             <img src="{% static 'assets/Logo stokka.png' %}" style="width: 42px;" class="mini-logo" alt="Logo">
             <div class="brand-container d-none d-md-flex flex-column" style="line-height: 1;">
-                <span class="brand-name text-white fs-4 fw-bolder" style="letter-spacing: 1px;">
+                <span class="brand-name text-white fs-4 mt-2 fw-bolder" style="letter-spacing: 1px;">
                     STOKKA
                 </span>
-                <span class="text-white-50 fw-light" style="font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase;">
+                <span class="text-white-50 fw-light mt-1" style="font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase;">
                     {{ user.empresa.nombre }}
                 </span>
             </div>

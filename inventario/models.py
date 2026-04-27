@@ -48,6 +48,7 @@ class Producto(models.Model):
     factura = models.FileField(upload_to='facturas/%Y/%m/', null=True, blank=True, verbose_name="Factura (Opcional)")
     fecha_registro = models.DateTimeField(default=timezone.now)
 
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='productos', null=True, blank=True)
 
     def __str__(self):
         return self.nombre
@@ -75,7 +76,6 @@ class Producto(models.Model):
             return "aviso"      #Amarillo
         return "ok"             #Verde
     
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='productos', null=True, blank=True)
 
 
 
@@ -94,6 +94,8 @@ class Perfil(models.Model):
         null=True,
         validators=[validar_tamano_foto] # Aplicamos el validador
     )
+
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='perfil', null=True, blank=True)
 
     def save(self, *args, **kwargs):
         # Primero guardamos para tener el archivo en el sistema
@@ -142,6 +144,7 @@ class HistorialMovimiento(models.Model):
     detalles = models.TextField(null=True, blank=True)
     stock_anterior = models.IntegerField(default=0)
 
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='movimientos_historial', null=True, blank=True)
     class Meta:
         ordering = ['-fecha']
         verbose_name = "Historial de Movimiento"
@@ -150,4 +153,3 @@ class HistorialMovimiento(models.Model):
     def __str__(self):
         return f"{self.producto_nombre} | {self.tipo_accion} | {self.cambio}"
     
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='HistorialMovimiento', null=True, blank=True)
