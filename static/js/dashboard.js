@@ -120,21 +120,5 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    const alerts = document.querySelectorAll('.custom-alert');
-    if (alerts.length > 0) {
-        alerts.forEach(function (alert) {
-            setTimeout(function () {
-                try {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                } catch (e) {
-                    // Si Bootstrap no ha cargado aún o el elemento ya no está
-                    alert.style.display = 'none';
-                }
-            }, 3000);
-        });
-    }
-
-    
 });
 

@@ -18,13 +18,13 @@ function togglePassword(inputId, iconId) {
 }
 
 function checkInput(inputElementOrId, iconId) {
-    const input = (typeof inputElementOrId === 'string') 
-        ? document.getElementById(inputElementOrId) 
+    const input = (typeof inputElementOrId === 'string')
+        ? document.getElementById(inputElementOrId)
         : inputElementOrId;
-    
+
     const container = input.closest('.position-relative');
     const icon = container ? container.querySelector('.fa-eye, .fa-eye-slash') : document.getElementById(iconId);
-    
+
     if (input && icon) {
         if (input.value.length > 0) {
             icon.classList.remove('d-none');
@@ -39,7 +39,7 @@ function checkInput(inputElementOrId, iconId) {
 // Escuchador global para capturar inputs nuevos (como los de los modales AJAX)
 document.addEventListener('input', function (e) {
     if (e.target.type === 'password' || e.target.id.includes('password')) {
-        checkInput(e.target, null); 
+        checkInput(e.target, null);
     }
 });
 
@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (btnEditar) {
             setTimeout(() => {
                 btnEditar.click(); // Esto dispara tu función fetch automáticamente
-                
+
                 // 3. El "Trim" / Auto-focus: 
                 // Esperamos un poco a que el fetch termine de cargar el HTML en el modal
                 setTimeout(() => {
@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (passInput) {
                         passInput.focus();
                         // Opcional: si quieres limpiar el campo si hubo error
-                        passInput.value = ''; 
+                        passInput.value = '';
                     }
                 }, 600); // Un pelín más de tiempo para asegurar que el fetch terminó
             }, 400);
@@ -136,13 +136,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const bodyPerfil = document.getElementById('bodyEditarPerfil');
 
     if (btnCargarPerfil && bodyPerfil) {
-        btnCargarPerfil.addEventListener('click', function() {
+        btnCargarPerfil.addEventListener('click', function () {
             const url = this.getAttribute('data-url');
             console.log("Cargando contenido desde:", url);
-            
+
             // Ponemos el spinner
             bodyPerfil.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-success"></div></div>';
-            
+
             fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(response => {
                     if (!response.ok) throw new Error('Error en red');
@@ -214,5 +214,18 @@ document.addEventListener("DOMContentLoaded", function () {
             lastScrollY = currentScrollY;
         }
     }, true);
+
+    const successAlerts = document.querySelectorAll('#container-mensajes .alert-success-stokka');
+    successAlerts.forEach(function (alert) {
+        setTimeout(function () {
+            if (alert) {
+                alert.classList.remove('show');
+
+                setTimeout(function () {
+                    alert.remove();
+                }, 600);
+            }
+        }, 3000);
+    });
 
 });
