@@ -31,6 +31,24 @@ def admin_required(view_func):
         raise PermissionDenied
     return _wrapped_view_func
 
+# FUNCION PAGO REGISTRO
+@login_required
+def pasarela_pago_view(request):
+    # Si la empresa ya está activa, no hace falta pagar, redirigimos al inicio
+    if request.user.empresa and request.user.empresa.plan_activo:
+        return redirect('index')
+
+    if request.method == 'POST':
+        # Simulamos que procesamos el pago...
+        empresa = request.user.empresa
+        empresa.plan_activo = True
+        empresa.save()
+        
+        messages.success(request, f"¡Pago confirmado! Bienvenido a STOKKA, {empresa.nombre}.")
+        return redirect('index')
+
+    return render(request, 'registration/pago_ficticio.html')
+
 # LÓGICA DE GESTIÓN DE USUARIOS
 @login_required
 @admin_required
@@ -259,6 +277,14 @@ def login_view(request):
 
             if user is not None:
                 login(request, user)
+
+                # Lógica de Recuérdame
+                if request.POST.get('recordar'): # Asegúrate de que el checkbox en HTML tenga name="recordar"
+                    # La sesión durará 2 semanas (o el tiempo que quieras en segundos)
+                    request.session.set_expiry(1209600) 
+                else:
+                    # La sesión expira al cerrar el navegador
+                    request.session.set_expiry(0)
                 
                 # Usamos el nombre si existe, si no, el nombre de usuario
                 nombre_mostrar = user.first_name if user.first_name else user.username
@@ -352,10 +378,7 @@ def registro_view(request):
 
                 # 5. LOGIN Y REDIRECCIÓN
                 login(request, nuevo_usuario)
-                
-                # Aquí podrías redirigir a la página de "PAGO" en el futuro
-                # Por ahora, vamos al index para confirmar que funciona
-                return redirect('index')
+                return redirect('pasarela_pago')
 
         except Exception as e:
             return render(request, 'registration/registro.html', {

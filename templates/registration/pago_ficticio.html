@@ -1,0 +1,55 @@
+{% extends 'layouts/base_auth.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center">
+    <div class="card shadow-lg border-0 rounded-4 p-4" style="max-width: 500px; background: white;">
+        <div class="text-center mb-4">
+            <img src="{% static 'assets/Logo_Stokka2.png' %}" style="width: 70px; color: var(--verde-stokka);" alt="Logo";>
+            <h3 class="fw-bold mt-3" style="color: var(--verde-stokka);">Suscripción STOKKA </h3>
+            <p class="text-dark">Estás a un paso de activar el panel para <strong>{{ user.empresa.nombre }}</strong></p>
+        </div>
+
+        <div class="alert py-2" style="font-size: 0.9rem; background-color: var(--rojo-alerta); color: white;">
+            <i class="fa-solid fa-circle-info me-2"></i> Esta es una pasarela de pago simulada.
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Titular de la tarjeta</label>
+                <input type="text" class="form-control" placeholder="Nombre completo" required>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label small fw-bold">Número de tarjeta</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="fa-solid fa-credit-card text-muted" style="color: var(--verde-stokka);"></i></span>
+                    <input type="text" class="form-control border-start-0" placeholder="0000 0000 0000 0000" maxlength="16" required>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-6 mb-3">
+                    <label class="form-label small fw-bold">Caducidad</label>
+                    <input type="text" class="form-control" placeholder="MM/AA" maxlength="5" required>
+                </div>
+                <div class="col-6 mb-3">
+                    <label class="form-label small fw-bold">CVV</label>
+                    <input type="text" class="form-control" placeholder="123" maxlength="3" required>
+                </div>
+            </div>
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-stokka fw-bold py-3 text-uppercase">
+                    Confirmar y Activar Empresa
+                </button>
+            </div>
+            
+            <div class="text-center mt-3">
+                <a href="{% url 'login' %}" class="btn btn-cancelar-stokka px-3 fw-bold">Cancelar y salir</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

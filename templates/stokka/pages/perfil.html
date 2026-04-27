@@ -5,7 +5,12 @@
 
 {% block content %}
 <div class="container-fluid py-4" style="max-width: 1000px;">
-    <h1 class="mb-4 fw-bold">Tu perfil</h1>
+    <div class="section-header d-flex align-items-end gap-3 mb-2">
+            <h1 class="fw-bold text-dark m-0">Tú Perfil</h1>
+            <span class="text-secondary pb-1 d-none d-md-inline" style="font-size: 1.1rem; font-weight: 300;">
+                | {{ user.empresa.nombre }}
+            </span>
+        </div>
 
     <div class="row g-4 g-lg-5">
         <aside class="col-lg-3 d-flex flex-column align-items-center gap-3">

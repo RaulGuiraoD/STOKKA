@@ -26,7 +26,7 @@ class RegistroUsuarioForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'email', 'password']
+        fields = ['username', 'first_name', 'email', 'password', 'rol']
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),

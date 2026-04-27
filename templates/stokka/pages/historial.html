@@ -9,9 +9,13 @@
 <main class="flex-grow-1 p-3 p-md-4 bg-gris-fondo">
     <div class="container-fluid">
         <div class="row mb-4 gy-3 align-items-center">
-            <div
-                class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
-                <h1 class="fw-bold text-dark m-0;">Historial de Actividad</h2>
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
+                <div class="section-header d-flex align-items-end gap-3 mb-2">
+            <h1 class="fw-bold text-dark m-0">Historial Movimientos</h1>
+            <span class="text-secondary pb-1 d-none d-md-inline" style="font-size: 1.1rem; font-weight: 300;">
+                | {{ user.empresa.nombre }}
+            </span>
+        </div>
             </div>
             <div class="col-12 col-md-8">
                 <div class="filtros-historial mb-4">
