@@ -17,7 +17,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 
 # 4. Local App Imports
-from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroUsuarioForm
+from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroUsuarioForm, RegistroColaboradorForm
 from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa
 
 # Esto detecta automáticamente el Usuario personalizado
@@ -54,36 +54,43 @@ def pasarela_pago_view(request):
 @admin_required
 def gestion_usuarios(request):
     query = request.GET.get('q')
-    usuarios = User.objects.all().order_by('id')
+    
+    # 1. FILTRADO POR EMPRESA: Solo usuarios de la misma empresa que el solicitante
+    usuarios = User.objects.filter(empresa=request.user.empresa).order_by('id')
     
     if query:
         usuarios = usuarios.filter(
-            Q(username__icontains=query) | Q(first_name__icontains=query) | Q(email__icontains=query)
+            Q(username__icontains=query) | 
+            Q(first_name__icontains=query) | 
+            Q(email__icontains=query)
         )
 
     if request.method == 'POST':
-        form = RegistroUsuarioForm(request.POST, user_request=request.user)
+        form = RegistroColaboradorForm(request.POST, user_request=request.user)
         if form.is_valid():
             nuevo_usuario = form.save(commit=False)
+            
+            # 2. VÍNCULO AUTOMÁTICO: Asignamos la empresa del creador
+            nuevo_usuario.empresa = request.user.empresa
+            
             nuevo_usuario.set_password(form.cleaned_data['password'])
             nuevo_usuario.save()
+            
             Perfil.objects.get_or_create(user=nuevo_usuario)
-            messages.success(request, f"Usuario {nuevo_usuario.username} creado.")
+            messages.success(request, f"Usuario {nuevo_usuario.username} creado correctamente.")
             return redirect('gestion_usuarios')
         else:
-            # CORRECCIÓN DEL KEYERROR '__all__'
+            # Mantengo tu lógica de mensajes de error para el modal
             for field, errors in form.errors.items():
                 for error in errors:
                     if field == '__all__':
-                        # Errores generales del formulario (ej: contraseñas no coinciden)
                         messages.error(request, f"Error: {error}", extra_tags='open_add_modal')
                     else:
-                        # Errores de campos específicos (ej: email duplicado)
                         label = form.fields[field].label or field.capitalize()
                         messages.error(request, f"{label}: {error}", extra_tags='open_add_modal')
             return redirect('gestion_usuarios')
     else:
-        form = RegistroUsuarioForm(user_request=request.user)
+        form = RegistroColaboradorForm(user_request=request.user)
 
     return render(request, 'stokka/pages/gestion_usuarios.html', {
         'usuarios': usuarios,

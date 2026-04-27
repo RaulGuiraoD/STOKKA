@@ -1,5 +1,5 @@
 from django import forms
-from .models import Producto, Empresa
+from .models import Producto, Empresa, Usuario
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 
@@ -172,3 +172,39 @@ class ProductoForm(forms.ModelForm):
         
         return cleaned_data
     
+
+class RegistroColaboradorForm(forms.ModelForm):
+    password = forms.CharField(label="Contraseña", widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'}))
+    confirm_password = forms.CharField(label="Confirmar Contraseña", widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'}))
+
+    class Meta:
+        model = Usuario
+        fields = ['first_name', 'email', 'username', 'rol']
+        labels = {
+            'first_name': 'Nombre Completo',
+            'email': 'Correo Electrónico',
+            'username': 'Nombre de Usuario',
+            'rol': 'Rol del Usuario'
+        }
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2', 'placeholder': 'Ej: Empleado 1'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2', 'placeholder': 'correo@empresa.com'}),
+            'username': forms.TextInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2', 'placeholder': 'emeplado.ejemplo'}),
+            'rol': forms.Select(attrs={'class': 'form-select rounded-3 border-0 bg-light py-2'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if password != confirm_password:
+            raise forms.ValidationError("Las contraseñas no coinciden.")
+        return cleaned_data
+    
+    def __init__(self, *args, **kwargs):
+        user_request = kwargs.pop('user_request', None) # Extraer antes del super
+        super().__init__(*args, **kwargs)
+        self.fields['first_name'].required = True
+        if user_request and not user_request.es_dueño():
+            self.fields['rol'].choices = [c for c in User.ROL_CHOICES if c[0] != 'dueño']
