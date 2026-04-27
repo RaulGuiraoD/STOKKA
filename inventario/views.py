@@ -39,7 +39,6 @@ def pasarela_pago_view(request):
         return redirect('index')
 
     if request.method == 'POST':
-        # Simulación de éxito
         empresa = request.user.empresa
         empresa.plan_activo = True
         empresa.save()
