@@ -5,16 +5,12 @@
             <i class="fa-solid fa-user-pen me-2" style="color: var(--verde-stokka);"></i>
             Editar Usuario
         </h3>
-        <p class="text-muted small">Modificando el perfil de: <span class="badge bg-light text-dark border">{{ usuario_editado.username }}</span></p>
+        <p class="text-muted small">Modificando el perfil de: <span class="badge bg-light text-dark border">{{ usuario_editado.email }}</span></p>
     </div>
 
     <form method="POST" action="{% url 'editar_usuario_admin' usuario_editado.id %}">
         {% csrf_token %}
         <div class="row g-3">
-            <div class="col-12 col-md-6">
-                <label class="form-label fw-bold small text-uppercase text-muted">Nombre de Usuario <span class="text-danger">*</span></label>
-                {{ form.username }}
-            </div>
             <div class="col-12 col-md-6">
                 <label class="form-label fw-bold small text-uppercase text-muted">Email <span class="text-danger">*</span></label>
                 {{ form.email }}
@@ -29,7 +25,7 @@
             </div>
 
             <div class="col-12 my-2 my-md-3">
-                {% with r=usuario_editado.rol %}
+                {% with r=membresia_editada.rol %}
                 <div class="p-3 bg-light rounded-3 border-start border-4 shadow-sm" 
                     style="{% if r == 'dueño' %}border-color: var(--verde-stokka) !important;
                            {% elif r == 'admin' %}border-color: #F5C907 !important;

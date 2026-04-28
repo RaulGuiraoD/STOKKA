@@ -10,7 +10,7 @@
         <div class="section-header d-flex align-items-end gap-2 mb-2">
             <h1 class="fw-bold text-dark m-0">Panel Principal</h1>
             <span class="text-dark pb-1 d-none d-md-inline" style="font-size: 1.4rem; font-weight: 300;">
-                | {{ user.empresa.nombre }}
+                | {{ empresa.nombre }}
             </span>
         </div>
         <a href="{% url 'inventario' %}" class="btn btn-stokka shadow-sm rounded-3 px-4">
@@ -113,7 +113,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h6 class="text-dark small text-uppercase fw-bold mb-4" style="color: var(--verde-stokka) !important;">
-                            <i class="fa-solid fa-user-shield me-2"></i>Rendimiento del Equipo ({{ user.get_rol_display }})
+                            <i class="fa-solid fa-user-shield me-2"></i>Rendimiento del Equipo ({{ membresia.get_rol_display }})
                         </h6>
                         <div style="height: 200px;">
                             <canvas id="chartAdmin"></canvas>

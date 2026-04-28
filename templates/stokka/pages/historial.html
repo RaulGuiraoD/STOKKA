@@ -13,7 +13,7 @@
                 <div class="section-header d-flex align-items-end gap-3 mb-2">
             <h1 class="fw-bold text-dark m-0">Historial Movimientos</h1>
             <span class="text-dark pb-1 d-none d-md-inline" style="font-size: 1.4rem; font-weight: 300;">
-                | {{ user.empresa.nombre }}
+                | {{ empresa.nombre }}
             </span>
         </div>
             </div>
@@ -125,7 +125,7 @@
                                                                                 {% endif %}
                                                                             </div>
                                                                             <div class="lh-1 text-truncate">
-                                                                                <div class="fw-bold text-uppercase {% if mov.usuario.rol == 'dueño' %}text-stokka{% elif mov.usuario.rol == 'admin' %}text-amarillo-historial{% else %}text-verde-secundario{% endif %}"
+                                                                                <div class="fw-bold text-uppercase {% if mov.usuario.membresias.first.rol == 'dueño' %}text-stokka{% elif mov.usuario.membresias.first.rol == 'admin' %}text-amarillo-historial{% else %}text-verde-secundario{% endif %}"
                                                                                     style="font-size: 0.75rem;">
                                                                                     {{ mov.usuario.username }}
                                                                                 </div>

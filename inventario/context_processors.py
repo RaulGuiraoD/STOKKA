@@ -1,11 +1,7 @@
 from .models import Membresia
 
 def empresa_activa(request):
-    """
-    Inyecta empresa_activa y membresia_activa en todos los templates.
-    Así base.html siempre tiene acceso a ellas sin que cada vista las pase.
-    """
-    if not request.user.is_authenticated:
+    if not hasattr(request, 'user') or not request.user.is_authenticated:
         return {}
 
     empresa_id = request.session.get('empresa_activa_id')
@@ -20,4 +16,7 @@ def empresa_activa(request):
             'es_jefe': request.user.es_admin_o_dueño_en(membresia.empresa),
         }
     except Membresia.DoesNotExist:
+        return {}
+    except Exception:
+        # Captura cualquier otro error silenciosamente para no romper todas las páginas
         return {}
