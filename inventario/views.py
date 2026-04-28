@@ -48,6 +48,11 @@ def pasarela_pago_view(request):
 
     return render(request, 'registration/pago_ficticio.html')
 
+def cancelar_pago_view(request):
+    from django.contrib.auth import logout
+    logout(request) 
+    return redirect('registro') 
+
 # LÓGICA DE GESTIÓN DE USUARIOS
 @login_required
 @admin_required

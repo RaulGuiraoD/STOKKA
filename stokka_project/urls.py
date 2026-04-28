@@ -25,14 +25,18 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # --- CORE / DASHBOARD ---
+    # --- CORE ---
     path('', views.index, name='index'),
-    path('login/', views.login_view, name='login'),
 
     # --- AUTENTICACIÓN ---
+    path('login/', views.login_view, name='login'), 
     path('registro/', views.registro_view, name='registro'),
-    path('registro/pago/', views.pasarela_pago_view, name='pasarela_pago'), 
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
+    
+    # --- FLUJO DE PAGO ---
+    path('registro/pago/', views.pasarela_pago_view, name='pasarela_pago'),
+    path('pago/cancelar/', views.cancelar_pago_view, name='cancelar_pago'), 
+    
+    # Logout (asegúrate de que el name sea 'logout')
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
 
     # --- PERFIL DE USUARIO ---

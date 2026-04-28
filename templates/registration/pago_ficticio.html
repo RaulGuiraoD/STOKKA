@@ -40,14 +40,17 @@
                 </div>
             </div>
 
-            <div class="d-grid mt-4">
-                <button type="submit" class="btn btn-stokka fw-bold py-3 text-uppercase">
-                    Confirmar y Activar Empresa
-                </button>
+            <div  class="d-grid mt-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-stokka fw-bold py-3 text-uppercase">
+                        Confirmar y Activar Empresa
+                    </button>
+                </form>     
             </div>
-            
+
             <div class="text-center mt-3">
-                <a href="{% url 'login' %}" class="btn btn-cancelar-stokka px-3 fw-bold">Cancelar y salir</a>
+                <a href="{% url 'cancelar_pago' %}" class="btn btn-cancelar-stokka px-3 fw-bold">Cancelar y salir</a>
             </div>
         </form>
     </div>
