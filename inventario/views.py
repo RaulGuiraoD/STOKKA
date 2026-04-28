@@ -408,6 +408,12 @@ def editar_usuario_admin(request, user_id):
     if membresia_editada.rol == 'dueño' and not request.user.es_dueño_en(empresa):
         messages.error(request, "No tienes permisos para editar perfiles de nivel Dueño.")
         return redirect('gestion_usuarios')
+    
+    # Los admins solo pueden editar empleados, nada más
+    if not request.user.es_dueño_en(empresa):
+        if membresia_editada.rol != 'empleado':
+            messages.error(request, "Solo p uedes editar usuarios con rol Empleado.")
+            return redirect('gestion_usuarios')
 
     if request.method == 'POST':
         form = EditarUsuarioAdminForm(

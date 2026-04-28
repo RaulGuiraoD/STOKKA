@@ -109,9 +109,8 @@ class EditarUsuarioAdminForm(forms.ModelForm):
 
         # Los admins no pueden asignar rol dueño
         if user_request and empresa_activa and not user_request.es_dueño_en(empresa_activa):
-            self.fields['rol'].choices = [
-                c for c in Membresia.ROL_CHOICES if c[0] != 'dueño'
-            ]
+            self.fields['rol'].disabled = True
+            self.fields['rol'].help_text = "Solo el Dueño puede cambiar roles."
 
     def clean(self):
         cleaned_data = super().clean()
@@ -209,11 +208,16 @@ class RegistroColaboradorForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['first_name'].required = True
 
-        # Los admins no pueden crear dueños
+        # El rol 'dueño' nunca es creable desde este form, por nadie.
+        choices_base = [c for c in Membresia.ROL_CHOICES if c[0] != 'dueño']
+
         if user_request and not user_request.es_dueño_en(user_request._empresa_activa):
-            self.fields['rol'].choices = [
-                c for c in Membresia.ROL_CHOICES if c[0] != 'dueño'
-            ]
+            # Los admins solo pueden crear empleados
+            self.fields['rol'].choices = [c for c in choices_base if c[0] == 'empleado']
+        else:
+            # El dueño puede crear admins y empleados
+            self.fields['rol'].choices = choices_base
+
 
     def clean_email(self):
         email = self.cleaned_data.get('email')

@@ -24,15 +24,10 @@
                         placeholder="Tu nombre" style="background: var(--blanco);" required>
                 </div>
                 <div class="mb-3">
-                    <label class="text-white small mb-1 d-block">Nombre de Usuario *</label>
-                    <input type="text" name="username" class="form-control border-0 rounded-2 py-2"
-                        placeholder="Ej: stokka.ejemplo" style="background: var(--blanco);" required>
-                </div>
-                <div class="mb-3">
-                <label class="text-white small mb-1 d-block">Email Corporativo *</label>
-                <input type="email" name="email" class="form-control border-0 rounded-2 py-2"
+                    <label class="text-white small mb-1 d-block">Email Corporativo *</label>
+                    <input type="email" name="email" class="form-control border-0 rounded-2 py-2"
                     placeholder="ejemplo@stokka.com" style="background: var(--blanco);" required>
-            </div>
+                </div>
             </div>
 
             <div class="col-12 col-md-2 d-flex justify-content-center align-items-center my-3 my-md-0">
@@ -88,6 +83,21 @@
                 </a>
             </div>
         </div>
+        <!-- Errores del form (validación server-side) -->
+        {% if form.errors %}
+            {% for field in form %}
+                {% for error in field.errors %}
+                <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-2">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> {{ error }}
+                </div>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+            <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-2">
+                <i class="fa-solid fa-triangle-exclamation me-2"></i> {{ error }}
+            </div>
+            {% endfor %}
+        {% endif %}
     </form>
 </div>
 {% endblock %}
