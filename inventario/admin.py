@@ -1,21 +1,27 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, Empresa, Producto, HistorialMovimiento, Perfil
+from .models import Usuario, Empresa, Producto, HistorialMovimiento, Perfil, Membresia
 
-# 1. Definición del panel de Usuario (solo una vez)
+
 class UsuarioAdmin(UserAdmin):
-    fieldsets = UserAdmin.fieldsets + (
-        ('Información de Empresa y Rol', {'fields': ('rol', 'empresa')}),
-    )
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ('Información de Empresa y Rol', {'fields': ('rol', 'empresa')}),
-    )
-    list_display = ('username', 'email', 'first_name', 'rol', 'empresa')
-    list_filter = ('rol', 'empresa')
+    # Quitamos 'rol' y 'empresa' — ya no son campos de Usuario
+    fieldsets = UserAdmin.fieldsets
+    add_fieldsets = UserAdmin.add_fieldsets
+    list_display  = ('email', 'first_name', 'last_name', 'is_staff')
+    list_filter   = ('is_staff', 'is_active')
+    search_fields = ('email', 'first_name', 'last_name')
+    ordering      = ('email',)
 
-# 2. Registros (ASEGÚRATE DE QUE SOLO HAYA UNO DE CADA UNO)
+
+class MembresiaAdmin(admin.ModelAdmin):
+    list_display  = ('usuario', 'empresa', 'rol', 'es_fundador', 'fecha_ingreso')
+    list_filter   = ('rol', 'empresa', 'es_fundador')
+    search_fields = ('usuario__email', 'empresa__nombre')
+
+
 admin.site.register(Usuario, UsuarioAdmin)
+admin.site.register(Membresia, MembresiaAdmin)
 admin.site.register(Empresa)
-admin.site.register(Producto)           # <--- Revisa que no esté repetido abajo
+admin.site.register(Producto)
 admin.site.register(HistorialMovimiento)
 admin.site.register(Perfil)

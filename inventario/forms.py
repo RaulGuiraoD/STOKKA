@@ -1,11 +1,21 @@
 from django import forms
-from .models import Producto, Empresa, Usuario
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
 
+from .models import Producto, Empresa, Membresia, Usuario
+
 User = get_user_model()
 
-class RegistroUsuarioForm(forms.ModelForm):
+class RegistroUsuarioForm(forms.Form):
+    first_name = forms.CharField(
+        label="Nombre",
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tu nombre'})
+    )
+    email = forms.EmailField(
+        label="Email Corporativo",
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'ejemplo@stokka.com'})
+    )
     password = forms.CharField(
         label="Contraseña",
         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'mínimo 8 caracteres'})
@@ -14,138 +24,117 @@ class RegistroUsuarioForm(forms.ModelForm):
         label="Confirmar Contraseña",
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
     )
-    email = forms.EmailField(
-        label="Email Corporativo",
-        required=True, 
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'ejemplo@stokka.com'})
-    )
     nombre_empresa = forms.CharField(
         label="Nombre de tu Empresa",
         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Stokka Logistics'})
     )
 
-    class Meta:
-        model = User
-        fields = ['username', 'first_name', 'email', 'password', 'rol']
-        widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'rol': forms.Select(attrs={'class': 'form-select'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        user_request = kwargs.pop('user_request', None) # Extraer antes del super
-        super().__init__(*args, **kwargs)
-        self.fields['first_name'].required = True
-        if user_request and not user_request.es_dueño():
-            self.fields['rol'].choices = [c for c in User.ROL_CHOICES if c[0] != 'dueño']
-
-    def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("password")
-        confirm_password = cleaned_data.get("confirm_password")
-        email = cleaned_data.get("email")
-
-        if not email:
-            self.add_error('email', "El correo electrónico es imprescindible para el acceso.")
-
-        if password and confirm_password and password != confirm_password:
-            self.add_error('confirm_password', "Las contraseñas no coinciden")
-        return cleaned_data
-    
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        usuario_id = self.instance.id if self.instance else None
-        if User.objects.filter(email=email).exclude(id=usuario_id).exists():
-            raise forms.ValidationError("Este email ya está en uso por otro usuario.")
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este email ya está registrado.")
         return email
-    
+
     def clean_nombre_empresa(self):
         nombre = self.cleaned_data.get('nombre_empresa')
         if Empresa.objects.filter(nombre__iexact=nombre).exists():
             raise forms.ValidationError("Este nombre de empresa ya está registrado.")
         return nombre
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get("password")
+        confirm_password = cleaned_data.get("confirm_password")
+        if password and confirm_password and password != confirm_password:
+            self.add_error('confirm_password', "Las contraseñas no coinciden.")
+        return cleaned_data
+
     
 class EditarUsuarioAdminForm(forms.ModelForm):
-
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'form-control stokka-input shadow-none', 
+            'class': 'form-control stokka-input shadow-none',
             'placeholder': 'Nueva contraseña',
-            'oninput': "checkInput(this, 'toggleIconAdmin1')" # 'this' pasa el elemento actual
+            'oninput': "checkInput(this, 'toggleIconAdmin1')"
         }),
         required=False,
         label="Nueva contraseña"
     )
     confirm_password = forms.CharField(
         widget=forms.PasswordInput(attrs={
-            'class': 'form-control stokka-input shadow-none', 
+            'class': 'form-control stokka-input shadow-none',
             'placeholder': 'Repite la contraseña',
             'oninput': "checkInput(this, 'toggleIconAdmin2')"
         }),
         required=False,
         label="Confirmar Nueva contraseña"
     )
+    # rol suelto, no del modelo Usuario
+    rol = forms.ChoiceField(
+        choices=Membresia.ROL_CHOICES,
+        label="Rol",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
 
-    email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={'class': 'form-control'}))
     class Meta:
         model = User
-        fields = ['username', 'first_name', 'last_name', 'email', 'rol']
+        # username fuera: ya no lo edita el usuario ni el admin
+        fields = ['first_name', 'last_name', 'email']
         widgets = {
-            'username': forms.TextInput(attrs={'class': 'form-control'}),
             'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'rol': forms.Select(attrs={'class': 'form-select'}),
+            'last_name':  forms.TextInput(attrs={'class': 'form-control'}),
+            'email':      forms.EmailInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
-        user_request = kwargs.pop('user_request', None)
+        user_request   = kwargs.pop('user_request', None)
+        empresa_activa = kwargs.pop('empresa_activa', None)
         super().__init__(*args, **kwargs)
-        
-        if self.instance and user_request:
-            # REGLA: No puedes cambiar tu propio rol (evita errores 403 y pérdida de acceso)
-            if self.instance.id == user_request.id:
-                self.fields['rol'].disabled = True
-                self.fields['rol'].help_text = "No puedes cambiar tu propio rol para evitar bloqueos de acceso."
-                
-            
-            # REGLA: El Dueño Primario (ID 1) es inamovible
-            if self.instance.id == 1:
-                self.fields['rol'].disabled = True
-            
-            # REGLA: El ID 1 puede cambiar el rol de OTROS dueños
-            elif user_request.id == 1:
-                self.fields['rol'].disabled = False
 
-        if user_request and not user_request.es_dueño():
-            self.fields['rol'].choices = [c for c in User.ROL_CHOICES if c[0] != 'dueño']
+        # Precargamos el rol actual de la membresía del usuario editado
+        if self.instance and empresa_activa:
+            membresia = self.instance.get_membresia(empresa_activa)
+            if membresia:
+                self.fields['rol'].initial = membresia.rol
+
+        if self.instance and user_request and empresa_activa:
+            # No puedes cambiar tu propio rol
+            if self.instance.pk == user_request.pk:
+                self.fields['rol'].disabled = True
+                self.fields['rol'].help_text = "No puedes cambiar tu propio rol."
+
+            # El fundador de la empresa no puede perder su rol
+            if self.instance.es_fundador_de(empresa_activa):
+                self.fields['rol'].disabled = True
+
+        # Los admins no pueden asignar rol dueño
+        if user_request and empresa_activa and not user_request.es_dueño_en(empresa_activa):
+            self.fields['rol'].choices = [
+                c for c in Membresia.ROL_CHOICES if c[0] != 'dueño'
+            ]
 
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
 
-        # 1. Validación: Coincidencia de campos
         if password or confirm_password:
             if password != confirm_password:
                 self.add_error('confirm_password', "Las contraseñas no coinciden.")
 
-        # 2. Validación: Diferente a la actual
         if password and self.instance.pk:
             if check_password(password, self.instance.password):
-                self.add_error('password', "La nueva contraseña debe ser diferente a la que está en uso.")
-    
+                self.add_error('password', "La nueva contraseña debe ser diferente a la actual.")
+
         return cleaned_data
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        usuario_id = self.instance.id if self.instance else None
-        if User.objects.filter(email=email).exclude(id=usuario_id).exists():
+        usuario_id = self.instance.pk if self.instance else None
+        if User.objects.filter(email=email).exclude(pk=usuario_id).exists():
             raise forms.ValidationError("Este email ya está en uso por otro usuario.")
         return email
+
     
 # LÓGICA DEL FORMULARIO PARA LOS PRODUCTOS
 class ProductoForm(forms.ModelForm):
@@ -173,38 +162,69 @@ class ProductoForm(forms.ModelForm):
         return cleaned_data
     
 
+# ==============================================================================
+# CREAR COLABORADOR (desde gestión de usuarios, por un dueño o admin)
+# Sin username visible: la vista lo genera con el email.
+# El rol es un ChoiceField suelto — la vista lo usa para crear la Membresia.
+# ==============================================================================
 class RegistroColaboradorForm(forms.ModelForm):
-    password = forms.CharField(label="Contraseña", widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'}))
-    confirm_password = forms.CharField(label="Confirmar Contraseña", widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'}))
+    password = forms.CharField(
+        label="Contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'})
+    )
+    confirm_password = forms.CharField(
+        label="Confirmar Contraseña",
+        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'})
+    )
+    # rol vive en Membresia, no en Usuario, pero lo recogemos aquí para comodidad.
+    # La vista leerá form.cleaned_data['rol'] y creará la Membresia con ese valor.
+    rol = forms.ChoiceField(
+        choices=Membresia.ROL_CHOICES,
+        label="Rol del Usuario",
+        widget=forms.Select(attrs={'class': 'form-select rounded-3 border-0 bg-light py-2'})
+    )
 
     class Meta:
         model = Usuario
-        fields = ['first_name', 'email', 'username', 'rol']
+        # username fuera: lo generamos en la vista con el email.
+        # rol fuera del Meta: no es campo de Usuario, es ChoiceField suelto arriba.
+        fields = ['first_name', 'email']
         labels = {
             'first_name': 'Nombre Completo',
             'email': 'Correo Electrónico',
-            'username': 'Nombre de Usuario',
-            'rol': 'Rol del Usuario'
         }
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2', 'placeholder': 'Ej: Empleado 1'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2', 'placeholder': 'correo@empresa.com'}),
-            'username': forms.TextInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2', 'placeholder': 'emeplado.ejemplo'}),
-            'rol': forms.Select(attrs={'class': 'form-select rounded-3 border-0 bg-light py-2'}),
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control rounded-3 border-0 bg-light py-2',
+                'placeholder': 'Ej: Empleado 1'
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control rounded-3 border-0 bg-light py-2',
+                'placeholder': 'correo@empresa.com'
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        user_request = kwargs.pop('user_request', None)
+        super().__init__(*args, **kwargs)
+        self.fields['first_name'].required = True
+
+        # Los admins no pueden crear dueños
+        if user_request and not user_request.es_dueño_en(user_request._empresa_activa):
+            self.fields['rol'].choices = [
+                c for c in Membresia.ROL_CHOICES if c[0] != 'dueño'
+            ]
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este email ya está en uso.")
+        return email
 
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
-
-        if password != confirm_password:
-            raise forms.ValidationError("Las contraseñas no coinciden.")
+        if password and confirm_password and password != confirm_password:
+            self.add_error('confirm_password', "Las contraseñas no coinciden.")
         return cleaned_data
-    
-    def __init__(self, *args, **kwargs):
-        user_request = kwargs.pop('user_request', None) # Extraer antes del super
-        super().__init__(*args, **kwargs)
-        self.fields['first_name'].required = True
-        if user_request and not user_request.es_dueño():
-            self.fields['rol'].choices = [c for c in User.ROL_CHOICES if c[0] != 'dueño']

@@ -22,26 +22,71 @@ class Empresa(models.Model):
     
 # MODELO USUARIOS
 class Usuario(AbstractUser):
+    # username lo seguimos teniendo pero lo rellenamos automáticamente con el email
+    # en el registro. El usuario nunca lo ve ni lo escribe.
+    # email es el único identificador que importa al usuario final.
+
+    def get_membresia(self, empresa):
+        """Devuelve la Membresia de este usuario en una empresa concreta, o None."""
+        return self.membresias.filter(empresa=empresa).first()
+
+    def es_fundador_de(self, empresa):
+        """True si este usuario fundó (registró) esa empresa."""
+        m = self.get_membresia(empresa)
+        return m is not None and m.es_fundador
+
+    def es_dueño_en(self, empresa):
+        """True si tiene rol dueño en esa empresa (incluye al fundador)."""
+        m = self.get_membresia(empresa)
+        return m is not None and m.rol == 'dueño'
+
+    def es_admin_o_dueño_en(self, empresa):
+        """True si puede acceder a gestión de usuarios en esa empresa."""
+        m = self.get_membresia(empresa)
+        return m is not None and m.rol in ['dueño', 'admin']
+
+    def __str__(self):
+        return self.email or self.username  
+# ==============================================================================
+# MEMBRESIA
+# Tabla pivote entre Usuario y Empresa.
+# Cada fila = un usuario en una empresa con un rol concreto.
+# Un usuario con 2 empresas tendrá 2 filas aquí.
+# ==============================================================================
+class Membresia(models.Model):
     ROL_CHOICES = (
-        ('dueño', 'Dueño Principal'),
-        ('admin', 'Administrador Delegado'),
+        ('dueño',    'Dueño'),
+        ('admin',    'Administrador'),
         ('empleado', 'Empleado'),
     )
 
-    rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='empleado')
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='usuarios', null=True, blank=True)
+    usuario     = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='membresias'
+    )
+    empresa     = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name='membresias'
+    )
+    rol         = models.CharField(max_length=20, choices=ROL_CHOICES, default='empleado')
+    es_fundador = models.BooleanField(default=False)
+    # es_fundador marca al primer usuario que registró esta empresa.
+    # Es inmutable: una vez True, ninguna vista ni form debe poder cambiarlo a False.
+    # Garantiza que siempre hay alguien con acceso total a cada empresa.
 
-    def es_dueño_supremo(self):
-        # Es el dueño supremo si es el usuario con el ID más pequeño de SU empresa
-        primer_usuario_empresa = Usuario.objects.filter(empresa=self.empresa).order_by('id').first()
-        return self == primer_usuario_empresa
+    fecha_ingreso = models.DateTimeField(auto_now_add=True)
 
-    def es_dueño(self):
-        # Para lógica general de permisos
-        return self.rol == 'dueño' or self.es_dueño_supremo()
-    
-    def es_admin_o_dueño(self):
-        return self.rol in ['dueño', 'admin']
+    class Meta:
+        unique_together = ('usuario', 'empresa')
+        # Un usuario no puede tener dos membresías en la misma empresa.
+        verbose_name = 'Membresía'
+        verbose_name_plural = 'Membresías'
+
+    def __str__(self):
+        return f"{self.usuario.email} — {self.empresa.nombre} ({self.rol})"
+
 
 # 2. MODELO PRODUCTOS
 class Producto(models.Model):
@@ -95,35 +140,25 @@ class Perfil(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     telefono = models.CharField(max_length=15, blank=True, null=True)
     foto = models.ImageField(
-        upload_to='perfiles/', 
-        blank=True, 
+        upload_to='perfiles/',
+        blank=True,
         null=True,
-        validators=[validar_tamano_foto] # Aplicamos el validador
+        validators=[validar_tamano_foto]
     )
-
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='perfil', null=True, blank=True)
+    # empresa eliminada. El perfil no pertenece a una empresa.
 
     def save(self, *args, **kwargs):
-        # Primero guardamos para tener el archivo en el sistema
         super().save(*args, **kwargs)
-
         if self.foto:
             img = Image.open(self.foto.path)
-
-            # 1. Si es muy grande, redimensionamos a un tamaño lógico para avatar (400x400)
             if img.height > 400 or img.width > 400:
-                output_size = (400, 400)
-                img.thumbnail(output_size, Image.LANCZOS)
-            
-            # 2. Convertir a RGB si es necesario (evita errores con PNG transparentes al pasar a JPEG)
+                img.thumbnail((400, 400), Image.LANCZOS)
             if img.mode in ("RGBA", "P"):
                 img = img.convert("RGB")
-
-            # 3. Comprimir y sobreescribir como JPEG para ahorrar espacio
             img.save(self.foto.path, "JPEG", quality=80, optimize=True)
 
     def __str__(self):
-        return f"Perfil de {self.user.username}"
+        return f"Perfil de {self.user.email}"
     
 # MODELOS HISTORIAL
 class HistorialMovimiento(models.Model):
