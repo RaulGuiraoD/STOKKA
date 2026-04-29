@@ -1,0 +1,97 @@
+{% extends 'layouts/base_auth.html' %}
+{% load static %}
+
+{% block content %}
+<div class="login-box text-center pb-5" style="max-width: 420px; width: 100%;">
+
+    <a href="{% url 'login' %}">
+        <img src="{% static 'assets/Logo stokka.png' %}" class="stokka-icon mb-2" style="width: 100px;" alt="Logo">
+    </a>
+
+    <h2 class="auth-subtitle mb-2 text-white" style="letter-spacing: 4px; font-weight: 400;">
+        CREAR CUENTA
+    </h2>
+    <p class="text-white-50 mb-4" style="font-size: 0.85rem;">
+        Paso 1 de 2 — Tus datos personales
+    </p>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} py-2 small mb-3" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="row g-3 text-start mb-3">
+            <div class="col-6">
+                <label class="text-white small mb-1 d-block">Nombre *</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <div class="text-warning small mt-1">{{ form.first_name.errors.0 }}</div>
+                {% endif %}
+            </div>
+            <div class="col-6">
+                <label class="text-white small mb-1 d-block">Apellido</label>
+                {{ form.last_name }}
+            </div>
+        </div>
+
+        <div class="text-start mb-3">
+            <label class="text-white small mb-1 d-block">Correo electrónico *</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+                <div class="text-warning small mt-1">{{ form.email.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="text-start mb-3">
+            <label class="text-white small mb-1 d-block">Contraseña *</label>
+            <div class="position-relative d-flex align-items-center">
+                {{ form.password }}
+                <i class="fa-regular fa-eye position-absolute d-none stokka-eye-icon"
+                   id="toggleIcon"
+                   style="right: 15px; cursor: pointer; color: var(--verde-stokka); z-index: 10;"
+                   onclick="togglePassword('id_password', 'toggleIcon')"></i>
+            </div>
+            {% if form.password.errors %}
+                <div class="text-warning small mt-1">{{ form.password.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="text-start mb-4">
+            <label class="text-white small mb-1 d-block">Confirmar contraseña *</label>
+            <div class="position-relative d-flex align-items-center">
+                {{ form.confirm_password }}
+                <i class="fa-regular fa-eye position-absolute d-none stokka-eye-icon"
+                   id="toggleIconConfirm"
+                   style="right: 15px; cursor: pointer; color: var(--verde-stokka); z-index: 10;"
+                   onclick="togglePassword('id_confirm_password', 'toggleIconConfirm')"></i>
+            </div>
+            {% if form.confirm_password.errors %}
+                <div class="text-warning small mt-1">{{ form.confirm_password.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-warning py-2 small mb-3">
+                {{ form.non_field_errors.0 }}
+            </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-light fw-bold text-uppercase w-100 py-2 mt-2"
+            style="color: var(--verde-stokka); border-radius: 10px;">
+            Siguiente → Registrar empresa
+        </button>
+    </form>
+
+    <a href="{% url 'registro' %}" class="d-block mt-4 text-white text-decoration-underline"
+        style="font-size: 13px;">
+        ← Volver
+    </a>
+
+</div>
+{% endblock %}

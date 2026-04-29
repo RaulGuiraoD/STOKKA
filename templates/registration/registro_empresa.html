@@ -1,0 +1,81 @@
+{% extends 'layouts/base_auth.html' %}
+{% load static %}
+
+{% block content %}
+<div class="login-box text-center pb-5" style="max-width: 420px; width: 100%;">
+
+    <a href="{% url 'login' %}">
+        <img src="{% static 'assets/Logo stokka.png' %}" class="stokka-icon mb-2" style="width: 100px;" alt="Logo">
+    </a>
+
+    <h2 class="auth-subtitle mb-2 text-white" style="letter-spacing: 4px; font-weight: 400;">
+        REGISTRAR EMPRESA
+    </h2>
+    <p class="text-white-50 mb-4" style="font-size: 0.85rem;">
+        Paso 2 de 2 — Datos de tu empresa
+    </p>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} py-2 small mb-3" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="text-start mb-3">
+            <label class="text-white small mb-1 d-block">Tu correo registrado en Stokka *</label>
+            {{ form.email_usuario }}
+            {% if form.email_usuario.errors %}
+                <div class="text-warning small mt-1">{{ form.email_usuario.errors.0 }}</div>
+            {% endif %}
+            <small class="text-white-50" style="font-size: 0.75rem;">
+                Usamos tu correo para vincular la empresa a tu cuenta.
+            </small>
+        </div>
+
+        <div class="text-start mb-3">
+            <label class="text-white small mb-1 d-block">Nombre de la empresa *</label>
+            {{ form.nombre_empresa }}
+            {% if form.nombre_empresa.errors %}
+                <div class="text-warning small mt-1">{{ form.nombre_empresa.errors.0 }}</div>
+            {% endif %}
+        </div>
+
+        <div class="row g-3 text-start mb-4">
+            <div class="col-6">
+                <label class="text-white small mb-1 d-block">CIF / NIF
+                    <span class="text-white-50" style="font-size: 0.7rem;">(opcional)</span>
+                </label>
+                {{ form.cif }}
+            </div>
+            <div class="col-6">
+                <label class="text-white small mb-1 d-block">Teléfono
+                    <span class="text-white-50" style="font-size: 0.7rem;">(opcional)</span>
+                </label>
+                {{ form.telefono }}
+            </div>
+        </div>
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-warning py-2 small mb-3">
+                {{ form.non_field_errors.0 }}
+            </div>
+        {% endif %}
+
+        <button type="submit" class="btn btn-light fw-bold text-uppercase w-100 py-2 mt-2"
+            style="color: var(--verde-stokka); border-radius: 10px;">
+            Continuar al pago
+        </button>
+    </form>
+
+    <a href="{% url 'registro' %}" class="d-block mt-4 text-white text-decoration-underline"
+        style="font-size: 13px;">
+        ← Volver
+    </a>
+
+</div>
+{% endblock %}

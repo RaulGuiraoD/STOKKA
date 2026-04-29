@@ -17,7 +17,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 
 # 4. Local App Imports
-from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroUsuarioForm, RegistroColaboradorForm
+from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm
 from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia
 
 User = get_user_model()
@@ -91,6 +91,114 @@ def seleccionar_empresa(request):
 
     return render(request, 'registration/seleccionar_empresa.html', {'membresias': membresias})
 
+# ==============================================================================
+# PANTALLA DE BIENVENIDA AL REGISTRO
+# Solo muestra dos botones: registrar usuario / registrar empresa
+# ==============================================================================
+def registro_bienvenida_view(request):
+    if request.user.is_authenticated:
+        return redirect('seleccionar_empresa')
+    return render(request, 'registration/registro_bienvenida.html')
+
+
+# ==============================================================================
+# PASO 1: REGISTRAR USUARIO
+# Crea la cuenta. No crea empresa ni membresía.
+# Al terminar redirige a registro_empresa con el email en sesión.
+# ==============================================================================
+def registro_usuario_view(request):
+    if request.user.is_authenticated:
+        return redirect('seleccionar_empresa')
+
+    if request.method == 'POST':
+        form = RegistroUsuarioNuevoForm(request.POST)
+        if form.is_valid():
+            email      = form.cleaned_data['email']
+            first_name = form.cleaned_data['first_name']
+            last_name  = form.cleaned_data.get('last_name', '')
+            password   = form.cleaned_data['password']
+
+            try:
+                with transaction.atomic():
+                    nuevo_usuario = User.objects.create_user(
+                        username=email,
+                        email=email,
+                        password=password,
+                        first_name=first_name,
+                        last_name=last_name,
+                    )
+                    Perfil.objects.create(user=nuevo_usuario)
+
+                # Guardamos el email en sesión para prellenar el form de empresa
+                request.session['email_registro'] = email
+                messages.success(request, "¡Usuario creado! Ahora registra tu empresa.")
+                return redirect('registro_empresa')
+
+            except Exception as e:
+                messages.error(request, f"Error al crear el usuario: {e}")
+    else:
+        form = RegistroUsuarioNuevoForm()
+
+    return render(request, 'registration/registro_usuario.html', {'form': form})
+
+
+# ==============================================================================
+# PASO 2: REGISTRAR EMPRESA
+# Detecta al usuario por email. Crea Empresa + Membresía como fundador/dueño.
+# Funciona tanto para usuarios nuevos (viene del paso 1) como para usuarios
+# ya existentes que quieren añadir una segunda empresa.
+# ==============================================================================
+def registro_empresa_view(request):
+    # Prellenar email si viene del paso 1
+    email_previo = request.session.get('email_registro', '')
+
+    if request.method == 'POST':
+        form = RegistroEmpresaForm(request.POST)
+        if form.is_valid():
+            email_usuario  = form.cleaned_data['email_usuario']
+            nombre_empresa = form.cleaned_data['nombre_empresa']
+            cif            = form.cleaned_data.get('cif', '')
+            telefono       = form.cleaned_data.get('telefono', '')
+
+            try:
+                usuario = User.objects.get(email=email_usuario)
+            except User.DoesNotExist:
+                messages.error(request, "No se encontró el usuario.")
+                return render(request, 'registration/registro_empresa.html', {'form': form})
+
+            try:
+                with transaction.atomic():
+                    nueva_empresa = Empresa.objects.create(
+                        nombre=nombre_empresa,
+                        slug=slugify(nombre_empresa),
+                        cif=cif,
+                        telefono=telefono,
+                        plan_activo=False,
+                    )
+                    Membresia.objects.create(
+                        usuario=usuario,
+                        empresa=nueva_empresa,
+                        rol='dueño',
+                        es_fundador=True,
+                    )
+
+                # Limpiamos el email de sesión
+                request.session.pop('email_registro', None)
+
+                # Login automático y empresa activa en sesión
+                login(request, usuario)
+                request.session['empresa_activa_id'] = nueva_empresa.id
+                messages.success(request, f"Empresa '{nueva_empresa.nombre}' creada. Completa el pago para activarla.")
+                return redirect('pasarela_pago')
+
+            except Exception as e:
+                messages.error(request, f"Error al crear la empresa: {e}")
+    else:
+        # Prellenamos el email si viene del paso 1
+        form = RegistroEmpresaForm(initial={'email_usuario': email_previo})
+
+    return render(request, 'registration/registro_empresa.html', {'form': form})
+
 
 # ==============================================================================
 # LOGIN / LOGOUT / REGISTRO
@@ -140,7 +248,7 @@ def logout_view(request):
 
 def registro_view(request):
     if request.method == 'POST':
-        form = RegistroUsuarioForm(request.POST)
+        form = RegistroUsuarioNuevoForm(request.POST)
         if form.is_valid():
             nombre        = form.cleaned_data['first_name']
             email         = form.cleaned_data['email']
@@ -190,7 +298,7 @@ def registro_view(request):
         # Si el form no es válido, lo devolvemos con los errores
         return render(request, 'registration/registro.html', {'form': form})
 
-    form = RegistroUsuarioForm()
+    form = RegistroUsuarioNuevoForm()
     return render(request, 'registration/registro.html', {'form': form})
 
 

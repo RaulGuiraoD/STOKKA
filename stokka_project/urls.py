@@ -31,7 +31,9 @@ urlpatterns = [
     # --- AUTENTICACIÓN ---
     path('login/', views.login_view, name='login'),
     path('seleccionar-empresa/', views.seleccionar_empresa, name='seleccionar_empresa'), 
-    path('registro/', views.registro_view, name='registro'),
+    path('registro/', views.registro_bienvenida_view, name='registro'),
+    path('registro/usuario/', views.registro_usuario_view,    name='registro_usuario'),
+    path('registro/empresa/', views.registro_empresa_view,    name='registro_empresa'),
     
     # --- FLUJO DE PAGO ---
     path('registro/pago/', views.pasarela_pago_view, name='pasarela_pago'),

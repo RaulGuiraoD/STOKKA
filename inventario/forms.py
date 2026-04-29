@@ -6,48 +6,48 @@ from .models import Producto, Empresa, Membresia, Usuario
 
 User = get_user_model()
 
-class RegistroUsuarioForm(forms.Form):
-    first_name = forms.CharField(
-        label="Nombre",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tu nombre'})
-    )
-    email = forms.EmailField(
-        label="Email Corporativo",
-        required=True,
-        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'ejemplo@stokka.com'})
-    )
-    password = forms.CharField(
-        label="Contraseña",
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'mínimo 8 caracteres'})
-    )
-    confirm_password = forms.CharField(
-        label="Confirmar Contraseña",
-        widget=forms.PasswordInput(attrs={'class': 'form-control'})
-    )
-    nombre_empresa = forms.CharField(
-        label="Nombre de tu Empresa",
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Stokka Logistics'})
-    )
+# class RegistroUsuarioForm(forms.Form):
+#     first_name = forms.CharField(
+#         label="Nombre",
+#         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tu nombre'})
+#     )
+#     email = forms.EmailField(
+#         label="Email Corporativo",
+#         required=True,
+#         widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'ejemplo@stokka.com'})
+#     )
+#     password = forms.CharField(
+#         label="Contraseña",
+#         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'mínimo 8 caracteres'})
+#     )
+#     confirm_password = forms.CharField(
+#         label="Confirmar Contraseña",
+#         widget=forms.PasswordInput(attrs={'class': 'form-control'})
+#     )
+#     nombre_empresa = forms.CharField(
+#         label="Nombre de tu Empresa",
+#         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Stokka Logistics'})
+#     )
 
-    def clean_email(self):
-        email = self.cleaned_data.get('email')
-        if User.objects.filter(email=email).exists():
-            raise forms.ValidationError("Este email ya está registrado.")
-        return email
+#     def clean_email(self):
+#         email = self.cleaned_data.get('email')
+#         if User.objects.filter(email=email).exists():
+#             raise forms.ValidationError("Este email ya está registrado.")
+#         return email
 
-    def clean_nombre_empresa(self):
-        nombre = self.cleaned_data.get('nombre_empresa')
-        if Empresa.objects.filter(nombre__iexact=nombre).exists():
-            raise forms.ValidationError("Este nombre de empresa ya está registrado.")
-        return nombre
+#     def clean_nombre_empresa(self):
+#         nombre = self.cleaned_data.get('nombre_empresa')
+#         if Empresa.objects.filter(nombre__iexact=nombre).exists():
+#             raise forms.ValidationError("Este nombre de empresa ya está registrado.")
+#         return nombre
 
-    def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("password")
-        confirm_password = cleaned_data.get("confirm_password")
-        if password and confirm_password and password != confirm_password:
-            self.add_error('confirm_password', "Las contraseñas no coinciden.")
-        return cleaned_data
+#     def clean(self):
+#         cleaned_data = super().clean()
+#         password = cleaned_data.get("password")
+#         confirm_password = cleaned_data.get("confirm_password")
+#         if password and confirm_password and password != confirm_password:
+#             self.add_error('confirm_password', "Las contraseñas no coinciden.")
+#         return cleaned_data
 
     
 class EditarUsuarioAdminForm(forms.ModelForm):
@@ -232,3 +232,121 @@ class RegistroColaboradorForm(forms.ModelForm):
         if password and confirm_password and password != confirm_password:
             self.add_error('confirm_password', "Las contraseñas no coinciden.")
         return cleaned_data
+
+# ==============================================================================
+# REGISTRO PASO 1: solo el usuario
+# Campos: nombre, apellido, email, contraseña, confirmar contraseña
+# El username se genera automáticamente con el email en la vista.
+# ==============================================================================
+class RegistroUsuarioNuevoForm(forms.Form):
+    first_name = forms.CharField(
+        label="Nombre",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control border-0 rounded-2 py-2',
+            'placeholder': 'Tu nombre',
+            'style': 'background: white;'
+        })
+    )
+    last_name = forms.CharField(
+        label="Apellido",
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control border-0 rounded-2 py-2',
+            'placeholder': 'Tu apellido',
+            'style': 'background: white;'
+        })
+    )
+    email = forms.EmailField(
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control border-0 rounded-2 py-2',
+            'placeholder': 'ejemplo@stokka.com',
+            'style': 'background: white;'
+        })
+    )
+    password = forms.CharField(
+        label="Contraseña",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control border-0 rounded-2 py-2 pe-5 shadow-none',
+            'placeholder': 'mínimo 8 caracteres',
+            'id': 'id_password',
+            'style': 'background: white;'
+        })
+    )
+    confirm_password = forms.CharField(
+        label="Confirmar contraseña",
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control border-0 rounded-2 py-2 pe-5 shadow-none',
+            'placeholder': '********',
+            'id': 'id_confirm_password',
+            'style': 'background: white;'
+        })
+    )
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este correo ya tiene una cuenta en Stokka.")
+        return email
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        confirm = cleaned_data.get('confirm_password')
+        if password and confirm and password != confirm:
+            self.add_error('confirm_password', "Las contraseñas no coinciden.")
+        return cleaned_data
+
+
+# ==============================================================================
+# REGISTRO PASO 2: solo la empresa
+# Detecta al usuario por su email (ya debe existir).
+# Campos: email usuario, nombre empresa, CIF/NIF (opcional), teléfono (opcional)
+# ==============================================================================
+class RegistroEmpresaForm(forms.Form):
+    email_usuario = forms.EmailField(
+        label="Tu correo registrado en Stokka",
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control border-0 rounded-2 py-2',
+            'placeholder': 'El mismo con el que te registraste',
+            'style': 'background: white;'
+        })
+    )
+    nombre_empresa = forms.CharField(
+        label="Nombre de la empresa",
+        widget=forms.TextInput(attrs={
+            'class': 'form-control border-0 rounded-2 py-2',
+            'placeholder': 'Ej: Stokka Logistics',
+            'style': 'background: white;'
+        })
+    )
+    cif = forms.CharField(
+        label="CIF / NIF",
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control border-0 rounded-2 py-2',
+            'placeholder': 'Ej: B12345678 (opcional)',
+            'style': 'background: white;'
+        })
+    )
+    telefono = forms.CharField(
+        label="Teléfono de contacto",
+        required=False,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control border-0 rounded-2 py-2',
+            'placeholder': '+34 600 000 000 (opcional)',
+            'style': 'background: white;'
+        })
+    )
+
+    def clean_email_usuario(self):
+        email = self.cleaned_data.get('email_usuario')
+        if not User.objects.filter(email=email).exists():
+            raise forms.ValidationError("No existe ninguna cuenta con ese correo. Regístrate primero como usuario.")
+        return email
+
+    def clean_nombre_empresa(self):
+        nombre = self.cleaned_data.get('nombre_empresa')
+        if Empresa.objects.filter(nombre__iexact=nombre).exists():
+            raise forms.ValidationError("Ya existe una empresa registrada con ese nombre.")
+        return nombre

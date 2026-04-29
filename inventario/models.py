@@ -16,6 +16,8 @@ class Empresa(models.Model):
     slug = models.SlugField(max_length=120, unique=True) # Para la URL: empresa-x.stokka.com
     fecha_registro = models.DateTimeField(auto_now_add=True)
     plan_activo = models.BooleanField(default=False) # Se activará tras el "pago"
+    cif      = models.CharField(max_length=20, blank=True, null=True, verbose_name="CIF/NIF")
+    telefono = models.CharField(max_length=20, blank=True, null=True, verbose_name="Teléfono")
 
     def __str__(self):
         return self.nombre

@@ -1,0 +1,56 @@
+{% extends 'layouts/base_auth.html' %}
+{% load static %}
+
+{% block content %}
+<div class="login-box text-center pb-5" style="max-width: 420px; width: 100%;">
+
+    <a href="{% url 'login' %}">
+        <img src="{% static 'assets/Logo stokka.png' %}" class="stokka-icon mb-2" style="width: 100px;" alt="Logo">
+    </a>
+
+    <h2 class="auth-subtitle mb-2 text-white" style="letter-spacing: 4px; font-weight: 400;">
+        BIENVENIDO A STOKKA
+    </h2>
+    <p class="text-white-50 mb-5" style="font-size: 0.85rem;">
+        ¿Qué quieres hacer?
+    </p>
+
+    <div class="d-flex flex-column gap-3">
+
+        <a href="{% url 'registro_usuario' %}"
+            class="btn w-100 d-flex align-items-center justify-content-between px-4 py-3 rounded-3 shadow-sm text-decoration-none"
+            style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: white;"
+            onmouseover="this.style.background='rgba(255,255,255,0.22)'"
+            onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+            <div class="text-start">
+                <span class="d-block fw-bold fs-6">Crear cuenta</span>
+                <span class="d-block text-white-50" style="font-size: 0.78rem;">
+                    Primera vez en Stokka
+                </span>
+            </div>
+            <i class="fa-solid fa-user-plus text-white-50"></i>
+        </a>
+
+        <a href="{% url 'registro_empresa' %}"
+            class="btn w-100 d-flex align-items-center justify-content-between px-4 py-3 rounded-3 shadow-sm text-decoration-none"
+            style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: white;"
+            onmouseover="this.style.background='rgba(255,255,255,0.22)'"
+            onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+            <div class="text-start">
+                <span class="d-block fw-bold fs-6">Añadir empresa</span>
+                <span class="d-block text-white-50" style="font-size: 0.78rem;">
+                    Ya tengo cuenta, quiero registrar otra empresa
+                </span>
+            </div>
+            <i class="fa-solid fa-building text-white-50"></i>
+        </a>
+
+    </div>
+
+    <a href="{% url 'login' %}" class="d-block mt-5 text-white text-decoration-underline"
+        style="font-size: 13px;">
+        Ya estoy registrado, iniciar sesión
+    </a>
+
+</div>
+{% endblock %}
