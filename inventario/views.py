@@ -67,6 +67,19 @@ def admin_required(view_func):
         raise PermissionDenied
     return _wrapped
 
+# def dueño_required(view_func):
+#     """
+#     Decorador: solo dueños y admins de la empresa activa pueden acceder.
+#     Si no hay empresa activa en sesión, lanza PermissionDenied.
+#     """
+#     def _wrapped(request, *args, **kwargs):
+#         if not request.user.is_authenticated:
+#             raise PermissionDenied
+#         empresa = get_empresa_activa(request)
+#         if empresa and request.user.es_admin_o_dueño_en(empresa):
+#             return view_func(request, *args, **kwargs)
+#         raise PermissionDenied
+#     return _wrapped
 
 # ==============================================================================
 # SELECTOR DE EMPRESA

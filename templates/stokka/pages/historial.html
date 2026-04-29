@@ -127,7 +127,7 @@
                                                                             <div class="lh-1 text-truncate">
                                                                                 <div class="fw-bold text-uppercase {% if mov.usuario.membresias.first.rol == 'dueño' %}text-stokka{% elif mov.usuario.membresias.first.rol == 'admin' %}text-amarillo-historial{% else %}text-verde-secundario{% endif %}"
                                                                                     style="font-size: 0.75rem;">
-                                                                                    {{ mov.usuario.username }}
+                                                                                    {{ mov.usuario.first_name }}
                                                                                 </div>
                                                                                 <span class="text-muted" style="font-size: 10px;">{{ mov.fecha|date:"H:i" }}</span>
                                                                             </div>

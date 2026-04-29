@@ -12,7 +12,7 @@
         CREAR CUENTA
     </h2>
     <p class="text-white-50 mb-4" style="font-size: 0.85rem;">
-        Paso 1 de 2 — Tus datos personales
+         Tus datos personales
     </p>
 
     {% if messages %}
@@ -35,7 +35,9 @@
                 {% endif %}
             </div>
             <div class="col-6">
-                <label class="text-white small mb-1 d-block">Apellido</label>
+                <label class="text-white small mb-1 d-block">Apellido
+                    <span class="text-white-50" style="font-size: 0.7rem;">(opcional)</span>
+                </label>
                 {{ form.last_name }}
             </div>
         </div>

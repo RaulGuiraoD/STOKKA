@@ -46,12 +46,12 @@
         <div class="header-right">
             <a href="{% url 'perfil' %}"
                 class="user-identity d-flex align-items-center gap-3 px-4 py-2 rounded-pill text-decoration-none"
-                style="background: rgba(255, 255, 255, 0.1);">
+                style="background: var(--selector-fondo);">
                 <div class="user-text text-end d-none d-sm-block">
                     <span class="user-name d-block fw-bold text-white fs-6 mb-0" style="line-height: 1.1;">
                         Hola, {{ user.first_name|capfirst }}
                     </span>
-                    <span class="user-role d-block text-white-50" style="font-size: 0.75rem;">
+                    <span class="user-role d-block text-white-50" style="font-size: 0.75rem; text-align: center;">
                         {{ membresia.get_rol_display|capfirst }}
                     </span>
                 </div>
@@ -86,6 +86,13 @@
                     </a>
                 </li>
 
+                <li class="nav-item-container">
+                    <a href="{% url 'historial_movimientos' %}" class="nav-link-stokka {% if request.resolver_match.url_name == 'historial_movimientos' %}active{% endif %}">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span class="nav-text">Historial</span>
+                    </a>
+                </li>
+
                 {% if es_jefe %}
                 <li class="nav-item-container">
                     <a href="{% url 'gestion_usuarios' %}"
@@ -96,19 +103,14 @@
                 </li>
                 {% endif %}
 
-                <li class="nav-item-container">
-                    <a href="{% url 'historial_movimientos' %}" class="nav-link-stokka {% if request.resolver_match.url_name == 'historial_movimientos' %}active{% endif %}">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                        <span class="nav-text">Historial</span>
-                    </a>
-                </li>
-
+                {% if es_jefe %}
                 <li class="nav-item-container">
                     <a href="#" class="nav-link-stokka">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                        <span class="nav-text">Editar</span>
+                        <i class="fa-solid fa-briefcase"></i>
+                        <span class="nav-text">Empresa</span>
                     </a>
                 </li>
+                {% endif %}
 
                 <li class="nav-item-container">
                     <a href="{% url 'perfil' %}"
