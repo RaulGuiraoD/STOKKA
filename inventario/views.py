@@ -480,7 +480,7 @@ def gestion_usuarios(request):
                         es_fundador=False
                     )
                     Perfil.objects.get_or_create(user=nuevo_usuario)
-                    messages.success(request, f"Usuario {email} creado correctamente.")
+                    messages.success(request, f"Usuario {first_name} creado correctamente.")
             except Exception as e:
                 messages.error(request, f"Error al crear el usuario: {e}", extra_tags='open_add_modal')
 
@@ -563,7 +563,7 @@ def editar_usuario_admin(request, user_id):
                 membresia_editada.rol = nuevo_rol
                 membresia_editada.save()
 
-            messages.success(request, f"Usuario {usuario.email} actualizado con éxito.")
+            messages.success(request, f"Usuario {usuario.first_name} actualizado con éxito.")
             return redirect('gestion_usuarios')
 
         else:
@@ -631,7 +631,7 @@ def eliminar_usuario(request, user_id):
     # Si el usuario ya no pertenece a ninguna empresa, eliminamos también su cuenta
     if not usuario_a_eliminar.membresias.exists():
         usuario_a_eliminar.delete()
-        messages.success(request, "Usuario eliminado completamente (no tenía más empresas).")
+        messages.success(request, "Usuario eliminado completamente.")
     else:
         messages.success(request, "Usuario eliminado de esta empresa.")
 
