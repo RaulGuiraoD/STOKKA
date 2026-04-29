@@ -662,8 +662,17 @@ def editar_perfil_view(request):
         apellido        = request.POST.get('apellido')
         email           = request.POST.get('email')
         telefono        = request.POST.get('telefono')
+        fecha_nacimiento        = request.POST.get('fecha_nacimiento')
         password        = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
+
+        if not nombre:
+            messages.error(request, "El nombre es obligatorio.", extra_tags='open_edit_modal')
+            return redirect('perfil')
+
+        if not email:
+            messages.error(request, "El correo electrónico es obligatorio.", extra_tags='open_edit_modal')
+            return redirect('perfil')
 
         if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
             messages.error(request, "Este email ya está en uso.", extra_tags='open_edit_modal')
@@ -681,9 +690,9 @@ def editar_perfil_view(request):
         request.user.first_name = nombre
         request.user.last_name  = apellido
         request.user.email      = email
-        # Mantenemos username sincronizado con email
         request.user.username   = email
         perfil.telefono = telefono
+        perfil.fecha_nacimiento = fecha_nacimiento
 
         request.user.save()
         perfil.save()

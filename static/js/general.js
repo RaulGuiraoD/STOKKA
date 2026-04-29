@@ -47,6 +47,28 @@ function submitFotoForm() {
     document.getElementById('fotoForm').submit();
 }
 
+// --- LÓGICA DE AVISO PARA CAMBIO DE CORREO EN EDITAR PERFIL  ---
+function confirmarGuardarPerfil() {
+    var form  = document.getElementById('formEditarPerfil');
+
+    // Validación nativa del navegador (required, email format, etc.)
+    if (!form.reportValidity()) return;
+
+    var inputEmail    = document.getElementById('inputEmailPerfil');
+    var emailActual   = inputEmail.dataset.emailOriginal.trim().toLowerCase();
+    var emailNuevo    = inputEmail.value.trim().toLowerCase();
+    var emailCambiado = emailActual !== emailNuevo;
+
+    if (emailCambiado) {
+        // Mostramos el nuevo email en el modal de confirmación
+        document.getElementById('nuevoEmailPreview').textContent = inputEmail.value.trim();
+        var modal = new bootstrap.Modal(document.getElementById('modalConfirmarEmail'));
+        modal.show();
+    } else {
+        form.submit();
+    }
+}
+
 document.addEventListener("DOMContentLoaded", function () {
 
     // --- CARGA DINÁMICA DE MODAL EDITAR USUARIO (ADMIN)---

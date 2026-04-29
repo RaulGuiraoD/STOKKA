@@ -141,6 +141,7 @@ def validar_tamano_foto(value):
 class Perfil(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     telefono = models.CharField(max_length=15, blank=True, null=True)
+    fecha_nacimiento = models.DateField(blank=True, null=True)
     foto = models.ImageField(
         upload_to='perfiles/',
         blank=True,

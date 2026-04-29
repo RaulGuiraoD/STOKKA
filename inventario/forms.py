@@ -94,23 +94,22 @@ class EditarUsuarioAdminForm(forms.ModelForm):
         self.fields['first_name'].required = True
         self.fields['email'].required = True
 
-        # Precargamos el rol actual de la membresía del usuario editado
+        self.fields['rol'].choices = [c for c in Membresia.ROL_CHOICES if c[0] != 'dueño']
+
         if self.instance and empresa_activa:
             membresia = self.instance.get_membresia(empresa_activa)
             if membresia:
                 self.fields['rol'].initial = membresia.rol
 
         if self.instance and user_request and empresa_activa:
-            # No puedes cambiar tu propio rol
             if self.instance.pk == user_request.pk:
                 self.fields['rol'].disabled = True
                 self.fields['rol'].help_text = "No puedes cambiar tu propio rol."
 
-            # El fundador de la empresa no puede perder su rol
             if self.instance.es_fundador_de(empresa_activa):
                 self.fields['rol'].disabled = True
+                self.fields['rol'].help_text = "El fundador no puede cambiar su rol."
 
-        # Los admins no pueden asignar rol dueño
         if user_request and empresa_activa and not user_request.es_dueño_en(empresa_activa):
             self.fields['rol'].disabled = True
             self.fields['rol'].help_text = "Solo el Dueño puede cambiar roles."
@@ -173,15 +172,15 @@ class RegistroColaboradorForm(forms.ModelForm):
      
     email = forms.EmailField(
         label="Correo electrónico",
-        widget=forms.EmailInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'})
+        widget=forms.EmailInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2', 'placeholder': 'empleado@stokka.com'})
     )
     password = forms.CharField(
         label="Contraseña",
-        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2' , 'placeholder': '***********'})
     )
     confirm_password = forms.CharField(
         label="Confirmar Contraseña",
-        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'})
+        widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2' , 'placeholder': '***********'})
     )
     # rol vive en Membresia, no en Usuario, pero lo recogemos aquí para comodidad.
     # La vista leerá form.cleaned_data['rol'] y creará la Membresia con ese valor.

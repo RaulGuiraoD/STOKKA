@@ -43,10 +43,10 @@
         <main class="col-lg-9">
             <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 bg-white">
 
-                <div class="py-3 border-bottom">
+                <!-- <div class="py-3 border-bottom">
                     <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Usuario</label>
                     <span class="fs-5 text-dark text-uppercase">{{ user.email }}</span>
-                </div>
+                </div> -->
 
                 <div class="py-3 border-bottom">
                     <label class="small text-uppercase fw-bold text-dark d-block mb-1" style="color: var(--verde-stokka) !important;">Rol</label>
@@ -66,6 +66,17 @@
                 <div class="py-3 border-bottom">
                     <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Teléfono</label>
                     <span class="fs-5 text-dark">{{ user.perfil.telefono|default:"+34 000-000-000" }}</span>
+                </div>
+
+                <div class="py-3 border-bottom">
+                    <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Cumpleaños</label>
+                    <span class="fs-5 text-dark">
+                        {% if user.perfil.fecha_nacimiento %}
+                            {{ user.perfil.fecha_nacimiento|date:"d \d\e F" }}
+                        {% else %}
+                            <span class="small text-uppercase fw-bold text-darkd-block mb-1" style="font-size: 0.9rem;">No especificado</span>
+                        {% endif %}
+                    </span>
                 </div>
 
                 <div class="py-3">

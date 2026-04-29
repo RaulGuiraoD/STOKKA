@@ -8,23 +8,19 @@
         <p class="text-muted small">Actualiza tus datos personales y de seguridad de tu cuenta</p>
     </div>
 
-    <form method="POST" action="{% url 'editar_perfil' %}">
+    <form method="POST" action="{% url 'editar_perfil' %}" id="formEditarPerfil">
         {% csrf_token %}
         <div class="row g-3">
             <div class="col-12 col-md-6">
-                <label class="form-label fw-bold small text-uppercase text-muted">Nombre</label>
+                <label class="form-label fw-bold small text-uppercase text-muted">
+                    Nombre <span class="text-danger">*</span>
+                </label>
                 <input type="text" name="nombre" value="{{ user.first_name }}"
-                    class="form-control stokka-input bg-light shadow-none">
+                    class="form-control stokka-input bg-light shadow-none" required minlength="1">
             </div>
             <div class="col-12 col-md-6">
                 <label class="form-label fw-bold small text-uppercase text-muted">Apellido</label>
                 <input type="text" name="apellido" value="{{ user.last_name }}"
-                    class="form-control stokka-input bg-light shadow-none">
-            </div>
-
-            <div class="col-12 col-md-6">
-                <label class="form-label fw-bold small text-uppercase text-muted">Correo electrónico <span class="text-danger">*</span></label>
-                <input type="email" name="email" value="{{ user.email }}"
                     class="form-control stokka-input bg-light shadow-none">
             </div>
 
@@ -34,11 +30,33 @@
                     class="form-control stokka-input bg-light shadow-none">
             </div>
 
+            <div class="col-12 col-md-6">
+                <label class="form-label fw-bold small text-uppercase text-muted">
+                    Fecha de Nacimiento
+                </label>
+                <input type="date" name="fecha_nacimiento" 
+                    value="{{ perfil.fecha_nacimiento|date:'Y-m-d' }}"
+                    class="form-control stokka-input bg-light shadow-none">
+            </div>
+            
+            <div class="col-12 col-md-12">
+                <label class="form-label fw-bold small text-uppercase text-muted">
+                    Correo electrónico <span class="text-danger">*</span>
+                </label>
+                <input type="email" name="email" id="inputEmailPerfil" value="{{ user.email }}"
+                    data-email-original="{{ user.email }}" class="form-control stokka-input bg-light shadow-none"
+                    required>
+                <small class="text-muted" style="font-size: 0.74rem;">
+                    <i class="fa-solid fa-triangle-exclamation me-1" style="color: var(--rojo-alerta);"></i>
+                    Cambiar el correo actualizará tu acceso y el de tus empresas vinculadas.
+                </small>
+            </div>
+
             <div class="col-12 mt-2">
                 <div class="p-3 rounded-4 border-start border-4"
                     style="background-color: #f0f9f0; border-color: var(--verde-stokka) !important;">
                     <h6 class="fw-bold text-dark mb-3 small">
-                        <i class="fa-solid fa-key me-2" style="color: var(--verde-stokka);"></i>SEGURIDAD <span class="text-danger">*</span>
+                        <i class="fa-solid fa-key me-2" style="color: var(--verde-stokka);"></i>SEGURIDAD
                     </h6>
                     <div class="row g-3">
                         <div class="col-12 col-md-6">
@@ -48,13 +66,13 @@
                                     class="form-control form-control-sm stokka-input bg-white shadow-none w-100"
                                     placeholder="Nueva contraseña"
                                     oninput="checkInput('id_password_new', 'toggleIconNew')"
-                                    style="padding-right: 40px;"> <i class="fa-regular fa-eye position-absolute d-none"
-                                    id="toggleIconNew" onclick="togglePassword('id_password_new', 'toggleIconNew')"
+                                    style="padding-right: 40px;">
+                                <i class="fa-regular fa-eye position-absolute d-none" id="toggleIconNew"
+                                    onclick="togglePassword('id_password_new', 'toggleIconNew')"
                                     style="right: 15px; cursor: pointer; color: var(--verde-stokka); z-index: 10; font-size: 0.9rem;">
                                 </i>
                             </div>
                         </div>
-
                         <div class="col-12 col-md-6">
                             <label class="form-label fw-bold extra-small text-muted text-uppercase">Confirmar</label>
                             <div class="position-relative d-flex align-items-center">
@@ -63,7 +81,6 @@
                                     placeholder="Repite la contraseña"
                                     oninput="checkInput('id_password_confirm', 'toggleIconConfirm')"
                                     style="padding-right: 40px;">
-
                                 <i class="fa-regular fa-eye position-absolute d-none" id="toggleIconConfirm"
                                     onclick="togglePassword('id_password_confirm', 'toggleIconConfirm')"
                                     style="right: 15px; cursor: pointer; color: var(--verde-stokka); z-index: 10; font-size: 0.9rem;">
@@ -71,7 +88,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="d-flex align-items-center mt-3 text-muted">
                         <i class="fa-solid fa-circle-info me-2 small"></i>
                         <small class="fst-italic" style="font-size: 0.75rem;">
@@ -87,11 +103,41 @@
                     data-bs-dismiss="modal">
                     Cancelar
                 </button>
-                <button type="submit"
-                    class="btn btn-stokka px-md-5 py-2 rounded-3 fw-bold text-uppercase shadow-sm order-1 order-md-2">
+                <button type="button"
+                    class="btn btn-stokka px-md-5 py-2 rounded-3 fw-bold text-uppercase shadow-sm order-1 order-md-2"
+                    onclick="confirmarGuardarPerfil()">
                     <i class="fa-solid fa-floppy-disk me-2"></i>Guardar Cambios
                 </button>
             </div>
         </div>
     </form>
+</div>
+
+<!-- Modal de confirmación de cambio de email -->
+<div class="modal fade" id="modalConfirmarEmail" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4 text-center">
+                <i class="fa-solid fa-envelope-circle-check fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                <h5 class="fw-bold">¿Cambiar correo electrónico?</h5>
+                <p class="text-muted small mb-1">
+                    Estás a punto de cambiar tu correo de acceso a Stokka.
+                </p>
+                <p class="text-muted small">
+                    A partir de ahora deberás iniciar sesión con
+                    <strong id="nuevoEmailPreview" style="color: var(--rojo-alerta);"></strong>.
+                    Todas tus empresas vinculadas quedarán asociadas al nuevo correo.
+                </p>
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="button" class="btn btn-cancelar-stokka px-3 fw-bold" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="button" class="btn btn-stokka px-3 fw-bold"
+                        onclick="document.getElementById('formEditarPerfil').submit()">
+                        Sí, cambiar correo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
