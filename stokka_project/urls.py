@@ -39,8 +39,8 @@ urlpatterns = [
     path('registro/pago/', views.pasarela_pago_view, name='pasarela_pago'),
     path('pago/cancelar/', views.cancelar_pago_view, name='cancelar_pago'), 
     
-    # Logout (asegúrate de que el name sea 'logout')
-    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    # Logout 
+    path('logout/', views.logout_view, name='logout'),
 
     # --- PERFIL DE USUARIO ---
     path('perfil/', views.perfil_view, name='perfil'),

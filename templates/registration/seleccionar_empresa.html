@@ -16,50 +16,70 @@
     </p>
 
     {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} py-2 small mb-3" role="alert">
-            {{ message }}
-        </div>
-        {% endfor %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} py-2 small mb-3" role="alert">
+        {{ message }}
+    </div>
+    {% endfor %}
     {% endif %}
 
     <div class="d-flex flex-column gap-3">
-        {% for m in membresias %}
-        <form method="POST">
-            {% csrf_token %}
-            <input type="hidden" name="empresa_id" value="{{ m.empresa.id }}">
-            <button type="submit"
-                class="btn w-100 d-flex align-items-center justify-content-between px-4 py-3 rounded-3 shadow-sm"
-                style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: white; transition: background 0.2s;"
+        {% if sin_empresas %}
+        <div class="d-flex flex-column align-items-center gap-3 mt-2">
+            <p class="text-white-50 mb-1" style="font-size: 0.9rem;">
+                Tu cuenta existe pero no tiene empresas vinculadas.
+            </p>
+            <a href="{% url 'registro_empresa' %}"
+                class="btn w-100 d-flex align-items-center justify-content-between px-4 py-3 rounded-3 shadow-sm text-decoration-none"
+                style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: white;"
                 onmouseover="this.style.background='rgba(255,255,255,0.22)'"
                 onmouseout="this.style.background='rgba(255,255,255,0.12)'">
-
                 <div class="text-start">
-                    <span class="d-block fw-bold fs-6">{{ m.empresa.nombre }}</span>
+                    <span class="d-block fw-bold fs-6">Registrar empresa</span>
                     <span class="d-block text-white-50" style="font-size: 0.78rem;">
-                        {{ m.get_rol_display }}
-                        {% if m.es_fundador %}
+                        Vincula tu cuenta a una empresa para continuar
+                    </span>
+                </div>
+                <i class="fa-solid fa-building text-white-50"></i>
+            </a>
+        </div>
+        {% else %}
+        <div class="d-flex flex-column gap-3">
+            {% for m in membresias %}
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="empresa_id" value="{{ m.empresa.id }}">
+                <button type="submit"
+                    class="btn w-100 d-flex align-items-center justify-content-between px-4 py-3 rounded-3 shadow-sm"
+                    style="background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: white; transition: background 0.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.22)'"
+                    onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+
+                    <div class="text-start">
+                        <span class="d-block fw-bold fs-6">{{ m.empresa.nombre }}</span>
+                        <span class="d-block text-white-50" style="font-size: 0.78rem;">
+                            {{ m.get_rol_display }}
+                            {% if m.es_fundador %}
                             · <i class="fa-solid fa-crown" style="color: #f0c040; font-size: 0.75rem;"></i> Fundador
-                        {% endif %}
-                    </span>
-                </div>
+                            {% endif %}
+                        </span>
+                    </div>
 
-                <div class="d-flex align-items-center gap-2">
-                    <span class="badge rounded-pill px-3 py-1"
-                        style="font-size: 0.72rem; background: {% if m.empresa.plan_activo %}var(--verde-stokka){% else %}var(--rojo-alerta){% endif %};">
-                        {% if m.empresa.plan_activo %}Activa{% else %}Inactiva{% endif %}
-                    </span>
-                    <i class="fa-solid fa-chevron-right text-white-50"></i>
-                </div>
-            </button>
-        </form>
-        {% endfor %}
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill px-3 py-1"
+                            style="font-size: 0.72rem; background: {% if m.empresa.plan_activo %}var(--verde-stokka){% else %}var(--rojo-alerta){% endif %};">
+                            {% if m.empresa.plan_activo %}Activa{% else %}Inactiva{% endif %}
+                        </span>
+                        <i class="fa-solid fa-chevron-right text-white-50"></i>
+                    </div>
+                </button>
+            </form>
+            {% endfor %}
+        </div>
+
+        <a href="{% url 'logout' %}" class="d-block mt-5 text-white text-decoration-underline" style="font-size: 13px;">
+            Cerrar sesión
+        </a>
     </div>
-
-    <a href="{% url 'logout' %}" class="d-block mt-5 text-white text-decoration-underline"
-        style="font-size: 13px;">
-        Cerrar sesión
-    </a>
-
-</div>
-{% endblock %}
+    {% endif %}
+    {% endblock %}

@@ -152,6 +152,6 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 LOGIN_URL = 'login'          # A donde van si intentan entrar al index sin cuenta
 LOGIN_REDIRECT_URL = 'index' # A donde van justo después de loguearse
 
-LOGOUT_REDIRECT_URL = 'login' # A dónde va el usuario tras cerrar sesión
-LOGOUT_ON_GET = True          # Permite cerrar sesión haciendo clic en el enlace
+# LOGOUT_REDIRECT_URL = 'login' # A dónde va el usuario tras cerrar sesión
+# LOGOUT_ON_GET = True          # Permite cerrar sesión haciendo clic en el enlace
 AUTH_USER_MODEL = 'inventario.Usuario'

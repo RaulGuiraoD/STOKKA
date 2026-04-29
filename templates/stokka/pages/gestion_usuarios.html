@@ -64,7 +64,7 @@
                         </div>
 
                         <div class="col-12 col-md-auto d-flex gap-2 justify-content-center justify-content-md-end" style="min-width: 130px;">
-                            m.{% if not m.es_fundador or request.user == m.usuario %}
+                            {% if not m.es_fundador or request.user == m.usuario %}
                                 <button type="button" class="btn btn-editar-stokka px-3 py-2 btn-cargar-editar"
                                     data-url="{% url 'editar_usuario_admin' m.usuario.id %}" data-bs-toggle="modal" data-bs-target="#modalEditarUsuario">
                                     <i class="fa-solid fa-pen-to-square fs-5"></i>

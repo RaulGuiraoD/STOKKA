@@ -76,20 +76,31 @@ def admin_required(view_func):
 @login_required
 def seleccionar_empresa(request):
     membresias = request.user.membresias.select_related('empresa').all()
+    total = membresias.count()
 
-    # Si solo tiene una empresa, la ponemos en sesión y pasamos directamente al index
-    if membresias.count() == 1:
+    # Sin ninguna empresa registrada
+    if total == 0:
+        messages.error(request, "Tu cuenta no tiene ninguna empresa registrada. Regístrala primero.")
+        return render(request, 'registration/seleccionar_empresa.html', {
+            'membresias': membresias,
+            'sin_empresas': True,
+        })
+
+    # Una sola empresa: entramos directo sin mostrar selector
+    if total == 1:
         request.session['empresa_activa_id'] = membresias.first().empresa.id
         return redirect('index')
 
+    # Varias empresas: mostramos el selector
     if request.method == 'POST':
-        empresa_id = request.POST.get('empresa_id')
-        if membresias.filter(empresa_id=empresa_id).exists():
+        empresa_id = request.POST.get('empresa_id', '').strip()
+        if empresa_id and membresias.filter(empresa_id=empresa_id).exists():
             request.session['empresa_activa_id'] = int(empresa_id)
             return redirect('index')
-        messages.error(request, "Empresa no válida.")
+        messages.error(request, "Empresa no válida. Selecciona una de la lista.")
 
     return render(request, 'registration/seleccionar_empresa.html', {'membresias': membresias})
+
 
 # ==============================================================================
 # PANTALLA DE BIENVENIDA AL REGISTRO
@@ -209,24 +220,27 @@ def login_view(request):
         return redirect('seleccionar_empresa')
 
     if request.method == 'POST':
-        email_ingresado = request.POST.get('username')
-        password_ingresado = request.POST.get('password')
+        email_ingresado    = request.POST.get('username', '').strip()
+        password_ingresado = request.POST.get('password', '')
+
+        if not email_ingresado or not password_ingresado:
+            messages.error(request, "Introduce tu correo y contraseña.")
+            return render(request, 'registration/login.html')
 
         try:
             user_obj = User.objects.get(email=email_ingresado)
-            user = authenticate(request, username=user_obj.username, password=password_ingresado)
+            user     = authenticate(request, username=user_obj.username, password=password_ingresado)
 
             if user is not None:
                 login(request, user)
 
                 if request.POST.get('recordar'):
-                    request.session.set_expiry(1209600)  # 2 semanas
+                    request.session.set_expiry(1209600)
                 else:
                     request.session.set_expiry(0)
 
                 nombre_mostrar = user.first_name if user.first_name else user.email
                 messages.success(request, f"¡Hola de nuevo, {nombre_mostrar}! Bienvenido/a a Stokka.")
-                # Tras el login siempre al selector, que redirige solo si hay una empresa
                 return redirect('seleccionar_empresa')
             else:
                 messages.error(request, "La contraseña introducida es incorrecta.")
@@ -234,10 +248,9 @@ def login_view(request):
         except User.DoesNotExist:
             messages.error(request, "Este correo electrónico no está registrado en el sistema.")
 
-        return redirect('login')
+        return render(request, 'registration/login.html')
 
     return render(request, 'registration/login.html')
-
 
 def logout_view(request):
     # Limpiamos también la empresa activa de la sesión
