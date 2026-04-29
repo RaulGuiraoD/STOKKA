@@ -229,3 +229,25 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 });
+
+    /* ICONO INFORMACIÓN */
+document.addEventListener('DOMContentLoaded', () => {
+    const icons = document.querySelectorAll('.info-icon');
+
+    icons.forEach(icon => {
+        icon.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Cerramos otros iconos abiertos
+            icons.forEach(i => i !== icon && i.classList.remove('active'));
+            // Alternamos el actual
+            icon.classList.toggle('active');
+        });
+    });
+
+    // Cerrar al hacer clic fuera del icono
+    document.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('info-icon')) {
+            icons.forEach(icon => icon.classList.remove('active'));
+        }
+    });
+});

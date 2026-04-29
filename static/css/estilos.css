@@ -1,6 +1,8 @@
 /* ==========================================
    STOKKA - BRAND IDENTITY & UI ELEMENTS
    ========================================== */
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500&display=swap');
+
 :root {
     --verde-stokka: #003D00;
     --verde-secundario: #1CA300;
@@ -17,6 +19,10 @@
     --verde-stokka-mid: #cce0cc;      
     --rojo-alerta-mid: #f9cfcc;       
     --amarillo-alerta-mid: #fdf1b5;
+
+    --selector-fondo: rgba(255, 255, 255, 0.12);
+    --selector-borde: rgba(255, 255, 255, 0.25);
+    --selector-hover: rgba(255, 255, 255, 0.22);
 
     --header-height: 85px; 
     --sidebar-w: 65px;     
@@ -74,7 +80,9 @@ main, .container-fluid, .card {
     box-shadow: 0 15px 35px rgba(0, 61, 0, 0.15) !important;
 }
 
+/* --- ------------------------------------------------------------------------------- --- */
 /* --- BOTONES STOKKA --- */
+/* --- ------------------------------------------------------------------------------- --- */
 .btn-stokka, .btn-cancelar-stokka, .btn-cancelar2-stokka, .btn-editar-stokka {
     font-weight: 600 !important;
     text-transform: uppercase;
@@ -85,6 +93,59 @@ main, .container-fluid, .card {
     align-items: center;
     justify-content: center;
 }
+/*Boton selector en registro/login*/
+.btn_selector {
+    background: var(--selector-fondo) !important;
+    border: 1px solid var(--selector-borde) !important;
+    color: white !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+}
+
+.btn_selector:hover {
+    background: var(--selector-hover) !important;
+    border-color: var(--gris-fondo) !important;
+    transform: translateY(-2px); 
+    color: var(--blanco) !important;
+}
+
+.btn_selector .text-white-50 {
+    transition: color 0.3s ease;
+}
+
+.btn_selector:hover .text-white-50 {
+    color: rgba(255, 255, 255, 0.874) !important; 
+}
+
+/* Icono del edificio */
+.btn_selector i {
+    font-size: 1.2rem !important;
+    color: var(--gris-fondo) !important;
+    transition: color 0.3s ease !important;
+}
+
+.btn_selector:hover i {
+    color: var(--blanco) !important;
+}
+
+/*Icono informativo*/
+.info-wrapper { position: relative; }
+.info-icon { color: var(--verde-stokka-mid); cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
+.info-icon:hover, .info-icon.active { color: white; }
+
+/* Recuadro de información */
+.info-icon::after {
+    content: attr(data-info);
+    font-family: 'Lora', serif !important; font-size: 0.82rem !important;
+    position: absolute; bottom: 130%; left: 0; width: 300px;
+    background: var(--verde-stokka-mid); color: black; padding: 10px; border-radius: 10px;
+    border: 1px solid var(--selector-borde); font-size: 0.75rem; line-height: 1.3;
+    z-index: 100; opacity: 0; visibility: hidden; transition: 0.3s;
+    text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.info-icon:hover::after, .info-icon.active::after { opacity: 1; visibility: visible; }
 
 /* Botón Principal  */
 .btn-stokka {
