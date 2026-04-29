@@ -137,7 +137,7 @@ main, .container-fluid, .card {
 /* Recuadro de información */
 .info-icon::after {
     content: attr(data-info);
-    font-family: 'Lora', serif !important; font-size: 0.82rem !important;
+    font-family: 'Lora', serif !important; font-size: 0.82rem !important; font-weight: 200 !important;
     position: absolute; bottom: 130%; left: 0; width: 300px;
     background: var(--verde-stokka-mid); color: black; padding: 10px; border-radius: 10px;
     border: 1px solid var(--selector-borde); font-size: 0.75rem; line-height: 1.3;

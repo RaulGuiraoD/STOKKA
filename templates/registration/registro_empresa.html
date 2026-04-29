@@ -27,7 +27,7 @@
         {% csrf_token %}
 
         <div class="text-start mb-3">
-            <label class="text-white small mb-1 d-block">Tu correo registrado en Stokka *</label>
+            <label class="text-white small mb-1 d-block">Correo electrónico *</label>
             {{ form.email_usuario }}
             {% if form.email_usuario.errors %}
                 <div class="text-warning small mt-1">{{ form.email_usuario.errors.0 }}</div>

@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 });
 
-    /* ICONO INFORMACIÓN */
+/* ICONO INFORMACIÓN */
 document.addEventListener('DOMContentLoaded', () => {
     const icons = document.querySelectorAll('.info-icon');
 

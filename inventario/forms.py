@@ -243,8 +243,7 @@ class RegistroUsuarioNuevoForm(forms.Form):
         label="Nombre",
         widget=forms.TextInput(attrs={
             'class': 'form-control border-0 rounded-2 py-2',
-            'placeholder': 'Tu nombre',
-            'style': 'background: white;'
+            'placeholder': 'Nombre',
         })
     )
     last_name = forms.CharField(
@@ -252,8 +251,7 @@ class RegistroUsuarioNuevoForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control border-0 rounded-2 py-2',
-            'placeholder': 'Tu apellido',
-            'style': 'background: white;'
+            'placeholder': 'Apellido',
         })
     )
     email = forms.EmailField(
@@ -261,25 +259,22 @@ class RegistroUsuarioNuevoForm(forms.Form):
         widget=forms.EmailInput(attrs={
             'class': 'form-control border-0 rounded-2 py-2',
             'placeholder': 'ejemplo@stokka.com',
-            'style': 'background: white;'
         })
     )
     password = forms.CharField(
         label="Contraseña",
         widget=forms.PasswordInput(attrs={
             'class': 'form-control border-0 rounded-2 py-2 pe-5 shadow-none',
-            'placeholder': 'mínimo 8 caracteres',
+            'placeholder': '**********',
             'id': 'id_password',
-            'style': 'background: white;'
         })
     )
     confirm_password = forms.CharField(
         label="Confirmar contraseña",
         widget=forms.PasswordInput(attrs={
             'class': 'form-control border-0 rounded-2 py-2 pe-5 shadow-none',
-            'placeholder': '********',
+            'placeholder': '**********',
             'id': 'id_confirm_password',
-            'style': 'background: white;'
         })
     )
 
@@ -301,15 +296,13 @@ class RegistroUsuarioNuevoForm(forms.Form):
 # ==============================================================================
 # REGISTRO PASO 2: solo la empresa
 # Detecta al usuario por su email (ya debe existir).
-# Campos: email usuario, nombre empresa, CIF/NIF (opcional), teléfono (opcional)
 # ==============================================================================
 class RegistroEmpresaForm(forms.Form):
     email_usuario = forms.EmailField(
         label="Tu correo registrado en Stokka",
         widget=forms.EmailInput(attrs={
             'class': 'form-control border-0 rounded-2 py-2',
-            'placeholder': 'El mismo con el que te registraste',
-            'style': 'background: white;'
+            'placeholder': 'ejemplo@stokka.com',
         })
     )
     nombre_empresa = forms.CharField(
@@ -317,7 +310,6 @@ class RegistroEmpresaForm(forms.Form):
         widget=forms.TextInput(attrs={
             'class': 'form-control border-0 rounded-2 py-2',
             'placeholder': 'Ej: Stokka Logistics',
-            'style': 'background: white;'
         })
     )
     cif = forms.CharField(
@@ -325,8 +317,7 @@ class RegistroEmpresaForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control border-0 rounded-2 py-2',
-            'placeholder': 'Ej: B12345678 (opcional)',
-            'style': 'background: white;'
+            'placeholder': 'Ej: B12345678 ',
         })
     )
     telefono = forms.CharField(
@@ -334,8 +325,7 @@ class RegistroEmpresaForm(forms.Form):
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control border-0 rounded-2 py-2',
-            'placeholder': '+34 600 000 000 (opcional)',
-            'style': 'background: white;'
+            'placeholder': '+34 600 000 000 ',
         })
     )
 
