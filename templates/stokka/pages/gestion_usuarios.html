@@ -64,20 +64,37 @@
                         </div>
 
                         <div class="col-12 col-md-auto d-flex gap-2 justify-content-center justify-content-md-end" style="min-width: 130px;">
-                            {% if not m.es_fundador or request.user == m.usuario %}
-                                <button type="button" class="btn btn-editar-stokka px-3 py-2 btn-cargar-editar"
-                                    data-url="{% url 'editar_usuario_admin' m.usuario.id %}" data-bs-toggle="modal" data-bs-target="#modalEditarUsuario">
-                                    <i class="fa-solid fa-pen-to-square fs-5"></i>
-                                </button>
-                            {% endif %}
-                            {% if not m.es_fundador and m.usuario != request.user %}
-                                {% if request.user.es_dueño_supremo or request.user.rol == 'dueño' or m.rol == 'empleado' %}
-                                    <button type="button" class="btn btn-cancelar-stokka px-3 py-2" data-bs-toggle="modal"
-                                        data-bs-target="#modalEliminarUsuario{{ m.usuario.id }}">
+
+                            {% if membresia_activa.rol == 'dueño' %}
+                                {% if request.user != m.usuario %}
+                                    <button type="button" class="btn btn-editar-stokka px-3 py-2 btn-cargar-editar"
+                                        data-url="{% url 'editar_usuario_admin' m.usuario.id %}"
+                                        data-bs-toggle="modal" data-bs-target="#modalEditarUsuario">
+                                        <i class="fa-solid fa-pen-to-square fs-5"></i>
+                                    </button>
+                                {% endif %}
+                                {% if not m.es_fundador and m.usuario != request.user %}
+                                    <button type="button" class="btn btn-cancelar-stokka px-3 py-2"
+                                        data-bs-toggle="modal" data-bs-target="#modalEliminarUsuario{{ m.usuario.id }}">
                                         <i class="fa-solid fa-user-minus fs-5"></i>
                                     </button>
                                 {% endif %}
+
+                            {% elif membresia_activa.rol == 'admin' %}
+                                {% if m.rol == 'empleado' %}
+                                    <button type="button" class="btn btn-editar-stokka px-3 py-2 btn-cargar-editar"
+                                        data-url="{% url 'editar_usuario_admin' m.usuario.id %}"
+                                        data-bs-toggle="modal" data-bs-target="#modalEditarUsuario">
+                                        <i class="fa-solid fa-pen-to-square fs-5"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-cancelar-stokka px-3 py-2"
+                                        data-bs-toggle="modal" data-bs-target="#modalEliminarUsuario{{ m.usuario.id }}">
+                                        <i class="fa-solid fa-user-minus fs-5"></i>
+                                    </button>
+                                {% endif %}
+
                             {% endif %}
+
                         </div>
                     </div>
                 </div>

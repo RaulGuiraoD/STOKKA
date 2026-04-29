@@ -91,6 +91,9 @@ class EditarUsuarioAdminForm(forms.ModelForm):
         empresa_activa = kwargs.pop('empresa_activa', None)
         super().__init__(*args, **kwargs)
 
+        self.fields['first_name'].required = True
+        self.fields['email'].required = True
+
         # Precargamos el rol actual de la membresía del usuario editado
         if self.instance and empresa_activa:
             membresia = self.instance.get_membresia(empresa_activa)
@@ -167,6 +170,11 @@ class ProductoForm(forms.ModelForm):
 # El rol es un ChoiceField suelto — la vista lo usa para crear la Membresia.
 # ==============================================================================
 class RegistroColaboradorForm(forms.ModelForm):
+     
+    email = forms.EmailField(
+        label="Correo electrónico",
+        widget=forms.EmailInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'})
+    )
     password = forms.CharField(
         label="Contraseña",
         widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3 border-0 bg-light py-2'})

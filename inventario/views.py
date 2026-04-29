@@ -516,26 +516,28 @@ def editar_usuario_admin(request, user_id):
     if not empresa:
         return redirect('seleccionar_empresa')
 
-    # El usuario a editar debe tener membresía en esta empresa
     membresia_editada = get_object_or_404(Membresia, usuario_id=user_id, empresa=empresa)
     usuario_a_editar  = membresia_editada.usuario
+    es_ajax           = request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
-    # Nadie puede editar al fundador excepto él mismo
+    # ── REGLAS DE ACCESO ──────────────────────────────────────────────────────
+    # El dueño solo puede editarse a sí mismo desde esta sección.
+    # Un admin solo puede editar empleados.
+    # Nadie puede editar al fundador excepto él mismo.
+
     if membresia_editada.es_fundador and request.user != usuario_a_editar:
-        messages.error(request, "El Fundador de la empresa es intocable.")
+        messages.error(request, "El fundador de la empresa solo puede editarse a sí mismo.")
         return redirect('gestion_usuarios')
 
-    # Solo un dueño puede editar a otro dueño
-    if membresia_editada.rol == 'dueño' and not request.user.es_dueño_en(empresa):
-        messages.error(request, "No tienes permisos para editar perfiles de nivel Dueño.")
+    if membresia_editada.rol == 'dueño' and request.user != usuario_a_editar:
+        messages.error(request, "No tienes permisos para editar al Dueño.")
         return redirect('gestion_usuarios')
-    
-    # Los admins solo pueden editar empleados, nada más
-    if not request.user.es_dueño_en(empresa):
-        if membresia_editada.rol != 'empleado':
-            messages.error(request, "Solo p uedes editar usuarios con rol Empleado.")
-            return redirect('gestion_usuarios')
 
+    if not request.user.es_dueño_en(empresa) and membresia_editada.rol != 'empleado':
+        messages.error(request, "Los administradores solo pueden editar empleados.")
+        return redirect('gestion_usuarios')
+
+    # ── PROCESAMIENTO 
     if request.method == 'POST':
         form = EditarUsuarioAdminForm(
             request.POST,
@@ -545,7 +547,7 @@ def editar_usuario_admin(request, user_id):
         )
 
         if form.is_valid():
-            usuario = form.save(commit=False)
+            usuario     = form.save(commit=False)
             nueva_clave = form.cleaned_data.get('password')
 
             if nueva_clave:
@@ -555,7 +557,7 @@ def editar_usuario_admin(request, user_id):
 
             usuario.save()
 
-            # Actualizar el rol en la membresía (nunca en el Usuario directamente)
+            # El rol se guarda en Membresia, nunca en Usuario
             nuevo_rol = form.cleaned_data.get('rol')
             if nuevo_rol and not membresia_editada.es_fundador:
                 membresia_editada.rol = nuevo_rol
@@ -567,7 +569,10 @@ def editar_usuario_admin(request, user_id):
         else:
             for field, errors in form.errors.items():
                 for error in errors:
-                    messages.error(request, error, extra_tags=f'open_admin_edit_modal_{usuario_a_editar.id}')
+                    messages.error(
+                        request, error,
+                        extra_tags=f'open_admin_edit_modal_{usuario_a_editar.id}'
+                    )
             return redirect('gestion_usuarios')
 
     else:
@@ -578,8 +583,8 @@ def editar_usuario_admin(request, user_id):
         )
 
     return render(request, 'stokka/modales/editar_usuario_admin.html', {
-        'form': form,
-        'usuario_editado': usuario_a_editar,
+        'form':              form,
+        'usuario_editado':   usuario_a_editar,
         'membresia_editada': membresia_editada,
     })
 
