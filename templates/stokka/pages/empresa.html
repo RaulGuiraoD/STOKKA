@@ -73,8 +73,8 @@
                 </div>
 
                 <div class="col-12 py-2 border-top mt-2">
-                    <small class="text-muted" style="font-size: 0.75rem;">
-                        <i class="fa-solid fa-circle-info me-1"></i>
+                    <small class="text-muted" style="font-size: 0.75rem; ">
+                        <i class="fa-solid fa-circle-info me-1" style="color: var(--verde-stokka);"></i>
                         El slug de la URL se actualiza automáticamente al cambiar el nombre.
                     </small>
                 </div>
@@ -96,7 +96,7 @@
         </h5>
         <p class="text-muted small mb-4">
             Eliminar la empresa borrará permanentemente todos sus productos, historial de movimientos,
-            usuarios y membresías asociadas. Esta acción <strong>no se puede deshacer</strong>.
+            usuarios y membresías asociadas. Esta acción <strong class="text-dark">no se puede deshacer</strong>.
         </p>
 
         <button type="button" class="btn fw-bold px-4 py-2"
@@ -107,36 +107,69 @@
     </div>
 </div>
 
-<!-- MODAL CONFIRMACIÓN ELIMINAR EMPRESA -->
+<!-- MODAL 1: ESCRIBIR NOMBRE -->
 <div class="modal fade" id="modalEliminarEmpresa" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-body p-4 p-md-5 text-center">
                 <i class="fa-solid fa-building-circle-xmark fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
-                <h5 class="fw-bold mb-2">¿Eliminar {{ empresa.nombre }}?</h5>
-                <p class="text-muted small mb-1">
-                    Se eliminarán <strong>{{ total_productos }} productos</strong>,
-                    <strong>{{ total_movimientos }} movimientos</strong> y
-                    <strong>{{ total_usuarios }} usuarios</strong> de forma permanente.
-                </p>
-                <p class="text-muted small mb-4">
-                    Para confirmar, escribe el nombre exacto de la empresa:
-                    <strong>{{ empresa.nombre }}</strong>
-                </p>
+                <h5 class="fw-bold mb-2">Confirmar eliminación</h5>
+                <p class="small text-muted">Para proceder, escribe el nombre de la empresa: <br><strong class="fw-bolder text-dark">{{ empresa.nombre }}</strong></p>
+                
+                <input type="text" id="inputConfirmacionEmpresa" data-nombre="{{ empresa.nombre }}" 
+                       class="form-control mb-3 text-center stokka-input text-white" autocomplete="off">
 
-                <form method="POST" action="{% url 'eliminar_empresa' %}" id="formEliminarEmpresa">
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-cancelar2-stokka" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnSiguienteEliminar" class="btn btn-cancelar-stokka fw-bold" disabled style="opacity: 0.5;">
+                        Siguiente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 2: ADVERTENCIA DE DATOS -->
+<div class="modal fade" id="modalConfirmacionFinal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center p-4 p-md-5">
+                <i class="fa-solid fa-skull-crossbones fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                <h5 class="fw-bold text-dark">¡ACCIÓN IRREVERSIBLE!</h5>
+                <p class="text-dark">Estás a punto de borrar <strong class="fw-bold" style="color: var(--verde-stokka);">{{ empresa.nombre }}</strong> y todos sus datos.</p>
+                <p class="small text-muted">Esta acción eliminará empleados, inventario e historial de forma permanente.</p>
+                
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="button" class="btn btn-cancelar2-stokka" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnIrAlUltimoPaso" class="btn btn-cancelar-stokka fw-bold">
+                        Entiendo, eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 3: CONFIRMACIÓN DEFINITIVA (MÁS OSCURO Y PEQUEÑO) -->
+<div class="modal fade" id="modalUltimoAviso" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" border-radius: 1.5rem;>
+            <div class="modal-body text-center p-4">
+                <i class="fa-solid fa-ghost fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                <h6 class="fw-bold mb-3">¿ESTÁS COMPLETAMENTE SEGURO?</h6>
+                <p class="x-small opacity-75 mb-4">No habrá vuelta atrás despues de este paso.</p>
+                
+                <form method="POST" action="{% url 'eliminar_empresa' %}">
                     {% csrf_token %}
-                    <input type="text" name="confirmacion" id="inputConfirmacionEmpresa"
-                        data-nombre="{{ empresa.nombre }}" 
-                        class="form-control mb-3 text-center" 
-                        placeholder="Escribe: {{ empresa.nombre }}" autocomplete="off">
-                    <div class="d-flex gap-2 justify-content-center mt-2">
-                        <button type="button" class="btn btn-cancelar2-stokka px-4 fw-bold" data-bs-dismiss="modal">
-                            Cancelar
+                    <input type="hidden" name="confirmacion" id="inputHiddenNombre">
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-cancelar-stokka fw-bold py-2" style="border-radius: 10px;">
+                            SÍ, ELIMINAR AHORA
                         </button>
-                        <button type="submit" id="btnConfirmarEliminarEmpresa" class="btn fw-bold px-4" disabled
-                            style="background: var(--rojo-alerta); color: white; border-radius: 8px; opacity: 0.5;">
-                            Sí, eliminar todo
+                        <button type="button" class="btn btn-cancelar2-stokka text-white-50 btn-sm text-decoration-none" data-bs-dismiss="modal">
+                            No, cancelar todo
                         </button>
                     </div>
                 </form>
@@ -144,16 +177,4 @@
         </div>
     </div>
 </div>
-
-<!-- <script>
-    // El botón de confirmar solo se activa cuando el nombre escrito coincide exactamente
-    document.getElementById('inputConfirmacionEmpresa').addEventListener('input', function () {
-        const nombre = "{{ empresa.nombre }}";
-        const btn = document.getElementById('btnConfirmarEliminarEmpresa');
-        const match = this.value === nombre;
-        btn.disabled = !match;
-        btn.style.opacity = match ? '1' : '0.5';
-    });
-</script> -->
-
 {% endblock %}
