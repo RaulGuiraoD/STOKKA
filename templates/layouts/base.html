@@ -103,10 +103,11 @@
                 </li>
                 {% endif %}
 
-                {% if es_jefe %}
+                {% if membresia.es_fundador %}
                 <li class="nav-item-container">
-                    <a href="#" class="nav-link-stokka">
-                        <i class="fa-solid fa-briefcase"></i>
+                    <a href="{% url 'empresa' %}"
+                        class="nav-link-stokka {% if request.resolver_match.url_name == 'empresa' %}active{% endif %}">
+                        <i class="fa-solid fa-building"></i>
                         <span class="nav-text">Empresa</span>
                     </a>
                 </li>

@@ -347,3 +347,36 @@ class RegistroEmpresaForm(forms.Form):
         if Empresa.objects.filter(nombre__iexact=nombre).exists():
             raise forms.ValidationError("Ya existe una empresa registrada con ese nombre.")
         return nombre
+    
+# ==============================================================================
+# EDITAR EMPRESA (solo el dueño)
+# ==============================================================================
+class EditarEmpresaForm(forms.ModelForm):
+    class Meta:
+        model = Empresa
+        fields = ['nombre', 'cif', 'telefono']
+        labels = {
+            'nombre':   'Nombre de la empresa',
+            'cif':      'CIF / NIF',
+            'telefono': 'Teléfono de contacto',
+        }
+        widgets = {
+            'nombre':   forms.TextInput(attrs={
+                'class': 'form-control stokka-input shadow-none'
+            }),
+            'cif':      forms.TextInput(attrs={
+                'class': 'form-control stokka-input shadow-none',
+                'placeholder': 'Ej: B12345678'
+            }),
+            'telefono': forms.TextInput(attrs={
+                'class': 'form-control stokka-input shadow-none',
+                'placeholder': '+34 600 000 000'
+            }),
+        }
+
+    def clean_nombre(self):
+        nombre = self.cleaned_data.get('nombre')
+        # Excluimos la empresa actual de la comprobación de unicidad
+        if Empresa.objects.filter(nombre__iexact=nombre).exclude(pk=self.instance.pk).exists():
+            raise forms.ValidationError("Ya existe otra empresa con ese nombre.")
+        return nombre

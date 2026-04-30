@@ -1,0 +1,159 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block title %}Mi Empresa - STOKKA{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="max-width: 860px;">
+
+    <div
+        class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
+        <div class="section-header d-flex align-items-end gap-3 mb-2">
+            <h1 class="fw-bold text-dark m-0">Mi Empresa</h1>
+            <span class="text-dark pb-1 d-none d-md-inline" style="font-size: 1.4rem; font-weight: 300;">
+                | {{ empresa.nombre }}
+            </span>
+        </div>
+        <span class="badge px-3 py-2 rounded-pill fw-bold"
+            style="background: {% if empresa.plan_activo %}var(--verde-secundario){% else %}var(--rojo-alerta){% endif %}; color: white; font-size: 0.8rem;">
+            {% if empresa.plan_activo %}Plan activo{% else %}Plan inactivo{% endif %}
+        </span>
+    </div>
+
+    <!-- ESTADÍSTICAS RÁPIDAS -->
+    <div class="row g-3 mb-5">
+        <div class="col-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 text-center h-100">
+                <small class="text-dark fw-bold text-uppercase"
+                    style="font-size: 10px; letter-spacing: 1px;">Usuarios</small>
+                <h3 class="fw-bold mb-0 mt-1">{{ total_usuarios }}</h3>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 text-center h-100">
+                <small class="text-dark fw-bold text-uppercase"
+                    style="font-size: 10px; letter-spacing: 1px;">Productos</small>
+                <h3 class="fw-bold mb-0 mt-1">{{ total_productos }}</h3>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 text-center h-100">
+                <small class="text-dark fw-bold text-uppercase"
+                    style="font-size: 10px; letter-spacing: 1px;">Movimientos</small>
+                <h3 class="fw-bold mb-0 mt-1">{{ total_movimientos }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDITAR DATOS -->
+    <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 mb-5">
+        <h5 class="fw-bold mb-4" style="color: var(--verde-stokka);">
+            <i class="fa-solid fa-pen-to-square me-2"></i>Datos de la empresa
+        </h5>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-bold small text-uppercase text-muted">
+                        Nombre de la empresa <span class="text-danger">*</span>
+                    </label>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                    <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold small text-uppercase text-muted">CIF / NIF</label>
+                    {{ form.cif }}
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Teléfono</label>
+                    {{ form.telefono }}
+                </div>
+
+                <div class="col-12 py-2 border-top mt-2">
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                        <i class="fa-solid fa-circle-info me-1"></i>
+                        El slug de la URL se actualiza automáticamente al cambiar el nombre.
+                    </small>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-stokka px-5 py-2 fw-bold shadow-sm">
+                        <i class="fa-solid fa-floppy-disk me-2"></i>Guardar cambios
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- ZONA DE PELIGRO -->
+    <div class="card border-0 rounded-4 p-4 p-md-5"
+        style="border: 1.5px solid var(--rojo-alerta) !important; background: #fff8f8;">
+        <h5 class="fw-bold mb-2" style="color: var(--rojo-alerta);">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>Zona de peligro
+        </h5>
+        <p class="text-muted small mb-4">
+            Eliminar la empresa borrará permanentemente todos sus productos, historial de movimientos,
+            usuarios y membresías asociadas. Esta acción <strong>no se puede deshacer</strong>.
+        </p>
+
+        <button type="button" class="btn fw-bold px-4 py-2"
+            style="background: var(--rojo-alerta); color: white; border-radius: 10px;" data-bs-toggle="modal"
+            data-bs-target="#modalEliminarEmpresa">
+            <i class="fa-solid fa-building-circle-xmark me-2"></i>Eliminar empresa
+        </button>
+    </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN ELIMINAR EMPRESA -->
+<div class="modal fade" id="modalEliminarEmpresa" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4 p-md-5 text-center">
+                <i class="fa-solid fa-building-circle-xmark fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                <h5 class="fw-bold mb-2">¿Eliminar {{ empresa.nombre }}?</h5>
+                <p class="text-muted small mb-1">
+                    Se eliminarán <strong>{{ total_productos }} productos</strong>,
+                    <strong>{{ total_movimientos }} movimientos</strong> y
+                    <strong>{{ total_usuarios }} usuarios</strong> de forma permanente.
+                </p>
+                <p class="text-muted small mb-4">
+                    Para confirmar, escribe el nombre exacto de la empresa:
+                    <strong>{{ empresa.nombre }}</strong>
+                </p>
+
+                <form method="POST" action="{% url 'eliminar_empresa' %}" id="formEliminarEmpresa">
+                    {% csrf_token %}
+                    <input type="text" name="confirmacion" id="inputConfirmacionEmpresa"
+                        data-nombre="{{ empresa.nombre }}" 
+                        class="form-control mb-3 text-center" 
+                        placeholder="Escribe: {{ empresa.nombre }}" autocomplete="off">
+                    <div class="d-flex gap-2 justify-content-center mt-2">
+                        <button type="button" class="btn btn-cancelar2-stokka px-4 fw-bold" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="submit" id="btnConfirmarEliminarEmpresa" class="btn fw-bold px-4" disabled
+                            style="background: var(--rojo-alerta); color: white; border-radius: 8px; opacity: 0.5;">
+                            Sí, eliminar todo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <script>
+    // El botón de confirmar solo se activa cuando el nombre escrito coincide exactamente
+    document.getElementById('inputConfirmacionEmpresa').addEventListener('input', function () {
+        const nombre = "{{ empresa.nombre }}";
+        const btn = document.getElementById('btnConfirmarEliminarEmpresa');
+        const match = this.value === nombre;
+        btn.disabled = !match;
+        btn.style.opacity = match ? '1' : '0.5';
+    });
+</script> -->
+
+{% endblock %}

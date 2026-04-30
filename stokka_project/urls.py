@@ -42,13 +42,17 @@ urlpatterns = [
     # Logout 
     path('logout/', views.logout_view, name='logout'),
 
+    # --- GESTIÓN DE EMPRESA (DUEÑO) ---
+    path('empresa/',          views.empresa_view,    name='empresa'),
+    path('empresa/eliminar/', views.eliminar_empresa, name='eliminar_empresa'),
+
     # --- PERFIL DE USUARIO ---
     path('perfil/', views.perfil_view, name='perfil'),
     path('perfil/editar/', views.editar_perfil_view, name='editar_perfil'),
     path('perfil/cambiar-foto/', views.cambiar_foto, name='cambiar_foto'),
     path('perfil/eliminar-foto/', views.eliminar_foto, name='eliminar_foto'),
 
-    # --- GESTIÓN DE USUARIOS (ADMIN) ---
+    # --- GESTIÓN DE USUARIOS (DEUO/ADMIN) ---
     path('gestion-usuarios/', views.gestion_usuarios, name='gestion_usuarios'),
     path('gestion-usuarios/editar/<int:user_id>/', views.editar_usuario_admin, name='editar_usuario_admin'),
     path('eliminar-usuario/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),

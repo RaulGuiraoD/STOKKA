@@ -273,3 +273,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// BOTON CONFIRMAR ELIMINACIÓN DE LA EMPRESA
+document.getElementById('inputConfirmacionEmpresa').addEventListener('input', function () {
+    // Leemos el nombre desde el atributo data para evitar errores de renderizado
+    const nombreCorrecto = this.getAttribute('data-nombre').trim();
+    const btn = document.getElementById('btnConfirmarEliminarEmpresa');
+    
+    // Comparamos ignorando espacios extra
+    const match = this.value.trim() === nombreCorrecto;
+    
+    btn.disabled = !match;
+    btn.style.opacity = match ? '1' : '0.5';
+    btn.style.cursor = match ? 'pointer' : 'not-allowed';
+});

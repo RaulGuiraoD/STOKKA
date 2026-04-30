@@ -1,7 +1,7 @@
-# 1. Standard Library Imports
+# 1. Library Imports
 import json
 
-# 2. Django Core & Common Imports
+# 2. Django Core & Imports Comunes
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models, transaction
@@ -11,13 +11,13 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
-# 3. Django Auth & Security
+# 3. Django Auth & Seguridad
 from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 
-# 4. Local App Imports
-from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm
+# 4.  Imports Locales
+from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm, EditarEmpresaForm
 from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia
 
 User = get_user_model()
@@ -67,19 +67,6 @@ def admin_required(view_func):
         raise PermissionDenied
     return _wrapped
 
-# def dueño_required(view_func):
-#     """
-#     Decorador: solo dueños y admins de la empresa activa pueden acceder.
-#     Si no hay empresa activa en sesión, lanza PermissionDenied.
-#     """
-#     def _wrapped(request, *args, **kwargs):
-#         if not request.user.is_authenticated:
-#             raise PermissionDenied
-#         empresa = get_empresa_activa(request)
-#         if empresa and request.user.es_admin_o_dueño_en(empresa):
-#             return view_func(request, *args, **kwargs)
-#         raise PermissionDenied
-#     return _wrapped
 
 # ==============================================================================
 # SELECTOR DE EMPRESA
@@ -667,6 +654,89 @@ def eliminar_usuario(request, user_id):
 
     return redirect('gestion_usuarios')
 
+# ==============================================================================
+# EMPRESA
+# ==============================================================================
+
+def dueño_required(view_func):
+    """Solo el dueño/fundador de la empresa activa puede acceder."""
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            raise PermissionDenied
+        empresa = get_empresa_activa(request)
+        if empresa and request.user.es_dueño_en(empresa):
+            return view_func(request, *args, **kwargs)
+        raise PermissionDenied
+    return _wrapped
+
+
+@login_required
+@dueño_required
+def empresa_view(request):
+    empresa  = get_empresa_activa(request)
+    membresia = get_membresia_activa(request, empresa)
+
+    # Estadísticas de la empresa para mostrar antes de borrar
+    total_usuarios  = Membresia.objects.filter(empresa=empresa).count()
+    total_productos = Producto.objects.filter(empresa=empresa).count()
+    total_movimientos = HistorialMovimiento.objects.filter(empresa=empresa).count()
+
+    if request.method == 'POST':
+        form = EditarEmpresaForm(request.POST, instance=empresa)
+        if form.is_valid():
+            empresa_editada = form.save(commit=False)
+            # Regeneramos el slug si cambia el nombre
+            empresa_editada.slug = slugify(empresa_editada.nombre)
+            empresa_editada.save()
+            messages.success(request, "Datos de la empresa actualizados.")
+            return redirect('empresa')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+    else:
+        form = EditarEmpresaForm(instance=empresa)
+
+    return render(request, 'stokka/pages/empresa.html', {
+        'form':              form,
+        'empresa':           empresa,
+        'membresia':         membresia,
+        'total_usuarios':    total_usuarios,
+        'total_productos':   total_productos,
+        'total_movimientos': total_movimientos,
+    })
+
+
+@login_required
+@dueño_required
+def eliminar_empresa(request):
+    empresa = get_empresa_activa(request)
+    
+    if request.method == 'POST':
+        confirmacion = request.POST.get('confirmacion', '').strip()
+
+        # Validación de seguridad extra en el servidor
+        if confirmacion != empresa.nombre:
+            messages.error(request, "El nombre introducido no coincide.")
+            return redirect('empresa')
+
+        nombre_borrado = empresa.nombre
+        
+        # 1. Quitamos la empresa de la sesión antes de borrarla
+        request.session.pop('empresa_activa_id', None)
+        
+        # 2. Borramos la empresa
+        empresa.delete()
+
+        messages.success(request, f"La empresa '{nombre_borrado}' ha sido eliminada.")
+
+        # 3. Comprobamos si al usuario le quedan otras membresías en otras empresas
+        if request.user.membresias.exists():
+            return redirect('seleccionar_empresa')
+        
+        return redirect('registro_empresa')
+
+    return redirect('empresa')
 
 # ==============================================================================
 # PERFIL
