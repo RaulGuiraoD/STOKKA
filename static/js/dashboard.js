@@ -94,15 +94,18 @@ document.addEventListener("DOMContentLoaded", function () {
     // 4. GRÁFICO ADMIN (Actividad de Stock)
     const ctxAdmin = document.getElementById('chartAdmin');
     if (ctxAdmin) {
+        const labels = JSON.parse(ctxAdmin.dataset.labels);
+        const valores = JSON.parse(ctxAdmin.dataset.valores);
+
         new Chart(ctxAdmin, {
             type: 'line',
             data: {
-                labels: ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00'],
+                labels: labels,
                 datasets: [{
-                    label: 'Movimientos',
-                    data: [5, 12, 8, 15, 10, 22, 14],
+                    label: 'Movimientos de stock',
+                    data: valores,
                     borderColor: colores.verdeSecundario,
-                    backgroundColor: colores.verdeSecundario + '22', // Añadimos transparencia
+                    backgroundColor: colores.verdeSecundario + '22',
                     fill: true,
                     tension: 0.4,
                     pointRadius: 4,
@@ -114,7 +117,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 plugins: { legend: { display: false } },
                 scales: {
                     x: { grid: { display: false } },
-                    y: { display: false }
+                    y: {
+                        display: true,
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
                 }
             }
         });

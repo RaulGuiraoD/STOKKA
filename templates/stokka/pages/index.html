@@ -116,7 +116,9 @@
                             <i class="fa-solid fa-user-shield me-2"></i>Rendimiento del Equipo ({{ membresia.get_rol_display }})
                         </h6>
                         <div style="height: 200px;">
-                            <canvas id="chartAdmin"></canvas>
+                            <canvas id="chartAdmin"
+                                data-labels='{{ labels_grafico_json|safe }}'
+                                data-valores='{{ datos_grafico_json|safe }}'></canvas>
                         </div>
                     </div>
                     <div class="col-md-4 text-center border-start d-none d-md-block">

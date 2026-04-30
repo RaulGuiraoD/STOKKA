@@ -407,6 +407,23 @@ def index(request):
         'es_jefe':          es_jefe,
         'total_empleados':  total_empleados,
     }
+    # GRAFICO PARA HISTORIAL (VISIBLE DUEÑO Y ADMINS)
+    hoy = timezone.now().date()
+    labels_grafico = []
+    datos_grafico  = []
+
+    for i in range(6, -1, -1):
+        dia = hoy - timezone.timedelta(days=i)
+        cantidad = HistorialMovimiento.objects.filter(
+            empresa=empresa,
+            fecha__date=dia
+        ).count()
+        labels_grafico.append(dia.strftime('%d %b'))
+        datos_grafico.append(cantidad)
+
+    context['labels_grafico_json'] = json.dumps(labels_grafico)
+    context['datos_grafico_json']  = json.dumps(datos_grafico)
+
     return render(request, 'stokka/pages/index.html', context)
 
 
