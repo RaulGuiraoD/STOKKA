@@ -113,7 +113,7 @@
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h6 class="text-dark small text-uppercase fw-bold mb-4" style="color: var(--verde-stokka) !important;">
-                            <i class="fa-solid fa-user-shield me-2"></i>Rendimiento del Equipo ({{ membresia.get_rol_display }})
+                            <i class="fa-solid fa-user-shield me-2"></i>Rendimiento del Equipo
                         </h6>
                         <div style="height: 200px;">
                             <canvas id="chartAdmin"
@@ -127,7 +127,9 @@
                             <h2 class="fw-bold text-dark mb-0">{{ total_empleados }}</h2>
                             <p class="text-dark small mb-0 text-uppercase" style="letter-spacing: 1px;">Operarios Activos</p>
                             <hr class="w-25 mx-auto my-3">
-                            <p class="extra-small text-dark mb-0" style="font-size: 12px;">Monitoreo de actividad de stock.</p>
+                            <a href="{% url 'historial_movimientos' %}" class="btn btn-stokka shadow-sm rounded-3 px-4">
+                                <i class="fa-solid fa-calendar-days me-2"></i>Historial
+                            </a>
                         </div>
                     </div>
                 </div>
