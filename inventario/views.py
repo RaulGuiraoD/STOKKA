@@ -891,6 +891,7 @@ def añadir_producto(request):
             HistorialMovimiento.objects.create(
                 producto_nombre=nuevo_p.nombre,
                 producto_id=nuevo_p.id,
+                producto_orden=nuevo_p.orden_empresa,
                 usuario=request.user,
                 empresa=empresa,
                 tipo_accion='CREACION',
@@ -915,6 +916,7 @@ def eliminar_producto(request, pk):
         HistorialMovimiento.objects.create(
             producto_nombre=producto.nombre,
             producto_id=producto.id,
+            producto_orden=p.orden_empresa,
             usuario=request.user,
             empresa=empresa,
             tipo_accion='ELIMINACION',
@@ -942,6 +944,7 @@ def eliminar_masivo(request):
             HistorialMovimiento.objects.create(
                 producto_nombre=p.nombre,
                 producto_id=p.id,
+                producto_orden=p.orden_empresa,
                 usuario=request.user,
                 empresa=empresa,
                 tipo_accion='ELIMINACION',
@@ -982,6 +985,7 @@ def editar_producto(request, pk):
             HistorialMovimiento.objects.create(
                 producto_nombre=producto_editado.nombre,
                 producto_id=producto_editado.id,
+                producto_orden=p.orden_empresa,
                 usuario=request.user,
                 empresa=empresa,
                 tipo_accion='MODAL_EDITAR',
@@ -1040,6 +1044,7 @@ def registrar_historial_rapido(request, pk):
             HistorialMovimiento.objects.create(
                 producto_nombre=producto.nombre,
                 producto_id=producto.id,
+                producto_orden=p.orden_empresa,
                 usuario=request.user,
                 empresa=empresa,
                 tipo_accion='AJUSTE_RAPIDO',

@@ -188,26 +188,35 @@ class HistorialMovimiento(models.Model):
         ('ELIMINACION', 'Producto Eliminado'),
     ]
 
-    producto_nombre = models.CharField(max_length=255)
-    producto_id = models.IntegerField(null=True, blank=True)
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
+    producto_nombre  = models.CharField(max_length=255)
+    producto_id      = models.IntegerField(null=True, blank=True)
+    producto_orden   = models.PositiveIntegerField(null=True, blank=True)  # nuevo: el #0001 visible
+    usuario          = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='movimientos'
     )
-    tipo_accion = models.CharField(max_length=20, choices=TIPOS_ACCION)
-    cambio = models.IntegerField(default=0) 
+    tipo_accion      = models.CharField(max_length=20, choices=TIPOS_ACCION)
+    cambio           = models.IntegerField(default=0)
     stock_resultante = models.IntegerField()
-    fecha = models.DateTimeField(auto_now_add=True)
-    detalles = models.TextField(null=True, blank=True)
-    stock_anterior = models.IntegerField(default=0)
+    fecha            = models.DateTimeField(auto_now_add=True)
+    detalles         = models.TextField(null=True, blank=True)
+    stock_anterior   = models.IntegerField(default=0)
+    empresa          = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='movimientos_historial', null=True, blank=True)
 
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='movimientos_historial', null=True, blank=True)
     class Meta:
         ordering = ['-fecha']
         verbose_name = "Historial de Movimiento"
         verbose_name_plural = "Historial de Movimientos"
+
+    @property
+    def id_producto_formateado(self):
+        if self.producto_orden:
+            return f"{self.producto_orden:04d}"
+        if self.producto_id:
+            return f"{self.producto_id:04d}"
+        return "---"
 
     def __str__(self):
         return f"{self.producto_nombre} | {self.tipo_accion} | {self.cambio}"
