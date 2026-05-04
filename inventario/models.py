@@ -5,8 +5,9 @@ from PIL import Image
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
+
 
 # 3. Local App Imports 
 
@@ -92,42 +93,56 @@ class Membresia(models.Model):
 
 # 2. MODELO PRODUCTOS
 class Producto(models.Model):
-    nombre = models.CharField(max_length=100, verbose_name="Nombre del Producto")
-    referencia = models.CharField(max_length=50, blank=True, null=True, verbose_name="Referencia/SKU")
-    descripcion = models.TextField(blank=True, verbose_name="Descripción Breve")
-    stock_actual = models.PositiveIntegerField(default=0, verbose_name="Stock Disponible")
-    umbrales_amarillo = models.PositiveIntegerField(verbose_name= "Aviso", default=10) # Añadido default para evitar errores
-    umbrales_rojo = models.PositiveIntegerField(verbose_name="Crítico", default=5)
-    factura = models.FileField(upload_to='facturas/%Y/%m/', null=True, blank=True, verbose_name="Factura (Opcional)")
-    fecha_registro = models.DateTimeField(default=timezone.now)
+    nombre            = models.CharField(max_length=100, verbose_name="Nombre del Producto")
+    referencia        = models.CharField(max_length=50, blank=True, null=True, verbose_name="Referencia/SKU")
+    descripcion       = models.TextField(blank=True, verbose_name="Descripción Breve")
+    stock_actual      = models.PositiveIntegerField(default=0, verbose_name="Stock Disponible")
+    umbrales_amarillo = models.PositiveIntegerField(verbose_name="Aviso", default=10)
+    umbrales_rojo     = models.PositiveIntegerField(verbose_name="Crítico", default=5)
+    factura           = models.FileField(upload_to='facturas/%Y/%m/', null=True, blank=True, verbose_name="Factura (Opcional)")
+    fecha_registro    = models.DateTimeField(default=timezone.now)
+    empresa           = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='productos', null=True, blank=True)
+    # Este campo es lo que el usuario ve como "#0001", "#0002"...
+    orden_empresa = models.PositiveIntegerField(default=0, editable=False)
 
-    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='productos', null=True, blank=True)
+    class Meta:
+        unique_together = ('empresa', 'orden_empresa')
+        indexes = [
+            models.Index(fields=['empresa', 'orden_empresa'])
+        ]
 
-    def __str__(self):
-        return self.nombre
-    
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            with transaction.atomic():
+                ultimo = (
+                    Producto.objects
+                    .select_for_update()
+                    .filter(empresa=self.empresa)
+                    .aggregate(models.Max('orden_empresa'))['orden_empresa__max']
+                ) or 0
+                self.orden_empresa = ultimo + 1
+        self.clean()  # solo valida umbrales, no unique
+        super().save(*args, **kwargs)
+
+    @property
+    def id_formateado(self):
+        # Esto es lo que ven los templates: #0001, #0042...
+        return f"{self.orden_empresa:04d}"
+
     def clean(self):
         if self.umbrales_amarillo is not None and self.umbrales_rojo is not None:
             if self.umbrales_amarillo <= self.umbrales_rojo:
                 raise ValidationError({
                     'umbrales_amarillo': 'El umbral de aviso debe ser mayor al umbral crítico.'
                 })
-        
-    def save(self, *args,**kwargs):
-        self.full_clean()   # Ejecuta la validación clean() antes de guardar
-        super().save(*args, **kwargs)
-
-    @property
-    def id_formateado(self):
-        return f"{self.id:04d}"
 
     @property
     def semaforo(self):
         if self.stock_actual <= self.umbrales_rojo:
-            return "critico"    # Rojo
+            return "critico"
         elif self.stock_actual <= self.umbrales_amarillo:
-            return "aviso"      #Amarillo
-        return "ok"             #Verde
+            return "aviso"
+        return "ok"
     
 
 
