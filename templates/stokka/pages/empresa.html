@@ -23,22 +23,25 @@
     <!-- ESTADÍSTICAS RÁPIDAS -->
     <div class="row g-3 mb-5">
         <div class="col-4">
-            <div class="card border-0 shadow-stokka rounded-4 p-3 text-center h-100">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 border-top text-center border-4 h-100"
+                style="border-color: var(--verde-secundario) !important;">
                 <small class="text-dark fw-bold text-uppercase"
                     style="font-size: 10px; letter-spacing: 1px;">Usuarios</small>
                 <h3 class="fw-bold mb-0 mt-1">{{ total_usuarios }}</h3>
             </div>
         </div>
         <div class="col-4">
-            <div class="card border-0 shadow-stokka rounded-4 p-3 text-center h-100">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 border-top text-center border-4 h-100"
+                style="border-color: var(--amarillo-alerta) !important;">
                 <small class="text-dark fw-bold text-uppercase"
                     style="font-size: 10px; letter-spacing: 1px;">Productos</small>
                 <h3 class="fw-bold mb-0 mt-1">{{ total_productos }}</h3>
             </div>
         </div>
         <div class="col-4">
-            <div class="card border-0 shadow-stokka rounded-4 p-3 text-center h-100">
-                <small class="text-dark fw-bold text-uppercase"
+            <div class="card border-0 shadow-stokka rounded-4 p-3 border-top text-center border-4 h-100"
+                style="border-color: var(--rojo-alerta) !important;"> <small
+                    class="text-dark fw-bold text-uppercase"
                     style="font-size: 10px; letter-spacing: 1px;">Movimientos</small>
                 <h3 class="fw-bold mb-0 mt-1">{{ total_movimientos }}</h3>
             </div>
@@ -114,14 +117,16 @@
             <div class="modal-body p-4 p-md-5 text-center">
                 <i class="fa-solid fa-building-circle-xmark fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
                 <h5 class="fw-bold mb-2">Confirmar eliminación</h5>
-                <p class="small text-muted">Para proceder, escribe el nombre de la empresa: <br><strong class="fw-bolder text-dark">{{ empresa.nombre }}</strong></p>
-                
-                <input type="text" id="inputConfirmacionEmpresa" data-nombre="{{ empresa.nombre }}" 
-                       class="form-control mb-3 text-center stokka-input text-white" autocomplete="off">
+                <p class="small text-muted">Para proceder, escribe el nombre de la empresa: <br><strong
+                        class="fw-bolder text-dark">{{ empresa.nombre }}</strong></p>
+
+                <input type="text" id="inputConfirmacionEmpresa" data-nombre="{{ empresa.nombre }}"
+                    class="form-control mb-3 text-center stokka-input text-white" autocomplete="off">
 
                 <div class="d-flex gap-2 justify-content-center">
                     <button type="button" class="btn btn-cancelar2-stokka" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" id="btnSiguienteEliminar" class="btn btn-cancelar-stokka fw-bold" disabled style="opacity: 0.5;">
+                    <button type="button" id="btnSiguienteEliminar" class="btn btn-cancelar-stokka fw-bold" disabled
+                        style="opacity: 0.5;">
                         Siguiente
                     </button>
                 </div>
@@ -137,9 +142,11 @@
             <div class="modal-body text-center p-4 p-md-5">
                 <i class="fa-solid fa-skull-crossbones fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
                 <h5 class="fw-bold text-dark">¡ACCIÓN IRREVERSIBLE!</h5>
-                <p class="text-dark">Estás a punto de borrar <strong class="fw-bold" style="color: var(--verde-stokka);">{{ empresa.nombre }}</strong> y todos sus datos.</p>
-                <p class="small text-muted">Esta acción eliminará empleados, inventario e historial de forma permanente.</p>
-                
+                <p class="text-dark">Estás a punto de borrar <strong class="fw-bold"
+                        style="color: var(--verde-stokka);">{{ empresa.nombre }}</strong> y todos sus datos.</p>
+                <p class="small text-muted">Esta acción eliminará empleados, inventario e historial de forma permanente.
+                </p>
+
                 <div class="d-flex gap-2 justify-content-center mt-4">
                     <button type="button" class="btn btn-cancelar2-stokka" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" id="btnIrAlUltimoPaso" class="btn btn-cancelar-stokka fw-bold">
@@ -159,16 +166,17 @@
                 <i class="fa-solid fa-ghost fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
                 <h6 class="fw-bold mb-3">¿ESTÁS COMPLETAMENTE SEGURO?</h6>
                 <p class="x-small opacity-75 mb-4">No habrá vuelta atrás despues de este paso.</p>
-                
+
                 <form method="POST" action="{% url 'eliminar_empresa' %}">
                     {% csrf_token %}
                     <input type="hidden" name="confirmacion" id="inputHiddenNombre">
-                    
+
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-cancelar-stokka fw-bold py-2" style="border-radius: 10px;">
                             SÍ, ELIMINAR AHORA
                         </button>
-                        <button type="button" class="btn btn-cancelar2-stokka text-white-50 btn-sm text-decoration-none" data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-cancelar2-stokka text-white-50 btn-sm text-decoration-none"
+                            data-bs-dismiss="modal">
                             No, cancelar todo
                         </button>
                     </div>
