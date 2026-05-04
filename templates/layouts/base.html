@@ -13,6 +13,24 @@
 
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+   {% if tema %}
+    <style>
+        :root {
+            --verde-stokka:     {{ tema.verde_stokka }};
+            --verde-secundario: {{ tema.verde_secundario }};
+            --rojo-alerta:      {{ tema.rojo_alerta }};
+            --amarillo-alerta:  {{ tema.amarillo_alerta }};
+
+            /* Variantes light y mid generadas automáticamente desde JS al cargar */
+            --verde-stokka-light:    {{ tema.verde_stokka }}22;
+            --rojo-alerta-light:     {{ tema.rojo_alerta }}22;
+            --amarillo-alerta-light: {{ tema.amarillo_alerta }}22;
+            --verde-stokka-mid:      {{ tema.verde_stokka }}66;
+            --rojo-alerta-mid:       {{ tema.rojo_alerta }}66;
+            --amarillo-alerta-mid:   {{ tema.amarillo_alerta }}66;
+        }
+    </style>
+    {% endif %}
 </head>
 
 <body class="bg-light">

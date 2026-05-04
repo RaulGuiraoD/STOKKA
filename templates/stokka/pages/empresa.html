@@ -40,12 +40,146 @@
         </div>
         <div class="col-4">
             <div class="card border-0 shadow-stokka rounded-4 p-3 border-top text-center border-4 h-100"
-                style="border-color: var(--rojo-alerta) !important;"> <small
-                    class="text-dark fw-bold text-uppercase"
+                style="border-color: var(--rojo-alerta) !important;"> <small class="text-dark fw-bold text-uppercase"
                     style="font-size: 10px; letter-spacing: 1px;">Movimientos</small>
                 <h3 class="fw-bold mb-0 mt-1">{{ total_movimientos }}</h3>
             </div>
         </div>
+    </div>
+
+    <!-- SELECTOR DE EMPRESA (solo si tiene más de una) -->
+    {% if otras_membresias %}
+    <div class="card border-0 shadow-stokka rounded-4 p-4 mb-4">
+        <h5 class="fw-bold mb-3" style="color: var(--verde-stokka);">
+            <i class="fa-solid fa-building me-2"></i>Cambiar de empresa
+        </h5>
+        <p class="text-muted small mb-3">
+            Tienes acceso a otras empresas. Puedes cambiar de contexto directamente desde aquí.
+        </p>
+        <div class="d-flex flex-column gap-2">
+            {% for m in otras_membresias %}
+            <form method="POST" action="{% url 'seleccionar_empresa' %}">
+                {% csrf_token %}
+                <input type="hidden" name="empresa_id" value="{{ m.empresa.id }}">
+                <button type="submit"
+                    class="btn w-100 d-flex align-items-center justify-content-between px-4 py-3 rounded-3"
+                    style="background: var(--verde-stokka-light); border: 1px solid var(--verde-stokka-mid); color: var(--verde-stokka);">
+                    <div class="text-start">
+                        <span class="d-block fw-bold">{{ m.empresa.nombre }}</span>
+                        <span class="d-block" style="font-size: 0.78rem; opacity: 0.7;">
+                            {{ m.get_rol_display }}
+                            {% if m.es_fundador %}· Fundador{% endif %}
+                        </span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </button>
+            </form>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- PERSONALIZACIÓN DE COLORES -->
+    <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 mb-5">
+        <h5 class="fw-bold mb-1" style="color: var(--verde-stokka);">
+            <i class="fa-solid fa-palette me-2"></i>Personalización de colores
+        </h5>
+        <p class="text-muted small mb-4">
+            Los cambios afectan a todos los usuarios de <strong>{{ empresa.nombre }}</strong> en tiempo real.
+        </p>
+
+        <!-- Preview en vivo -->
+        <div class="d-flex gap-2 mb-4 flex-wrap" id="preview-colores">
+            <span class="badge px-3 py-2 rounded-pill" id="prev-verde"
+                style="background: {{ tema.verde_stokka }}; color: white;">Principal</span>
+            <span class="badge px-3 py-2 rounded-pill" id="prev-secundario"
+                style="background: {{ tema.verde_secundario }}; color: white;">Secundario</span>
+            <span class="badge px-3 py-2 rounded-pill" id="prev-rojo"
+                style="background: {{ tema.rojo_alerta }}; color: white;">Alerta</span>
+            <span class="badge px-3 py-2 rounded-pill" id="prev-amarillo"
+                style="background: {{ tema.amarillo_alerta }}; color: black;">Aviso</span>
+        </div>
+
+        <form method="POST" id="formTema">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="guardar_tema">
+
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted d-block">
+                        Color principal
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="color" name="verde_stokka" id="pick-verde" value="{{ tema.verde_stokka }}"
+                            class="form-control form-control-color rounded-3 border-0"
+                            style="width: 48px; height: 48px; cursor: pointer; padding: 2px;">
+                        <input type="text" id="hex-verde" value="{{ tema.verde_stokka }}"
+                            class="form-control stokka-input shadow-none" maxlength="7" placeholder="#003D00"
+                            style="font-family: monospace; font-size: 0.85rem;">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted d-block">
+                        Color secundario
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="color" name="verde_secundario" id="pick-secundario"
+                            value="{{ tema.verde_secundario }}"
+                            class="form-control form-control-color rounded-3 border-0"
+                            style="width: 48px; height: 48px; cursor: pointer; padding: 2px;">
+                        <input type="text" id="hex-secundario" value="{{ tema.verde_secundario }}"
+                            class="form-control stokka-input shadow-none" maxlength="7" placeholder="#1CA300"
+                            style="font-family: monospace; font-size: 0.85rem;">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted d-block">
+                        Color alerta
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="color" name="rojo_alerta" id="pick-rojo" value="{{ tema.rojo_alerta }}"
+                            class="form-control form-control-color rounded-3 border-0"
+                            style="width: 48px; height: 48px; cursor: pointer; padding: 2px;">
+                        <input type="text" id="hex-rojo" value="{{ tema.rojo_alerta }}"
+                            class="form-control stokka-input shadow-none" maxlength="7" placeholder="#C10D00"
+                            style="font-family: monospace; font-size: 0.85rem;">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted d-block">
+                        Color aviso
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="color" name="amarillo_alerta" id="pick-amarillo" value="{{ tema.amarillo_alerta }}"
+                            class="form-control form-control-color rounded-3 border-0"
+                            style="width: 48px; height: 48px; cursor: pointer; padding: 2px;">
+                        <input type="text" id="hex-amarillo" value="{{ tema.amarillo_alerta }}"
+                            class="form-control stokka-input shadow-none" maxlength="7" placeholder="#F5C907"
+                            style="font-family: monospace; font-size: 0.85rem;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div class="d-flex gap-2">
+                    <!-- Botón Aleatorio: No envía formulario, solo ejecuta JS -->
+                    <button type="button" class="btn btn-cancelar2-stokka px-3 py-2 fw-bold"
+                        onclick="aplicarAleatorios()">
+                        <i class="fa-solid fa-shuffle me-1"></i>Aleatorios
+                    </button>
+
+                    <!-- Botón Restablecer: Envía el formulario con valor 'restablecer_tema' -->
+                    <button type="submit" name="accion" value="restablecer_tema" class="btn btn-cancelar-stokka px-3 py-2 fw-bold">
+                        <i class="fa-solid fa-rotate-left me-1"></i>Restablecer
+                    </button>
+                </div>
+
+                <!-- Botón Guardar: Envía el formulario con valor 'guardar_tema' -->
+                <button type="submit" name="accion" value="guardar_tema" class="btn btn-stokka px-4 py-2 fw-bold shadow-sm">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>Guardar colores
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- EDITAR DATOS -->
@@ -56,6 +190,7 @@
 
         <form method="POST">
             {% csrf_token %}
+            <input type="hidden" name="accion" value="guardar_datos">
             <div class="row g-3">
                 <div class="col-12">
                     <label class="form-label fw-bold small text-uppercase text-muted">
@@ -185,4 +320,6 @@
         </div>
     </div>
 </div>
+
+<script src="{% static 'js/empresa.js' %}"></script>
 {% endblock %}

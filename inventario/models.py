@@ -221,3 +221,13 @@ class HistorialMovimiento(models.Model):
     def __str__(self):
         return f"{self.producto_nombre} | {self.tipo_accion} | {self.cambio}"
     
+# MODELO PARA ESTILOS EMPRESARIAL
+class TemaEmpresa(models.Model):
+    empresa           = models.OneToOneField(Empresa, on_delete=models.CASCADE, related_name='tema')
+    verde_stokka      = models.CharField(max_length=7, default='#003D00')
+    verde_secundario  = models.CharField(max_length=7, default='#1CA300')
+    rojo_alerta       = models.CharField(max_length=7, default='#C10D00')
+    amarillo_alerta   = models.CharField(max_length=7, default='#F5C907')
+
+    def __str__(self):
+        return f"Tema de {self.empresa.nombre}"    

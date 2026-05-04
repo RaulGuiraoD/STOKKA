@@ -1,4 +1,4 @@
-from .models import Membresia
+from .models import Membresia, TemaEmpresa
 
 def empresa_activa(request):
     if not hasattr(request, 'user') or not request.user.is_authenticated:
@@ -10,13 +10,17 @@ def empresa_activa(request):
 
     try:
         membresia = request.user.membresias.select_related('empresa').get(empresa_id=empresa_id)
+        empresa   = membresia.empresa
+
+        tema, _ = TemaEmpresa.objects.get_or_create(empresa=empresa)
+
         return {
-            'empresa': membresia.empresa,
+            'empresa':   empresa,
             'membresia': membresia,
-            'es_jefe': request.user.es_admin_o_dueño_en(membresia.empresa),
+            'es_jefe':   request.user.es_admin_o_dueño_en(empresa),
+            'tema':      tema,
         }
     except Membresia.DoesNotExist:
         return {}
     except Exception:
-        # Captura cualquier otro error silenciosamente para no romper todas las páginas
         return {}

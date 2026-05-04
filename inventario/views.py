@@ -18,7 +18,7 @@ from django.contrib.auth.hashers import check_password
 
 # 4.  Imports Locales
 from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm, EditarEmpresaForm
-from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia
+from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia, TemaEmpresa
 
 User = get_user_model()
 
@@ -673,27 +673,55 @@ def dueño_required(view_func):
 @login_required
 @dueño_required
 def empresa_view(request):
-    empresa  = get_empresa_activa(request)
+    empresa   = get_empresa_activa(request)
     membresia = get_membresia_activa(request, empresa)
 
-    # Estadísticas de la empresa para mostrar antes de borrar
-    total_usuarios  = Membresia.objects.filter(empresa=empresa).count()
-    total_productos = Producto.objects.filter(empresa=empresa).count()
+    total_usuarios    = Membresia.objects.filter(empresa=empresa).count()
+    total_productos   = Producto.objects.filter(empresa=empresa).count()
     total_movimientos = HistorialMovimiento.objects.filter(empresa=empresa).count()
 
+    # Otras empresas del dueño para el selector
+    otras_membresias = request.user.membresias.select_related('empresa').exclude(empresa=empresa)
+
+    # Tema actual
+    tema, _ = TemaEmpresa.objects.get_or_create(empresa=empresa)
+
     if request.method == 'POST':
-        form = EditarEmpresaForm(request.POST, instance=empresa)
-        if form.is_valid():
-            empresa_editada = form.save(commit=False)
-            # Regeneramos el slug si cambia el nombre
-            empresa_editada.slug = slugify(empresa_editada.nombre)
-            empresa_editada.save()
-            messages.success(request, "Datos de la empresa actualizados.")
+        accion = request.POST.get('accion')
+
+        if accion == 'guardar_datos':
+            form = EditarEmpresaForm(request.POST, instance=empresa)
+            if form.is_valid():
+                empresa_editada      = form.save(commit=False)
+                empresa_editada.slug = slugify(empresa_editada.nombre)
+                empresa_editada.save()
+                messages.success(request, "Datos de la empresa actualizados.")
+                return redirect('empresa')
+            else:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, error)
+
+        elif accion == 'guardar_tema':
+            tema.verde_stokka     = request.POST.get('verde_stokka', tema.verde_stokka)
+            tema.verde_secundario = request.POST.get('verde_secundario', tema.verde_secundario)
+            tema.rojo_alerta      = request.POST.get('rojo_alerta', tema.rojo_alerta)
+            tema.amarillo_alerta  = request.POST.get('amarillo_alerta', tema.amarillo_alerta)
+            tema.save()
+            messages.success(request, "Colores actualizados. Los cambios son visibles para todos los usuarios de la empresa.")
             return redirect('empresa')
+
+        elif accion == 'restablecer_tema':
+            tema.verde_stokka     = '#003D00'
+            tema.verde_secundario = '#1CA300'
+            tema.rojo_alerta      = '#C10D00'
+            tema.amarillo_alerta  = '#F5C907'
+            tema.save()
+            messages.success(request, "Colores restablecidos a los valores originales de Stokka.")
+            return redirect('empresa')
+
         else:
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(request, error)
+            form = EditarEmpresaForm(instance=empresa)
     else:
         form = EditarEmpresaForm(instance=empresa)
 
@@ -704,8 +732,9 @@ def empresa_view(request):
         'total_usuarios':    total_usuarios,
         'total_productos':   total_productos,
         'total_movimientos': total_movimientos,
+        'otras_membresias':  otras_membresias,
+        'tema':              tema,
     })
-
 
 @login_required
 @dueño_required
