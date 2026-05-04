@@ -48,7 +48,6 @@ main, .container-fluid, .card {
     overflow-wrap: break-word;
 }
 /* LOGIN Y REGISTRO */
-/* Creamos las utilidades de Bootstrap personalizadas */
 .bg-stokka { background-color: var(--verde-stokka) !important; }
 .text-stokka { color: var(--verde-stokka) !important; }
 
@@ -58,7 +57,7 @@ main, .container-fluid, .card {
     font-weight: 700;
 }
 
-/* Ajuste para que los botones sociales sean cuadrados perfectos */
+/*  botones sociales  */
 .social-btn-fix {
     width: 40px;
     height: 40px;
@@ -68,8 +67,7 @@ main, .container-fluid, .card {
     padding: 0;
 }
 
-/* --- SOMBRA STOKKA GLOBAL --- 
-   Aplica esta clase a cualquier card o div */
+/* --- SOMBRA STOKKA GLOBAL --- */
 .shadow-stokka {
     box-shadow: 0 10px 30px rgba(0, 61, 0, 0.08) !important;
     transition: transform 0.3s ease, box-shadow 0.3s ease !important;
@@ -103,11 +101,27 @@ main, .container-fluid, .card {
     text-decoration: none !important;
 }
 
+.btn_selector-2 {
+    background: var(--verde-stokka-light) !important;
+    border: 1px solid var(--verde-stokka-mid) !important;
+    color:  var(--verde-stokka) !important;
+    transition: all 0.3s ease !important;
+    cursor: pointer !important;
+    text-decoration: none !important;
+}
+
 .btn_selector:hover {
     background: var(--selector-hover) !important;
     border-color: var(--gris-fondo) !important;
     transform: translateY(-2px); 
     color: var(--blanco) !important;
+}
+
+.btn_selector-2:hover {
+    background: var(--verde-stokka-mid) !important;
+    border-color: var(--verde-stokka-light) !important;
+    transform: translateY(-2px); 
+    color: 1px solid var(--blanco) !important;
 }
 
 .btn_selector .text-white-50 {
@@ -270,19 +284,19 @@ main, .container-fluid, .card {
     border-radius: 10px !important; border: 1px solid #dee2e6 !important; padding: 10px !important; transition: all 0.2s;
 }
 
-/* 1. Reset para que el ojo no cree un "recuadro" aparte */
+/* 1. Reset para que el ojo no cree un recuadro aparte */
 .input-group-text {
     border: none !important;
     background: white !important;
-    padding-left: 0 !important; /* Acerca el ojo al texto */
+    padding-left: 0 !important; 
 }
 
 /* 2. Evita que el input pierda su forma al unirse al ojo */
 .input-group > .form-control {
-    border-right: none !important; /* Quitamos la raya divisoria */
+    border-right: none !important; 
 }
 
-/* 3. El Foco de Stokka (Brillo verde sin saltos) */
+/* 3. El Foco de Stokka  */
 .stokka-input:focus, 
 .form-control:focus,
 .input-group:focus-within {
@@ -308,7 +322,7 @@ main, .container-fluid, .card {
     -webkit-text-security: none !important;
     text-security: none !important;
     font-family: inherit !important;
-    color: #212529 !important; /* Color oscuro estándar */
+    color: #212529 !important; 
 }
 
 /* Evita que el navegador oculte texto por "estilos de sistema" */

@@ -28,13 +28,13 @@
                 {% with r=membresia_editada.rol %}
                 <div class="p-3 bg-light rounded-3 border-start border-4 shadow-sm" 
                     style="{% if r == 'dueño' %}border-color: var(--verde-stokka) !important;
-                           {% elif r == 'admin' %}border-color: #F5C907 !important;
-                           {% else %}border-color: #1CA300 !important;{% endif %}">
+                           {% elif r == 'admin' %}border-color: var(--amarillo-alerta) !important;
+                           {% else %}border-color: var(--verde-secundario) !important;{% endif %}">
                     
                     <label class="form-label fw-bold small text-uppercase mb-2 d-block" 
                            style="{% if r == 'dueño' %}color: var(--verde-stokka);
-                                  {% elif r == 'admin' %}#modalEditarUsuario: #CCAA00;
-                                  {% else %}color: #1CA300;{% endif %}">
+                                  {% elif r == 'admin' %}color: var(--amarillo-alerta);
+                                  {% else %}color: var(--verde-secundario);{% endif %}">
                         <i class="fa-solid {% if r == 'dueño' %}fa-crown{% elif r == 'admin' %}fa-shield-halved{% else %}fa-user{% endif %} me-1"></i>
                         Rol en el Sistema
                     </label>
