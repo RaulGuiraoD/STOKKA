@@ -198,6 +198,13 @@ main, .container-fluid, .card {
 
 .info-icon-2:hover::after, .info-icon-2.active::after { opacity: 1; visibility: visible; }
 
+.info-icon-2 {
+    vertical-align: middle;
+    cursor: pointer;
+    /* Evita que el icono empuje otros elementos */
+    flex-shrink: 0; 
+}
+
 /*----------------------------------------------------------------------------*/
 /* Botón Principal  */
 .btn-stokka {
@@ -434,5 +441,8 @@ input::-webkit-credentials-auto-fill-button {
         min-width: 130px;
         height: 48px;
         font-size: 0.85rem !important;
+    }
+    .info-icon-2 {
+        display: none !important;
     }
 }

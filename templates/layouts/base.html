@@ -168,6 +168,7 @@
    {% if user.is_authenticated %}
     <script>
         window.STOKKA_PREFS = {
+            iconos_info: {{ user.perfil.iconos_info|yesno:"true,false" }},
             daltonismo: "{{ user.perfil.daltonismo|default:'normal' }}",
             urls: {
                 pref_daltonismo: "{% url 'pref_daltonismo' %}",

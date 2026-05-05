@@ -49,14 +49,14 @@ function submitFotoForm() {
 
 // --- LÓGICA DE AVISO PARA CAMBIO DE CORREO EN EDITAR PERFIL  ---
 function confirmarGuardarPerfil() {
-    var form  = document.getElementById('formEditarPerfil');
+    var form = document.getElementById('formEditarPerfil');
 
     // Validación nativa del navegador (required, email format, etc.)
     if (!form.reportValidity()) return;
 
-    var inputEmail    = document.getElementById('inputEmailPerfil');
-    var emailActual   = inputEmail.dataset.emailOriginal.trim().toLowerCase();
-    var emailNuevo    = inputEmail.value.trim().toLowerCase();
+    var inputEmail = document.getElementById('inputEmailPerfil');
+    var emailActual = inputEmail.dataset.emailOriginal.trim().toLowerCase();
+    var emailNuevo = inputEmail.value.trim().toLowerCase();
     var emailCambiado = emailActual !== emailNuevo;
 
     if (emailCambiado) {
@@ -327,7 +327,7 @@ function actualizarPreviewDaltonismo(tipo) {
         el.style.backgroundColor = mapeo[id];
         // Calcular contraste para el texto del badge
         const hex = mapeo[id].replace('#', '');
-        const r = parseInt(hex.substr(0,2), 16), g = parseInt(hex.substr(2,2), 16), b = parseInt(hex.substr(4,2), 16);
+        const r = parseInt(hex.substr(0, 2), 16), g = parseInt(hex.substr(2, 2), 16), b = parseInt(hex.substr(4, 2), 16);
         const luminosidad = (r * 299 + g * 587 + b * 114) / 1000;
         el.style.color = luminosidad > 128 ? 'black' : 'white';
     });
@@ -384,12 +384,12 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('btnAplicarDaltonismo')?.addEventListener('click', async function () {
         this.disabled = true;
         this.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Guardando...';
-        
+
         await guardarEnBaseDeDatos(tipoSeleccionado);
-        
+
         // Opcional: actualizar el objeto global para esta sesión
         window.STOKKA_PREFS.daltonismo = tipoSeleccionado;
-        
+
         location.reload(); // Recargamos para asegurar que todo el CSS se re-renderice
     });
 
@@ -406,55 +406,102 @@ document.addEventListener('DOMContentLoaded', function () {
 // Los info-icon (registro) nunca se tocan.
 // =============================================================================
 
-const STORAGE_KEY_INFO = 'stokka_info_icons_ocultos';
+function aplicarEstadoIconos() {
+    const esMovil = window.innerWidth < 992;
+    const sesionInfo = sessionStorage.getItem('stokka_iconos_session');
+    let visibles;
 
-function inicializarIconosInfo() {
-    const ocultos = localStorage.getItem(STORAGE_KEY_INFO) === 'true';
+    if (sesionInfo !== null) {
+        visibles = sesionInfo === 'true';
+    } else {
+        visibles = window.STOKKA_PREFS ? window.STOKKA_PREFS.iconos_info : true;
+    }
 
     document.querySelectorAll('.info-icon-2').forEach(icon => {
-        icon.style.display = ocultos ? 'none' : '';
+        if (esMovil) {
+            icon.style.setProperty('display', 'none', 'important');
+        } else {
+            icon.style.setProperty('display', visibles ? 'inline-flex' : 'none', 'important');
+        }
     });
 
-    // Actualiza el estado del toggle en el perfil si existe
     const toggle = document.getElementById('toggleIconosInfo');
     if (toggle) {
-        toggle.checked = !ocultos;
-        actualizarLabelToggle(!ocultos);
+        toggle.checked = visibles;
+        if (esMovil) {
+            toggle.disabled = true;
+            actualizarLabelToggle(false, true);
+        } else {
+            toggle.disabled = false;
+            actualizarLabelToggle(visibles, false);
+        }
     }
 }
 
-function actualizarLabelToggle(visibles) {
+function actualizarLabelToggle(visibles, esMovil) {
     const label = document.getElementById('labelToggleIconos');
     if (!label) return;
-    label.textContent = visibles ? 'Iconos de ayuda visibles' : 'Iconos de ayuda ocultos';
-    label.style.color = visibles ? 'var(--verde-stokka)' : 'var(--rojo-alerta)';
+
+    if (esMovil) {
+        label.textContent = 'No disponible en móvil';
+        label.style.color = 'var(--rojo-alerta)';
+    } else {
+        label.textContent = visibles ? 'Iconos de ayuda visibles' : 'Iconos de ayuda ocultos';
+        label.style.color = visibles ? 'var(--verde-stokka)' : 'var(--rojo-alerta)';
+    }
+}
+
+async function guardarPreferenciaIconos(visibles) {
+    sessionStorage.setItem('stokka_iconos_session', visibles);
+
+    if (!window.STOKKA_PREFS) return;
+
+    try {
+        const response = await fetch(window.STOKKA_PREFS.urls.pref_iconos, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.STOKKA_PREFS.csrfToken
+            },
+            body: JSON.stringify({ visibles: visibles })
+        });
+
+        if (response.ok) {
+            window.STOKKA_PREFS.iconos_info = visibles;
+        }
+    } catch (error) {
+        console.error("Error al guardar preferencia de iconos:", error);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    // 1. Aplicar estado inicial
+    aplicarEstadoIconos();
 
-    // Aplicar estado guardado en todas las páginas
-    inicializarIconosInfo();
+    // 2. Escuchar cambios de tamaño de pantalla
+    window.addEventListener('resize', aplicarEstadoIconos);
 
-    // Click en cualquier info-icon-2 para mostrarlo/ocultarlo individualmente (hover CSS)
-    // La lógica de click global solo aplica al toggle del perfil
+    // 3. Manejar el cambio del switch (solo Desktop)
     const toggle = document.getElementById('toggleIconosInfo');
     if (toggle) {
-        toggle.addEventListener('change', function () {
-            const visibles = this.checked;
-            localStorage.setItem(STORAGE_KEY_INFO, visibles ? 'false' : 'true');
-            actualizarLabelToggle(visibles);
+        toggle.addEventListener('change', async function () {
+            const estadoActual = this.checked;
 
+            // Aplicar inmediatamente de forma visual
             document.querySelectorAll('.info-icon-2').forEach(icon => {
-                icon.style.display = visibles ? '' : 'none';
+                icon.style.setProperty('display', estadoActual ? 'inline-flex' : 'none', 'important');
             });
+            actualizarLabelToggle(estadoActual, false);
+
+            // Guardar en Base de Datos
+            await guardarPreferenciaIconos(estadoActual);
         });
     }
 
-    // Lógica de click para info-icon-2 (toggle activo/inactivo al hacer clic)
+    // 4. Lógica de click para los iconos (mostrar info)
     document.addEventListener('click', function (e) {
         const icon = e.target.closest('.info-icon-2');
         if (!icon) {
-            // Cerrar todos los activos al clicar fuera
             document.querySelectorAll('.info-icon-2.active').forEach(i => i.classList.remove('active'));
             return;
         }
