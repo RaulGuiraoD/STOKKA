@@ -86,13 +86,35 @@
                     </select>
                 </div>
 
+                <!-- PREFERENCIAS DE AYUDA -->
+                <div class="py-3">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Iconos de ayuda</label>
+                            <p class="text-muted small mb-0">
+                                Los "<i class="fa-solid fa-circle-info" style="color: var(--verde-stokka);"></i> "
+                                muestran información útil al pasar el ratón.
+                            </p>
+                        </div>
+                        <div class="d-flex align-items-end gap-3">
+                           <span id="labelToggleIconos" class="text-muted small"></span>
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input shadow-none bg-stokka border-white"
+                                    type="checkbox"
+                                    role="switch"
+                                    id="toggleIconosInfo"
+                                    style="cursor: pointer; width: 2.5em; height: 1.3em;"
+                                    onchange="toggleIconosInfo(this.checked)">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- ACCESIBILIDAD: FILTRO DE DALTONISMO -->
                 <div class="card border-0 shadow-stokka rounded-4 p-4 mt-4 mb-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                            <h6 class="fw-bold mb-1" style="color: var(--verde-stokka);">
-                                <i class="fa-solid fa-eye me-2"></i>Accesibilidad visual
-                            </h6>
+                           <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Filtros daltonismo</label>
                             <p class="text-muted small mb-0">
                                 Ajusta los colores según tu tipo de visión. Solo afecta a tu pantalla.
                             </p>

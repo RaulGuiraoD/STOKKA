@@ -161,6 +161,11 @@ main, .container-fluid, .card {
 
 .info-icon:hover::after, .info-icon.active::after { opacity: 1; visibility: visible; }
 
+/* Icono informativo oculto (cuando el usuario los ha desactivado) */
+.info-icon.oculto {
+    display: none !important;
+}
+
 /* Botón Principal  */
 .btn-stokka {
     background-color: var(--verde-stokka) !important;

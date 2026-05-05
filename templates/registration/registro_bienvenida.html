@@ -19,8 +19,9 @@
 
         <div class="d-flex align-items-center gap-2">
             <div class="info-wrapper">
-                <i class="fa-solid fa-circle-info info-icon" 
-                   data-info="Crearás un usuario en la plataforma de Stokka. Para poder acceder debes ingresar una empresa."></i>
+                <i class="fa-solid fa-circle-info info-icon"
+                data-permanente="true"
+                data-info="Crearás un usuario en la plataforma de Stokka. Para poder acceder debes ingresar una empresa."></i>
             </div>
             <a href="{% url 'registro_usuario' %}"
                 class="btn_selector btn flex-grow-1 d-flex align-items-center justify-content-between px-4 py-3 rounded-3 shadow-sm text-decoration-none">
@@ -35,7 +36,8 @@
         <div class="d-flex align-items-center gap-2">
             <div class="info-wrapper">
                 <i class="fa-solid fa-circle-info info-icon" 
-                   data-info="Conectarás tu cuenta de Stokka con la empresa que registres. Si ya tienes cuenta puedes ingresar más directamente."></i>
+                    data-permanente="true"
+                    data-info="Conectarás tu cuenta de Stokka con la empresa que registres. Si ya tienes cuenta puedes ingresar más directamente."></i>
             </div>
             <a href="{% url 'registro_empresa' %}"
                 class="btn_selector btn flex-grow-1 d-flex align-items-center justify-content-between px-4 py-3 rounded-3 shadow-sm text-decoration-none">

@@ -442,3 +442,34 @@ document.addEventListener('DOMContentLoaded', function () {
         marcarActivo('normal');
     });
 });
+
+// =============================================================================
+// SISTEMA DE ICONOS INFORMATIVOS
+// Los iconos con clase .info-icon pueden ocultarse globalmente por el usuario.
+// Los que tienen data-permanente="true" nunca se ocultan.
+// El estado se guarda en localStorage.
+// =============================================================================
+
+function aplicarEstadoIconosInfo() {
+    const ocultos = localStorage.getItem('stokka_info_ocultos') === 'true';
+    document.querySelectorAll('.info-icon:not([data-permanente="true"])').forEach(icon => {
+        icon.classList.toggle('oculto', ocultos);
+    });
+    // Actualiza el toggle del perfil si existe en esta página
+    const toggle = document.getElementById('toggleIconosInfo');
+    if (toggle) {
+        toggle.checked = !ocultos;
+        const label = document.getElementById('labelToggleIconos');
+        if (label) label.textContent = ocultos ? 'Mostrar iconos' : 'Ocultar iconos';
+    }
+}
+
+function toggleIconosInfo(activar) {
+    localStorage.setItem('stokka_info_ocultos', activar ? 'false' : 'true');
+    aplicarEstadoIconosInfo();
+}
+
+// Se ejecuta en todas las páginas al cargar
+document.addEventListener('DOMContentLoaded', function () {
+    aplicarEstadoIconosInfo();
+});
