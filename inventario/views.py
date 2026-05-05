@@ -834,6 +834,36 @@ def editar_perfil_view(request):
 
     return render(request, 'stokka/modales/editar_perfil.html', {'perfil': perfil})
 
+@login_required
+def guardar_preferencia_daltonismo(request):
+    if request.method == 'POST':
+        try:
+            import json
+            data = json.loads(request.body)
+            tipo = data.get('tipo', 'normal')
+            
+            # Actualizamos el perfil del usuario autenticado
+            perfil = request.user.perfil 
+            perfil.daltonismo = tipo
+            perfil.save()
+            
+            return JsonResponse({'ok': True})
+        except Exception as e:
+            return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+    return JsonResponse({'ok': False}, status=405)
+
+
+@login_required
+def guardar_preferencia_iconos(request):
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        visibles = data.get('visibles', True)
+        perfil, _ = Perfil.objects.get_or_create(user=request.user)
+        perfil.iconos_info = bool(visibles)
+        perfil.save(update_fields=['iconos_info'])
+        return JsonResponse({'ok': True})
+    return JsonResponse({'ok': False}, status=400)
 
 @login_required
 def cambiar_foto(request):

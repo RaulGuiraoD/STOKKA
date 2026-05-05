@@ -51,6 +51,8 @@ urlpatterns = [
     path('perfil/editar/', views.editar_perfil_view, name='editar_perfil'),
     path('perfil/cambiar-foto/', views.cambiar_foto, name='cambiar_foto'),
     path('perfil/eliminar-foto/', views.eliminar_foto, name='eliminar_foto'),
+    path('perfil/preferencias/daltonismo/', views.guardar_preferencia_daltonismo, name='pref_daltonismo'),
+    path('perfil/preferencias/iconos/',     views.guardar_preferencia_iconos, name='pref_iconos'),
 
     # --- GESTIÓN DE USUARIOS (DEUO/ADMIN) ---
     path('gestion-usuarios/', views.gestion_usuarios, name='gestion_usuarios'),

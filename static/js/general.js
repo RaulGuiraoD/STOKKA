@@ -275,201 +275,191 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================================================
-// ACCESIBILIDAD: FILTRO DE DALTONISMO PERSONAL
-// Los colores se guardan en localStorage — solo afectan al usuario actual
-// en este dispositivo. No van a BD ni afectan a otros usuarios.
+// ACCESIBILIDAD: SISTEMA PERSISTENTE STOKKA
 // =============================================================================
 
 const FILTROS_DALTONISMO = {
-    normal: {
-        '--verde-stokka':     null,
-        '--verde-secundario': null,
-        '--rojo-alerta':      null,
-        '--amarillo-alerta':  null,
-    },
-    protanopia: {
-        '--verde-stokka':     '#4B4B00',
-        '--verde-secundario': '#9E9E00',
-        '--rojo-alerta':      '#0070B8',
-        '--amarillo-alerta':  '#C8B400',
-    },
-    deuteranopia: {
-        '--verde-stokka':     '#4B4B00',
-        '--verde-secundario': '#9E9E00',
-        '--rojo-alerta':      '#0057A8',
-        '--amarillo-alerta':  '#C8B400',
-    },
-    tritanopia: {
-        '--verde-stokka':     '#CC0000',
-        '--verde-secundario': '#009E9E',
-        '--rojo-alerta':      '#8B008B',
-        '--amarillo-alerta':  '#FF6600',
-    },
-    acromatopsia: {
-        '--verde-stokka':     '#333333',
-        '--verde-secundario': '#777777',
-        '--rojo-alerta':      '#111111',
-        '--amarillo-alerta':  '#999999',
-    },
-    alto_contraste: {
-        '--verde-stokka':     '#000080',
-        '--verde-secundario': '#FFD700',
-        '--rojo-alerta':      '#FF4500',
-        '--amarillo-alerta':  '#00CED1',
-    },
+    normal: { '--verde-stokka': null, '--verde-secundario': null, '--rojo-alerta': null, '--amarillo-alerta': null },
+    protanopia: { '--verde-stokka': '#4B4B00', '--verde-secundario': '#9E9E00', '--rojo-alerta': '#0070B8', '--amarillo-alerta': '#C8B400' },
+    deuteranopia: { '--verde-stokka': '#4B4B00', '--verde-secundario': '#9E9E00', '--rojo-alerta': '#0057A8', '--amarillo-alerta': '#C8B400' },
+    tritanopia: { '--verde-stokka': '#CC0000', '--verde-secundario': '#009E9E', '--rojo-alerta': '#8B008B', '--amarillo-alerta': '#FF6600' },
+    acromatopsia: { '--verde-stokka': '#333333', '--verde-secundario': '#777777', '--rojo-alerta': '#111111', '--amarillo-alerta': '#999999' },
+    alto_contraste: { '--verde-stokka': '#000080', '--verde-secundario': '#FFD700', '--rojo-alerta': '#FF4500', '--amarillo-alerta': '#00CED1' },
 };
 
-// Lee los colores base del tema de empresa desde las variables CSS actuales
-// (que ya cargó el context processor en base.html)
+// Obtener colores base del tema (computados)
 function obtenerColoresBase() {
     const style = getComputedStyle(document.documentElement);
     return {
-        '--verde-stokka':     style.getPropertyValue('--verde-stokka').trim(),
+        '--verde-stokka': style.getPropertyValue('--verde-stokka').trim(),
         '--verde-secundario': style.getPropertyValue('--verde-secundario').trim(),
-        '--rojo-alerta':      style.getPropertyValue('--rojo-alerta').trim(),
-        '--amarillo-alerta':  style.getPropertyValue('--amarillo-alerta').trim(),
+        '--rojo-alerta': style.getPropertyValue('--rojo-alerta').trim(),
+        '--amarillo-alerta': style.getPropertyValue('--amarillo-alerta').trim(),
     };
 }
 
-// Aplica un filtro a las variables CSS del documento
 function aplicarFiltroCSS(tipo) {
-    const variables = [
-        '--verde-stokka',
-        '--verde-secundario',
-        '--rojo-alerta',
-        '--amarillo-alerta',
-    ];
-
+    const variables = ['--verde-stokka', '--verde-secundario', '--rojo-alerta', '--amarillo-alerta'];
     if (tipo === 'normal') {
         variables.forEach(v => document.documentElement.style.removeProperty(v));
         return;
     }
-
-    const base   = obtenerColoresBase();
+    const base = obtenerColoresBase();
     const filtro = FILTROS_DALTONISMO[tipo];
-
     variables.forEach(v => {
-        const color = filtro[v] || base[v];
-        document.documentElement.style.setProperty(v, color);
+        document.documentElement.style.setProperty(v, filtro[v] || base[v]);
     });
 }
 
-// Actualiza el preview de colores en el panel
 function actualizarPreviewDaltonismo(tipo) {
-    const base   = obtenerColoresBase();
+    const base = obtenerColoresBase();
     const filtro = FILTROS_DALTONISMO[tipo] || FILTROS_DALTONISMO.normal;
-
-    const prev = {
-        'dprev-principal':  filtro['--verde-stokka']     || base['--verde-stokka'],
-        'dprev-secundario': filtro['--verde-secundario']  || base['--verde-secundario'],
-        'dprev-alerta':     filtro['--rojo-alerta']       || base['--rojo-alerta'],
-        'dprev-aviso':      filtro['--amarillo-alerta']   || base['--amarillo-alerta'],
+    const mapeo = {
+        'dprev-principal': filtro['--verde-stokka'] || base['--verde-stokka'],
+        'dprev-secundario': filtro['--verde-secundario'] || base['--verde-secundario'],
+        'dprev-alerta': filtro['--rojo-alerta'] || base['--rojo-alerta'],
+        'dprev-aviso': filtro['--amarillo-alerta'] || base['--amarillo-alerta'],
     };
 
-    Object.keys(prev).forEach(id => {
+    Object.keys(mapeo).forEach(id => {
         const el = document.getElementById(id);
         if (!el) return;
-        el.style.background = prev[id];
-        // Ajusta el color del texto según luminosidad
-        const hex = prev[id].replace('#', '');
-        const r = parseInt(hex.substr(0,2), 16);
-        const g = parseInt(hex.substr(2,2), 16);
-        const b = parseInt(hex.substr(4,2), 16);
+        el.style.backgroundColor = mapeo[id];
+        // Calcular contraste para el texto del badge
+        const hex = mapeo[id].replace('#', '');
+        const r = parseInt(hex.substr(0,2), 16), g = parseInt(hex.substr(2,2), 16), b = parseInt(hex.substr(4,2), 16);
         const luminosidad = (r * 299 + g * 587 + b * 114) / 1000;
         el.style.color = luminosidad > 128 ? 'black' : 'white';
     });
 }
 
-// Carga y aplica el filtro guardado al arrancar la página
-function cargarFiltroDaltonismo() {
-    const tipoGuardado = localStorage.getItem('stokka_daltonismo') || 'normal';
-    if (tipoGuardado !== 'normal') {
-        aplicarFiltroCSS(tipoGuardado);
+// PERSISTENCIA: Enviar a Django
+async function guardarEnBaseDeDatos(tipo) {
+    if (!window.STOKKA_PREFS) return;
+    try {
+        const response = await fetch(window.STOKKA_PREFS.urls.pref_daltonismo, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': window.STOKKA_PREFS.csrfToken
+            },
+            body: JSON.stringify({ tipo: tipo })
+        });
+        return await response.json();
+    } catch (error) {
+        console.error("Error guardando preferencia:", error);
     }
-    return tipoGuardado;
 }
 
-// Inicializa el panel si estamos en la página de perfil
 document.addEventListener('DOMContentLoaded', function () {
+    // 1. Cargar preferencia desde el objeto global de Django
+    const preferenciaInicial = window.STOKKA_PREFS ? window.STOKKA_PREFS.daltonismo : 'normal';
+    aplicarFiltroCSS(preferenciaInicial);
 
-    // Aplicar filtro guardado en todas las páginas
-    cargarFiltroDaltonismo();
-
-    // El resto solo si el panel existe (página de perfil)
+    // 2. Lógica del Panel (solo si existe en la página actual)
     const panel = document.getElementById('panelDaltonismo');
     if (!panel) return;
 
-    let tipoSeleccionado = localStorage.getItem('stokka_daltonismo') || 'normal';
+    let tipoSeleccionado = preferenciaInicial;
 
-    // Marcar el botón activo al abrir el panel
     function marcarActivo(tipo) {
         document.querySelectorAll('.btn-daltonismo').forEach(btn => {
             btn.classList.toggle('activo', btn.dataset.tipo === tipo);
+            btn.style.borderColor = (btn.dataset.tipo === tipo) ? 'var(--verde-stokka)' : '#dee2e6';
         });
     }
 
-    // Preview inicial
-    actualizarPreviewDaltonismo(tipoSeleccionado);
     marcarActivo(tipoSeleccionado);
+    actualizarPreviewDaltonismo(tipoSeleccionado);
 
-    // Click en cada tipo
     document.querySelectorAll('.btn-daltonismo').forEach(btn => {
         btn.addEventListener('click', function () {
             tipoSeleccionado = this.dataset.tipo;
             marcarActivo(tipoSeleccionado);
             actualizarPreviewDaltonismo(tipoSeleccionado);
-            // Preview en vivo antes de confirmar
-            aplicarFiltroCSS(tipoSeleccionado);
+            aplicarFiltroCSS(tipoSeleccionado); // Preview en vivo
         });
     });
 
-    // Aplicar y guardar
-    document.getElementById('btnAplicarDaltonismo')?.addEventListener('click', function () {
-        localStorage.setItem('stokka_daltonismo', tipoSeleccionado);
-        // Cerrar el panel
-        const collapse = bootstrap.Collapse.getOrCreateInstance(
-            document.getElementById('panelDaltonismo')
-        );
-        collapse.hide();
+    document.getElementById('btnAplicarDaltonismo')?.addEventListener('click', async function () {
+        this.disabled = true;
+        this.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Guardando...';
+        
+        await guardarEnBaseDeDatos(tipoSeleccionado);
+        
+        // Opcional: actualizar el objeto global para esta sesión
+        window.STOKKA_PREFS.daltonismo = tipoSeleccionado;
+        
+        location.reload(); // Recargamos para asegurar que todo el CSS se re-renderice
     });
 
-    // Restablecer — vuelve a los colores del tema de empresa
-    document.getElementById('btnRestablecerDaltonismo')?.addEventListener('click', function () {
+    document.getElementById('btnRestablecerDaltonismo')?.addEventListener('click', async function () {
         tipoSeleccionado = 'normal';
-        localStorage.removeItem('stokka_daltonismo');
-        aplicarFiltroCSS('normal');
-        actualizarPreviewDaltonismo('normal');
-        marcarActivo('normal');
+        await guardarEnBaseDeDatos('normal');
+        location.reload();
     });
 });
 
 // =============================================================================
-// SISTEMA DE ICONOS INFORMATIVOS
-// Los iconos con clase .info-icon pueden ocultarse globalmente por el usuario.
-// Los que tienen data-permanente="true" nunca se ocultan.
-// El estado se guarda en localStorage.
+// ICONOS INFORMATIVOS — OCULTADO PERMANENTE
+// Los info-icon-2 se pueden ocultar globalmente por usuario.
+// Los info-icon (registro) nunca se tocan.
 // =============================================================================
 
-function aplicarEstadoIconosInfo() {
-    const ocultos = localStorage.getItem('stokka_info_ocultos') === 'true';
-    document.querySelectorAll('.info-icon:not([data-permanente="true"])').forEach(icon => {
-        icon.classList.toggle('oculto', ocultos);
+const STORAGE_KEY_INFO = 'stokka_info_icons_ocultos';
+
+function inicializarIconosInfo() {
+    const ocultos = localStorage.getItem(STORAGE_KEY_INFO) === 'true';
+
+    document.querySelectorAll('.info-icon-2').forEach(icon => {
+        icon.style.display = ocultos ? 'none' : '';
     });
-    // Actualiza el toggle del perfil si existe en esta página
+
+    // Actualiza el estado del toggle en el perfil si existe
     const toggle = document.getElementById('toggleIconosInfo');
     if (toggle) {
         toggle.checked = !ocultos;
-        const label = document.getElementById('labelToggleIconos');
-        if (label) label.textContent = ocultos ? 'Mostrar iconos' : 'Ocultar iconos';
+        actualizarLabelToggle(!ocultos);
     }
 }
 
-function toggleIconosInfo(activar) {
-    localStorage.setItem('stokka_info_ocultos', activar ? 'false' : 'true');
-    aplicarEstadoIconosInfo();
+function actualizarLabelToggle(visibles) {
+    const label = document.getElementById('labelToggleIconos');
+    if (!label) return;
+    label.textContent = visibles ? 'Iconos de ayuda visibles' : 'Iconos de ayuda ocultos';
+    label.style.color = visibles ? 'var(--verde-stokka)' : 'var(--rojo-alerta)';
 }
 
-// Se ejecuta en todas las páginas al cargar
 document.addEventListener('DOMContentLoaded', function () {
-    aplicarEstadoIconosInfo();
+
+    // Aplicar estado guardado en todas las páginas
+    inicializarIconosInfo();
+
+    // Click en cualquier info-icon-2 para mostrarlo/ocultarlo individualmente (hover CSS)
+    // La lógica de click global solo aplica al toggle del perfil
+    const toggle = document.getElementById('toggleIconosInfo');
+    if (toggle) {
+        toggle.addEventListener('change', function () {
+            const visibles = this.checked;
+            localStorage.setItem(STORAGE_KEY_INFO, visibles ? 'false' : 'true');
+            actualizarLabelToggle(visibles);
+
+            document.querySelectorAll('.info-icon-2').forEach(icon => {
+                icon.style.display = visibles ? '' : 'none';
+            });
+        });
+    }
+
+    // Lógica de click para info-icon-2 (toggle activo/inactivo al hacer clic)
+    document.addEventListener('click', function (e) {
+        const icon = e.target.closest('.info-icon-2');
+        if (!icon) {
+            // Cerrar todos los activos al clicar fuera
+            document.querySelectorAll('.info-icon-2.active').forEach(i => i.classList.remove('active'));
+            return;
+        }
+        const estaActivo = icon.classList.contains('active');
+        document.querySelectorAll('.info-icon-2.active').forEach(i => i.classList.remove('active'));
+        if (!estaActivo) icon.classList.add('active');
+    });
 });

@@ -154,16 +154,27 @@ def validar_tamano_foto(value):
 
 # MODELOS PERFILES    
 class Perfil(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    telefono = models.CharField(max_length=15, blank=True, null=True)
+    user             = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    telefono         = models.CharField(max_length=15, blank=True, null=True)
     fecha_nacimiento = models.DateField(blank=True, null=True)
-    foto = models.ImageField(
+    foto             = models.ImageField(
         upload_to='perfiles/',
         blank=True,
         null=True,
         validators=[validar_tamano_foto]
     )
-    # empresa eliminada. El perfil no pertenece a una empresa.
+
+    # Preferencias de accesibilidad — se sincronizan con localStorage en el cliente
+    DALTONISMO_CHOICES = [
+        ('normal',        'Normal'),
+        ('protanopia',    'Protanopia'),
+        ('deuteranopia',  'Deuteranopia'),
+        ('tritanopia',    'Tritanopia'),
+        ('acromatopsia',  'Acromatopsia'),
+        ('alto_contraste','Alto contraste'),
+    ]
+    daltonismo        = models.CharField(max_length=20, choices=DALTONISMO_CHOICES, default='normal')
+    iconos_info       = models.BooleanField(default=True)  # True = visibles
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

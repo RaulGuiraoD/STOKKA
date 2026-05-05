@@ -143,7 +143,7 @@ main, .container-fluid, .card {
     color: var(--blanco) !important;
 }
 
-/*Icono informativo*/
+/*ICONOS INFORMATIVOS (EL 2 DENTRO DE LA APP)*/
 .info-wrapper { position: relative; }
 .info-icon { color: var(--verde-stokka-mid); cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
 .info-icon:hover, .info-icon.active { color: white; }
@@ -162,10 +162,43 @@ main, .container-fluid, .card {
 .info-icon:hover::after, .info-icon.active::after { opacity: 1; visibility: visible; }
 
 /* Icono informativo oculto (cuando el usuario los ha desactivado) */
-.info-icon.oculto {
+.info-icon2.oculto {
     display: none !important;
 }
 
+/*Icono informativo 2*/
+.info-wrapper { position: relative; }
+
+.info-icon-2 { 
+    color: var(--verde-stokka); 
+    cursor: pointer; 
+    transition: 0.3s; 
+    font-size: 1.1rem; 
+    display: inline-block; 
+}
+
+.info-icon-2:hover, .info-icon-2.active {  
+    transform: scale(1.1); 
+}
+
+/* Recuadro de información */
+.info-icon-2::after {
+    content: attr(data-info);
+    font-family: 'Lora', serif !important; font-size: 0.82rem !important; font-weight: 200 !important;
+    position: absolute; 
+    top: -120%; 
+    left: 150%;
+    width: 300px;
+    background: var(--verde-stokka-light); 
+    color: black; padding: 10px; border-radius: 10px;
+    border: 1px solid var(--selector-borde); font-size: 0.75rem; line-height: 1.3;
+    z-index: 100; opacity: 0; visibility: hidden; transition: 0.3s;
+    text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+}
+
+.info-icon-2:hover::after, .info-icon-2.active::after { opacity: 1; visibility: visible; }
+
+/*----------------------------------------------------------------------------*/
 /* Botón Principal  */
 .btn-stokka {
     background-color: var(--verde-stokka) !important;

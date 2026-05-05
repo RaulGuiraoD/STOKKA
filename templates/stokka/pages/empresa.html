@@ -13,6 +13,10 @@
             <span class="text-dark pb-1 d-none d-md-inline" style="font-size: 1.4rem; font-weight: 300;">
                 | {{ empresa.nombre }}
             </span>
+            <div class="info-wrapper d-inline-block ms-2 mb-2">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                    data-info="Monotoriza los datos, edita el estilo de la app, o navega entre tus otras empresas registradas. Ten cuidado con eliminar tu empresa por error. "></i>
+            </div>
         </div>
         <span class="badge px-3 py-2 rounded-pill fw-bold"
             style="background: {% if empresa.plan_activo %}var(--verde-secundario){% else %}var(--rojo-alerta){% endif %}; color: white; font-size: 0.8rem;">
@@ -49,13 +53,23 @@
 
     <!-- SELECTOR DE EMPRESA (solo si tiene más de una) -->
     {% if otras_membresias %}
-    <div class="card border-0 shadow-stokka rounded-4 p-4 mb-4">
-        <h5 class="fw-bold mb-3" style="color: var(--verde-stokka);">
-            <i class="fa-solid fa-building me-2"></i>Cambiar de empresa
+    <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 mb-5">
+        <h5 class="fw-bold mb-3 d-flex align-items-center justify-content-between" style="color: var(--verde-stokka);">
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-building me-2"></i>
+                <span>Cambiar de empresa</span>
+            </div>
+            
+            <div class="info-wrapper">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                data-info="Navega entre tus otras empresas registradas de manera sencilla y rápida. "></i>
+            </div>
         </h5>
+
         <p class="text-muted small mb-3">
-            Tienes acceso a otras empresas. Puedes cambiar de contexto directamente desde aquí.
+            Tienes acceso a otras empresas.
         </p>
+
         <div class="d-flex flex-column gap-2">
             {% for m in otras_membresias %}
             <form method="POST" action="{% url 'seleccionar_empresa' %}">
@@ -80,12 +94,19 @@
 
     <!-- PERSONALIZACIÓN DE COLORES -->
     <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 mb-5">
-        <h5 class="fw-bold mb-1" style="color: var(--verde-stokka);">
-            <i class="fa-solid fa-palette me-2"></i>Personalización de colores
+        <h5 class="fw-bold mb-3 d-flex align-items-center justify-content-between" style="color: var(--verde-stokka);">
+            <div class="d-flex align-items-center">
+                 <i class="fa-solid fa-palette me-2"></i>Personalización de colores</span>
+            </div>
+            
+            <div class="info-wrapper">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                data-info="Cambia la mayoría de colores de la app, adaptalo al estilo de tu empresa. El cambio visual se cambiará al resto de usuarios registrados. "></i>
+            </div>
         </h5>
         <p class="text-muted small mb-4">
             Los cambios afectan a todos los usuarios de <strong class="fw-bolder"
-                style="color: var(--verde-stokka);">{{ empresa.nombre }}</strong> en tiempo real.
+                style="color: var(--verde-stokka);">{{ empresa.nombre }}</strong>.
         </p>
 
         <!-- Preview en vivo -->
@@ -184,8 +205,15 @@
 
     <!-- EDITAR DATOS -->
     <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 mb-5">
-        <h5 class="fw-bold mb-4" style="color: var(--verde-stokka);">
-            <i class="fa-solid fa-pen-to-square me-2"></i>Datos de la empresa
+        <h5 class="fw-bold mb-3 d-flex align-items-center justify-content-between" style="color: var(--verde-stokka);">
+            <div class="d-flex align-items-center">
+                 <i class="fa-solid fa-pen-to-square me-2"></i>Datos de la empresa
+            </div>
+            
+            <div class="info-wrapper">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                data-info="Edita los datos de tu empresa. Los cambios de nombre se realizan a nivel general."></i>
+            </div>
         </h5>
 
         <form method="POST">

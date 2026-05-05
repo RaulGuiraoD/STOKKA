@@ -11,6 +11,17 @@
             <span class="text-dark pb-1 d-none d-md-inline" style="font-size: 1.4rem; font-weight: 300;">
                 | {{ empresa.nombre }}
             </span>
+            {% if membresia.es_fundador %}
+            <div class="info-wrapper d-inline-block ms-2 mb-2">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                    data-info="Crea, edita, asigna roles o elimina a tus trabajadores. Crear un usuario nuevo permitirá la entrada a {{ empresa.nombre }}. Entregale el email y contraseña correspondientes. "></i>
+            </div>
+            {% elif membresia_activa.rol == 'admin' %}
+             <div class="info-wrapper d-inline-block ms-2 mb-2">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                    data-info="Crea o elimina a operarios. Crear un usuario nuevo permitirá la entrada a {{ empresa.nombre }}. Entregale el email y contraseña correspondientes. "></i>
+            </div>
+            {% endif %}
         </div>
         <button type="button" class="btn btn-stokka px-4 py-2 shadow-sm" data-bs-toggle="modal"
             data-bs-target="#modalNuevoUsuario">
