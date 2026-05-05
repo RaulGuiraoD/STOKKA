@@ -114,12 +114,12 @@
                 </div>
 
                 <!-- ACCESIBILIDAD: FILTRO DE DALTONISMO -->
-                <div class="card border-0 shadow-stokka rounded-4 p-4 mt-4 mb-3 " >
+                <div class="card border-0 shadow-stokka rounded-4 p-4 mt-4 mb-3">
                     <div class="d-flex align-items-center justify-content-between">
                         <div>
-                           <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Filtros daltonismo</label>
+                            <label class="small text-uppercase fw-bold text-muted d-block mb-1" style="color: var(--verde-stokka) !important;">Filtros daltonismo</label>
                             <p class="text-muted small mb-0">
-                                Ajusta los colores según tu tipo de visión. Solo afecta a tu pantalla.
+                                Ajusta los colores según tu tipo de visión. Solo afecta a tu usuario.
                             </p>
                         </div>
                         <button type="button"
@@ -138,11 +138,12 @@
                             <p class="small text-muted fw-bold text-uppercase mb-2" style="font-size: 0.72rem;">
                                 Vista previa con el filtro seleccionado
                             </p>
-                            <div class="d-flex gap-2 flex-wrap" id="preview-daltonismo">
-                                <span class="badge px-3 py-2 rounded-pill" id="dprev-principal">Principal</span>
-                                <span class="badge px-3 py-2 rounded-pill" id="dprev-secundario">Secundario</span>
-                                <span class="badge px-3 py-2 rounded-pill" id="dprev-alerta">Alerta</span>
-                                <span class="badge px-3 py-2 rounded-pill" id="dprev-aviso">Aviso</span>
+                            <!-- He quitado los IDs individuales de los badges para que el filtro se aplique al contenedor padre -->
+                            <div class="d-flex gap-2 flex-wrap p-2 rounded" id="preview-daltonismo">
+                                <span class="badge px-3 py-2 rounded-pill" style="background-color: var(--verde-stokka);">Principal</span>
+                                <span class="badge px-3 py-2 rounded-pill" style="background-color: var(--verde-secundario);">Secundario</span>
+                                <span class="badge px-3 py-2 rounded-pill" style="background-color: var(--rojo-alerta);">Alerta</span>
+                                <span class="badge px-3 py-2 rounded-pill" style="background-color: var(--amarillo-alerta); color: black;">Aviso</span>
                                 <span class="badge px-3 py-2 rounded-pill bg-dark text-white">Texto</span>
                             </div>
                         </div>
@@ -152,13 +153,10 @@
                             <p class="small text-muted fw-bold text-uppercase mb-3" style="font-size: 0.72rem;">
                                 Tipo de visión
                             </p>
-                            <div class="row g-2" id="selectorDaltonismo">
-
+                            <div class="row g-2">
+                                <!-- Normal -->
                                 <div class="col-6 col-md-4">
-                                    <button type="button"
-                                        class="btn-daltonismo w-100 p-3 rounded-3 text-start border"
-                                        data-tipo="normal"
-                                        style="background: white; border-color: #dee2e6 !important;">
+                                    <button type="button" class="btn-daltonismo w-100 p-3 rounded-3 text-start border bg-white" data-tipo="normal">
                                         <span class="d-flex gap-1 mb-2">
                                             <span style="width:18px;height:18px;border-radius:50%;background:#003D00;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#1CA300;display:inline-block;"></span>
@@ -169,78 +167,68 @@
                                     </button>
                                 </div>
 
+                                <!-- Protanopia -->
                                 <div class="col-6 col-md-4">
-                                    <button type="button"
-                                        class="btn-daltonismo w-100 p-3 rounded-3 text-start border"
-                                        data-tipo="protanopia"
-                                        style="background: white; border-color: #dee2e6 !important;">
+                                    <button type="button" class="btn-daltonismo w-100 p-3 rounded-3 text-start border bg-white" data-tipo="protanopia">
                                         <span class="d-flex gap-1 mb-2">
                                             <span style="width:18px;height:18px;border-radius:50%;background:#4B4B00;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#9E9E00;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#0070B8;display:inline-block;"></span>
                                         </span>
                                         <span class="fw-bold small d-block">Protanopia</span>
-                                        <span class="text-muted" style="font-size: 0.72rem;">Dificultad con el rojo</span>
+                                        <span class="text-muted" style="font-size: 0.72rem;">Dificultad rojo</span>
                                     </button>
                                 </div>
 
+                                <!-- Deuteranopia -->
                                 <div class="col-6 col-md-4">
-                                    <button type="button"
-                                        class="btn-daltonismo w-100 p-3 rounded-3 text-start border"
-                                        data-tipo="deuteranopia"
-                                        style="background: white; border-color: #dee2e6 !important;">
+                                    <button type="button" class="btn-daltonismo w-100 p-3 rounded-3 text-start border bg-white" data-tipo="deuteranopia">
                                         <span class="d-flex gap-1 mb-2">
                                             <span style="width:18px;height:18px;border-radius:50%;background:#4B4B00;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#9E9E00;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#0057A8;display:inline-block;"></span>
                                         </span>
                                         <span class="fw-bold small d-block">Deuteranopia</span>
-                                        <span class="text-muted" style="font-size: 0.72rem;">Dificultad con el verde</span>
+                                        <span class="text-muted" style="font-size: 0.72rem;">Dificultad verde</span>
                                     </button>
                                 </div>
 
+                                <!-- Tritanopia -->
                                 <div class="col-6 col-md-4">
-                                    <button type="button"
-                                        class="btn-daltonismo w-100 p-3 rounded-3 text-start border"
-                                        data-tipo="tritanopia"
-                                        style="background: white; border-color: #dee2e6 !important;">
+                                    <button type="button" class="btn-daltonismo w-100 p-3 rounded-3 text-start border bg-white" data-tipo="tritanopia">
                                         <span class="d-flex gap-1 mb-2">
                                             <span style="width:18px;height:18px;border-radius:50%;background:#CC0000;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#009E9E;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#8B008B;display:inline-block;"></span>
                                         </span>
                                         <span class="fw-bold small d-block">Tritanopia</span>
-                                        <span class="text-muted" style="font-size: 0.72rem;">Dificultad con el azul</span>
+                                        <span class="text-muted" style="font-size: 0.72rem;">Dificultad azul</span>
                                     </button>
                                 </div>
 
+                                <!-- Acromatopsia -->
                                 <div class="col-6 col-md-4">
-                                    <button type="button"
-                                        class="btn-daltonismo w-100 p-3 rounded-3 text-start border"
-                                        data-tipo="acromatopsia"
-                                        style="background: white; border-color: #dee2e6 !important;">
+                                    <button type="button" class="btn-daltonismo w-100 p-3 rounded-3 text-start border bg-white" data-tipo="acromatopsia">
                                         <span class="d-flex gap-1 mb-2">
                                             <span style="width:18px;height:18px;border-radius:50%;background:#555;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#999;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#222;display:inline-block;"></span>
                                         </span>
                                         <span class="fw-bold small d-block">Acromatopsia</span>
-                                        <span class="text-muted" style="font-size: 0.72rem;">Sin percepción de color</span>
+                                        <span class="text-muted" style="font-size: 0.72rem;">Blanco y Negro</span>
                                     </button>
                                 </div>
 
+                                <!-- Alto Contraste -->
                                 <div class="col-6 col-md-4">
-                                    <button type="button"
-                                        class="btn-daltonismo w-100 p-3 rounded-3 text-start border"
-                                        data-tipo="alto_contraste"
-                                        style="background: white; border-color: #dee2e6 !important;">
+                                    <button type="button" class="btn-daltonismo w-100 p-3 rounded-3 text-start border bg-white" data-tipo="alto_contraste">
                                         <span class="d-flex gap-1 mb-2">
                                             <span style="width:18px;height:18px;border-radius:50%;background:#000080;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#FFD700;display:inline-block;"></span>
                                             <span style="width:18px;height:18px;border-radius:50%;background:#FF4500;display:inline-block;"></span>
                                         </span>
-                                        <span class="fw-bold small d-block">Alto contraste</span>
-                                        <span class="text-muted" style="font-size: 0.72rem;">Máxima diferenciación</span>
+                                        <span class="fw-bold small d-block">Contraste</span>
+                                        <span class="text-muted" style="font-size: 0.72rem;">Diferenciación</span>
                                     </button>
                                 </div>
 
@@ -249,14 +237,10 @@
 
                         <!-- Botones aplicar / restablecer -->
                         <div class="d-flex gap-2 justify-content-end pt-3 border-top">
-                            <button type="button"
-                                class="btn btn-cancelar-stokka px-3 py-2 fw-bold"
-                                id="btnRestablecerDaltonismo">
+                            <button type="button" class="btn btn-cancelar-stokka px-3 py-2 fw-bold" id="btnRestablecerDaltonismo">
                                 <i class="fa-solid fa-rotate-left me-1"></i>Restablecer
                             </button>
-                            <button type="button"
-                                class="btn btn-stokka px-4 py-2 fw-bold"
-                                id="btnAplicarDaltonismo">
+                            <button type="button" class="btn btn-stokka px-4 py-2 fw-bold" id="btnAplicarDaltonismo">
                                 <i class="fa-solid fa-check me-1"></i>Aplicar filtro
                             </button>
                         </div>

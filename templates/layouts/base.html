@@ -34,6 +34,26 @@
 </head>
 
 <body class="bg-light">
+    <svg style="display: none;">
+        <defs>
+            <!-- Protanopia -->
+            <filter id="protanopia-filter">
+            <feColorMatrix type="matrix" values="0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0"/>
+            </filter>
+            <!-- Deuteranopia -->
+            <filter id="deuteranopia-filter">
+            <feColorMatrix type="matrix" values="0.625, 0.375, 0, 0, 0, 0.7, 0.3, 0, 0, 0, 0, 0.3, 0.7, 0, 0, 0, 0, 0, 1, 0"/>
+            </filter>
+            <!-- Tritanopia -->
+            <filter id="tritanopia-filter">
+            <feColorMatrix type="matrix" values="0.95, 0.05, 0, 0, 0, 0, 0.433, 0.567, 0, 0, 0, 0.475, 0.525, 0, 0, 0, 0, 0, 1, 0"/>
+            </filter>
+            <!-- Acromatopsia (Escala de grises) -->
+            <filter id="acromatopsia-filter">
+            <feColorMatrix type="matrix" values="0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0, 0, 0, 1, 0"/>
+            </filter>
+        </defs>
+    </svg>
     <header class="dashboard-header fixed-top d-flex align-items-center justify-content-between px-3 px-md-4 shadow">
         <div class="header-left d-flex align-items-center gap-2 cursor-pointer" onclick="location.href='{% url 'index' %}'">
             <img src="{% static 'assets/Logo stokka.png' %}" style="width: 42px;" class="mini-logo" alt="Logo">

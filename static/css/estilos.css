@@ -427,6 +427,16 @@ input::-webkit-credentials-auto-fill-button {
     background: var(--verde-stokka-light) !important;
 }
 
+.alto-contraste {
+    filter: contrast(1.2) saturate(1.5) !important;
+}
+
+.alto-contraste body {
+    --verde-stokka: #000 !important;
+    --texto-base: #000 !important;
+    background-color: #fff !important;
+}
+
 /* --- MEDIA QUERY: BOTONES RESPONSIVOS --- */
 @media (max-width: 991.98px) {
     .btn-container-stokka {

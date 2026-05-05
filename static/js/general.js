@@ -275,62 +275,47 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // =============================================================================
-// ACCESIBILIDAD: SISTEMA PERSISTENTE STOKKA
+// ACCESIBILIDAD: SISTEMA DINÁMICO DE FILTROS (SVG)
 // =============================================================================
 
-const FILTROS_DALTONISMO = {
-    normal: { '--verde-stokka': null, '--verde-secundario': null, '--rojo-alerta': null, '--amarillo-alerta': null },
-    protanopia: { '--verde-stokka': '#4B4B00', '--verde-secundario': '#9E9E00', '--rojo-alerta': '#0070B8', '--amarillo-alerta': '#C8B400' },
-    deuteranopia: { '--verde-stokka': '#4B4B00', '--verde-secundario': '#9E9E00', '--rojo-alerta': '#0057A8', '--amarillo-alerta': '#C8B400' },
-    tritanopia: { '--verde-stokka': '#CC0000', '--verde-secundario': '#009E9E', '--rojo-alerta': '#8B008B', '--amarillo-alerta': '#FF6600' },
-    acromatopsia: { '--verde-stokka': '#333333', '--verde-secundario': '#777777', '--rojo-alerta': '#111111', '--amarillo-alerta': '#999999' },
-    alto_contraste: { '--verde-stokka': '#000080', '--verde-secundario': '#FFD700', '--rojo-alerta': '#FF4500', '--amarillo-alerta': '#00CED1' },
-};
-
-// Obtener colores base del tema (computados)
-function obtenerColoresBase() {
-    const style = getComputedStyle(document.documentElement);
-    return {
-        '--verde-stokka': style.getPropertyValue('--verde-stokka').trim(),
-        '--verde-secundario': style.getPropertyValue('--verde-secundario').trim(),
-        '--rojo-alerta': style.getPropertyValue('--rojo-alerta').trim(),
-        '--amarillo-alerta': style.getPropertyValue('--amarillo-alerta').trim(),
-    };
-}
-
+/**
+ * Aplica el filtro global a toda la aplicación
+ */
 function aplicarFiltroCSS(tipo) {
-    const variables = ['--verde-stokka', '--verde-secundario', '--rojo-alerta', '--amarillo-alerta'];
-    if (tipo === 'normal') {
-        variables.forEach(v => document.documentElement.style.removeProperty(v));
-        return;
+    // Limpieza de estados previos
+    document.documentElement.style.filter = '';
+    document.documentElement.classList.remove('alto-contraste');
+
+    if (!tipo || tipo === 'normal') return;
+
+    if (tipo === 'alto_contraste') {
+        document.documentElement.classList.add('alto-contraste');
+    } else {
+        // Aplicamos el filtro SVG definido en el base.html
+        document.documentElement.style.filter = `url(#${tipo}-filter)`;
     }
-    const base = obtenerColoresBase();
-    const filtro = FILTROS_DALTONISMO[tipo];
-    variables.forEach(v => {
-        document.documentElement.style.setProperty(v, filtro[v] || base[v]);
-    });
 }
 
+/**
+ * Actualiza la vista previa del panel de ajustes sin afectar a toda la web aún
+ */
 function actualizarPreviewDaltonismo(tipo) {
-    const base = obtenerColoresBase();
-    const filtro = FILTROS_DALTONISMO[tipo] || FILTROS_DALTONISMO.normal;
-    const mapeo = {
-        'dprev-principal': filtro['--verde-stokka'] || base['--verde-stokka'],
-        'dprev-secundario': filtro['--verde-secundario'] || base['--verde-secundario'],
-        'dprev-alerta': filtro['--rojo-alerta'] || base['--rojo-alerta'],
-        'dprev-aviso': filtro['--amarillo-alerta'] || base['--amarillo-alerta'],
-    };
+    const contenedorPreview = document.getElementById('preview-daltonismo'); 
+    if (!contenedorPreview) return;
 
-    Object.keys(mapeo).forEach(id => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        el.style.backgroundColor = mapeo[id];
-        // Calcular contraste para el texto del badge
-        const hex = mapeo[id].replace('#', '');
-        const r = parseInt(hex.substr(0, 2), 16), g = parseInt(hex.substr(2, 2), 16), b = parseInt(hex.substr(4, 2), 16);
-        const luminosidad = (r * 299 + g * 587 + b * 114) / 1000;
-        el.style.color = luminosidad > 128 ? 'black' : 'white';
-    });
+    // Limpiamos filtros en la zona de preview
+    contenedorPreview.style.filter = '';
+    contenedorPreview.classList.remove('alto-contraste');
+
+    if (tipo === 'normal') return;
+
+    if (tipo === 'alto_contraste') {
+        contenedorPreview.classList.add('alto-contraste');
+        // Pequeño ajuste manual para la preview de alto contraste
+        contenedorPreview.style.filter = 'contrast(150%) brightness(110%)';
+    } else {
+        contenedorPreview.style.filter = `url(#${tipo}-filter)`;
+    }
 }
 
 // PERSISTENCIA: Enviar a Django
@@ -352,11 +337,11 @@ async function guardarEnBaseDeDatos(tipo) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    // 1. Cargar preferencia desde el objeto global de Django
+    // 1. Cargar preferencia inicial desde el servidor
     const preferenciaInicial = window.STOKKA_PREFS ? window.STOKKA_PREFS.daltonismo : 'normal';
     aplicarFiltroCSS(preferenciaInicial);
 
-    // 2. Lógica del Panel (solo si existe en la página actual)
+    // 2. Lógica del Panel de Ajustes
     const panel = document.getElementById('panelDaltonismo');
     if (!panel) return;
 
@@ -364,35 +349,44 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function marcarActivo(tipo) {
         document.querySelectorAll('.btn-daltonismo').forEach(btn => {
-            btn.classList.toggle('activo', btn.dataset.tipo === tipo);
-            btn.style.borderColor = (btn.dataset.tipo === tipo) ? 'var(--verde-stokka)' : '#dee2e6';
+            const esActivo = btn.dataset.tipo === tipo;
+            btn.classList.toggle('activo', esActivo);
+            // Si es activo usamos el verde principal, si no un gris suave
+            btn.style.borderColor = esActivo ? 'var(--verde-stokka)' : '#dee2e6';
+            btn.style.borderWidth = esActivo ? '2px' : '1px';
         });
     }
 
+    // Estado inicial del panel
     marcarActivo(tipoSeleccionado);
     actualizarPreviewDaltonismo(tipoSeleccionado);
 
+    // Eventos de selección
     document.querySelectorAll('.btn-daltonismo').forEach(btn => {
         btn.addEventListener('click', function () {
             tipoSeleccionado = this.dataset.tipo;
             marcarActivo(tipoSeleccionado);
             actualizarPreviewDaltonismo(tipoSeleccionado);
-            aplicarFiltroCSS(tipoSeleccionado); // Preview en vivo
+            // OPCIONAL: aplicar en vivo mientras eligen. 
+            // Si prefieres que solo cambie al dar a "Aplicar", comenta la línea de abajo.
+            aplicarFiltroCSS(tipoSeleccionado); 
         });
     });
 
+    // Botón Aplicar
     document.getElementById('btnAplicarDaltonismo')?.addEventListener('click', async function () {
         this.disabled = true;
+        const textoOriginal = this.innerHTML;
         this.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Guardando...';
 
         await guardarEnBaseDeDatos(tipoSeleccionado);
-
-        // Opcional: actualizar el objeto global para esta sesión
         window.STOKKA_PREFS.daltonismo = tipoSeleccionado;
-
-        location.reload(); // Recargamos para asegurar que todo el CSS se re-renderice
+        
+        // Recarga para asentar todos los cambios de color del servidor
+        location.reload(); 
     });
 
+    // Botón Restablecer
     document.getElementById('btnRestablecerDaltonismo')?.addEventListener('click', async function () {
         tipoSeleccionado = 'normal';
         await guardarEnBaseDeDatos('normal');
