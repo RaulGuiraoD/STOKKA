@@ -273,3 +273,172 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// =============================================================================
+// ACCESIBILIDAD: FILTRO DE DALTONISMO PERSONAL
+// Los colores se guardan en localStorage — solo afectan al usuario actual
+// en este dispositivo. No van a BD ni afectan a otros usuarios.
+// =============================================================================
+
+const FILTROS_DALTONISMO = {
+    normal: {
+        '--verde-stokka':     null,
+        '--verde-secundario': null,
+        '--rojo-alerta':      null,
+        '--amarillo-alerta':  null,
+    },
+    protanopia: {
+        '--verde-stokka':     '#4B4B00',
+        '--verde-secundario': '#9E9E00',
+        '--rojo-alerta':      '#0070B8',
+        '--amarillo-alerta':  '#C8B400',
+    },
+    deuteranopia: {
+        '--verde-stokka':     '#4B4B00',
+        '--verde-secundario': '#9E9E00',
+        '--rojo-alerta':      '#0057A8',
+        '--amarillo-alerta':  '#C8B400',
+    },
+    tritanopia: {
+        '--verde-stokka':     '#CC0000',
+        '--verde-secundario': '#009E9E',
+        '--rojo-alerta':      '#8B008B',
+        '--amarillo-alerta':  '#FF6600',
+    },
+    acromatopsia: {
+        '--verde-stokka':     '#333333',
+        '--verde-secundario': '#777777',
+        '--rojo-alerta':      '#111111',
+        '--amarillo-alerta':  '#999999',
+    },
+    alto_contraste: {
+        '--verde-stokka':     '#000080',
+        '--verde-secundario': '#FFD700',
+        '--rojo-alerta':      '#FF4500',
+        '--amarillo-alerta':  '#00CED1',
+    },
+};
+
+// Lee los colores base del tema de empresa desde las variables CSS actuales
+// (que ya cargó el context processor en base.html)
+function obtenerColoresBase() {
+    const style = getComputedStyle(document.documentElement);
+    return {
+        '--verde-stokka':     style.getPropertyValue('--verde-stokka').trim(),
+        '--verde-secundario': style.getPropertyValue('--verde-secundario').trim(),
+        '--rojo-alerta':      style.getPropertyValue('--rojo-alerta').trim(),
+        '--amarillo-alerta':  style.getPropertyValue('--amarillo-alerta').trim(),
+    };
+}
+
+// Aplica un filtro a las variables CSS del documento
+function aplicarFiltroCSS(tipo) {
+    const variables = [
+        '--verde-stokka',
+        '--verde-secundario',
+        '--rojo-alerta',
+        '--amarillo-alerta',
+    ];
+
+    if (tipo === 'normal') {
+        variables.forEach(v => document.documentElement.style.removeProperty(v));
+        return;
+    }
+
+    const base   = obtenerColoresBase();
+    const filtro = FILTROS_DALTONISMO[tipo];
+
+    variables.forEach(v => {
+        const color = filtro[v] || base[v];
+        document.documentElement.style.setProperty(v, color);
+    });
+}
+
+// Actualiza el preview de colores en el panel
+function actualizarPreviewDaltonismo(tipo) {
+    const base   = obtenerColoresBase();
+    const filtro = FILTROS_DALTONISMO[tipo] || FILTROS_DALTONISMO.normal;
+
+    const prev = {
+        'dprev-principal':  filtro['--verde-stokka']     || base['--verde-stokka'],
+        'dprev-secundario': filtro['--verde-secundario']  || base['--verde-secundario'],
+        'dprev-alerta':     filtro['--rojo-alerta']       || base['--rojo-alerta'],
+        'dprev-aviso':      filtro['--amarillo-alerta']   || base['--amarillo-alerta'],
+    };
+
+    Object.keys(prev).forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.style.background = prev[id];
+        // Ajusta el color del texto según luminosidad
+        const hex = prev[id].replace('#', '');
+        const r = parseInt(hex.substr(0,2), 16);
+        const g = parseInt(hex.substr(2,2), 16);
+        const b = parseInt(hex.substr(4,2), 16);
+        const luminosidad = (r * 299 + g * 587 + b * 114) / 1000;
+        el.style.color = luminosidad > 128 ? 'black' : 'white';
+    });
+}
+
+// Carga y aplica el filtro guardado al arrancar la página
+function cargarFiltroDaltonismo() {
+    const tipoGuardado = localStorage.getItem('stokka_daltonismo') || 'normal';
+    if (tipoGuardado !== 'normal') {
+        aplicarFiltroCSS(tipoGuardado);
+    }
+    return tipoGuardado;
+}
+
+// Inicializa el panel si estamos en la página de perfil
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Aplicar filtro guardado en todas las páginas
+    cargarFiltroDaltonismo();
+
+    // El resto solo si el panel existe (página de perfil)
+    const panel = document.getElementById('panelDaltonismo');
+    if (!panel) return;
+
+    let tipoSeleccionado = localStorage.getItem('stokka_daltonismo') || 'normal';
+
+    // Marcar el botón activo al abrir el panel
+    function marcarActivo(tipo) {
+        document.querySelectorAll('.btn-daltonismo').forEach(btn => {
+            btn.classList.toggle('activo', btn.dataset.tipo === tipo);
+        });
+    }
+
+    // Preview inicial
+    actualizarPreviewDaltonismo(tipoSeleccionado);
+    marcarActivo(tipoSeleccionado);
+
+    // Click en cada tipo
+    document.querySelectorAll('.btn-daltonismo').forEach(btn => {
+        btn.addEventListener('click', function () {
+            tipoSeleccionado = this.dataset.tipo;
+            marcarActivo(tipoSeleccionado);
+            actualizarPreviewDaltonismo(tipoSeleccionado);
+            // Preview en vivo antes de confirmar
+            aplicarFiltroCSS(tipoSeleccionado);
+        });
+    });
+
+    // Aplicar y guardar
+    document.getElementById('btnAplicarDaltonismo')?.addEventListener('click', function () {
+        localStorage.setItem('stokka_daltonismo', tipoSeleccionado);
+        // Cerrar el panel
+        const collapse = bootstrap.Collapse.getOrCreateInstance(
+            document.getElementById('panelDaltonismo')
+        );
+        collapse.hide();
+    });
+
+    // Restablecer — vuelve a los colores del tema de empresa
+    document.getElementById('btnRestablecerDaltonismo')?.addEventListener('click', function () {
+        tipoSeleccionado = 'normal';
+        localStorage.removeItem('stokka_daltonismo');
+        aplicarFiltroCSS('normal');
+        actualizarPreviewDaltonismo('normal');
+        marcarActivo('normal');
+    });
+});

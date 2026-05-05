@@ -363,6 +363,25 @@ input::-webkit-credentials-auto-fill-button {
     font-size: 0.75rem;
 }
 
+/* --- ACCESIBILIDAD: SELECTOR DE DALTONISMO --- */
+.btn-daltonismo {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+.btn-daltonismo:hover {
+    border-color: var(--verde-stokka) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 61, 0, 0.1);
+}
+
+.btn-daltonismo.activo {
+    border-color: var(--verde-stokka) !important;
+    border-width: 2px !important;
+    background: var(--verde-stokka-light) !important;
+}
+
 /* --- MEDIA QUERY: BOTONES RESPONSIVOS --- */
 @media (max-width: 991.98px) {
     .btn-container-stokka {
