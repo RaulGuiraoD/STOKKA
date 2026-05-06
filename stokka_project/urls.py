@@ -45,6 +45,10 @@ urlpatterns = [
     # --- GESTIÓN DE EMPRESA (DUEÑO) ---
     path('empresa/',          views.empresa_view,    name='empresa'),
     path('empresa/eliminar/', views.eliminar_empresa, name='eliminar_empresa'),
+    path('empresa/desactivar/ahora/',   views.desactivar_empresa_ahora,  name='desactivar_empresa_ahora'),
+    path('empresa/desactivar/fecha/',   views.desactivar_empresa_fecha,   name='desactivar_empresa_fecha'),
+    path('empresa/desactivar/cancelar/', views.cancelar_desactivacion,    name='cancelar_desactivacion'),
+    path('empresa/reactivar/',          views.reactivar_empresa,          name='reactivar_empresa'),
 
     # --- PERFIL DE USUARIO ---
     path('perfil/', views.perfil_view, name='perfil'),

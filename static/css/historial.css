@@ -12,12 +12,12 @@
 
 /* Cabecera: fondo blanco (como pediste en el nivel día) y texto verde */
 .tabla-historial-clase thead tr {
-    background-color: white !important;
+    background-color:  var(--blanco) !important;
 }
 
 .tabla-historial-clase thead th {
     color: var(--verde-stokka) !important;
-    background-color: white !important;
+    background-color:  var(--blanco) !important;
     font-size: 11px !important;
     letter-spacing: 1px;
     padding: 12px 8px !important;
@@ -32,7 +32,7 @@
 /* Siempre verde stokka, texto e iconos blancos */
 .level-year > .accordion-header .accordion-button {
     background-color: var(--verde-stokka) !important;
-    color: white !important;
+    color:  var(--blanco) !important;
     font-size: 1.1rem;
     letter-spacing: 0.5px;
     padding: 1.25rem 1.5rem;
@@ -52,7 +52,7 @@
 }
 
 .level-month .accordion-button {
-    background-color: white !important;
+    background-color:  var(--blanco) !important;
     color: var(--verde-stokka) !important;
     font-weight: 700;
 }
@@ -128,7 +128,7 @@ tr.fila-movimiento.tipo-ajuste_rapido {
 /* ── DETALLES Y LISTAS ── */
 
 .fila-detalle {
-    background-color: white !important;
+    background-color:  var(--blanco) !important;
 }
 
 .fila-detalle td {
@@ -188,10 +188,10 @@ tr.fila-movimiento.tipo-ajuste_rapido {
     white-space: nowrap;
 }
 
-.mov-ajuste_rapido { background-color: #e9ecef; color: #495057; border: 2px solid #ced4da; }
-.mov-creacion      { background-color: #d1e7dd; color: #0f5132; border: 2px solid #a3cfbb; }
-.mov-eliminacion   { background-color: #f8d7da; color: #842029; border: 2px solid #f1aeb5; }
-.mov-modal_editar  { background-color: #fff3cd; color: #856404; border: 2px solid #bbac7e;; }
+.mov-ajuste_rapido { background-color: var(--gris-stokka-historial-fondo); color: var(--gris-stokka-historial-color); border: var(--gris-stokka-historial-pastel); }
+.mov-creacion      { background-color: var(--verde-stokka-historial-fondo); color: var(--verde-stokka-historial-color); border: var(--verde-stokka-historial-pastel); }
+.mov-eliminacion   { background-color: var(--rojo-stokka-historial-fondo); color: var(--rojo-stokka-historial-color); border: var(--rojo-stokka-historial-pastel); }
+.mov-modal_editar  { background-color: var(--amarillo-stokka-historial-fondo); color: var(--amarillo-stokka-historial-color); border: var(--amarillo-stokka-historial-pastel);}
 
 /* ── TIPOGRAFÍA ── */
 .text-truncate {
@@ -262,7 +262,7 @@ tr.fila-movimiento.tipo-ajuste_rapido {
     border-radius: 10px !important;
     border: 2px solid var(--verde-stokka) !important;
     color: var(--verde-stokka);
-    background-color: white;
+    background-color:  var(--blanco);
     transition: border-color 0.25s ease, color 0.25s ease,
                 background-color 0.25s ease, box-shadow 0.25s ease;
 }
@@ -273,17 +273,17 @@ tr.fila-movimiento.tipo-ajuste_rapido {
 }
 
 /* Opción "Todos los tipos" */
-#filtro-tipo option[value=""]             { color: #212529; background: white; }
-#filtro-tipo option[value="AJUSTE_RAPIDO"]{ color: black; background: white; font-weight: 700; }
-#filtro-tipo option[value="MODAL_EDITAR"] { color: var(--amarillo-alerta); background: white; font-weight: 700; }
-#filtro-tipo option[value="CREACION"]     { color: var(--verde-stokka); background: white; font-weight: 700; }
-#filtro-tipo option[value="ELIMINACION"]  { color: var(--rojo-alerta); background: white; font-weight: 700; }
+#filtro-tipo option[value=""]             { color: #212529; background:  var(--blanco); }
+#filtro-tipo option[value="AJUSTE_RAPIDO"]{ color: black; background:  var(--blanco); font-weight: 700; }
+#filtro-tipo option[value="MODAL_EDITAR"] { color: var(--amarillo-alerta); background:  var(--blanco); font-weight: 700; }
+#filtro-tipo option[value="CREACION"]     { color: var(--verde-stokka); background:  var(--blanco); font-weight: 700; }
+#filtro-tipo option[value="ELIMINACION"]  { color: var(--rojo-alerta); background:  var(--blanco); font-weight: 700; }
 
 /* Color dinámico del select según selección (aplicado por JS) */
-.border-creacion    { border-color: var(--verde-stokka) !important; color: var(--verde-stokka) !important; background-color: #d1e7dd !important; }
-.border-edicion     { border-color: #d4a017 !important;             color: #856404 !important;             background-color: #fffde7 !important; }
-.border-eliminacion { border-color: var(--rojo-alerta) !important;  color: #842029 !important;             background-color: #f8d7da !important; }
-.border-ajuste      { border-color: #adb5bd !important;             color: #495057 !important;             background-color: #e9ecef !important; }
+.border-creacion    { border-color: var(--verde-stokka) !important; color: var(--verde-stokka) !important;                    background-color: #d1e7dd !important; }
+.border-edicion     { border-color: var(--borde-editar) !important; color: var(--amarillo-stokka-historial-color) !important; background-color: #fffde7 !important; }
+.border-eliminacion { border-color: var(--rojo-alerta)  !important;  color: var(--rojo-stokka-historial-color-) !important;   background-color: #f8d7da !important; }
+.border-ajuste      { border-color: var(--borde-ajuste) !important; color: var(--gris-stokka-historial-color) !important;     background-color: #e9ecef !important; }
 
 /* ── BOTÓN LIMPIAR: oculto hasta que hay filtros activos ── */
 #btn-limpiar-filtros {
@@ -314,7 +314,7 @@ tr.fila-movimiento.tipo-ajuste_rapido {
 
 #btn-limpiar-filtros:hover {
     background-color: var(--rojo-alerta) !important;
-    color: white;
+    color:  var(--blanco);
 }
 
 /* ── PANEL DETALLE MÓVIL: invisible en desktop ── */

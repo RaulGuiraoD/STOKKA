@@ -4,6 +4,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500&display=swap');
 
 :root {
+    /*COLORES PRINCIPALES*/
     --verde-stokka: #003D00;
     --verde-secundario: #1CA300;
     --rojo-alerta: #C10D00;
@@ -12,17 +13,44 @@
     --blanco: #FFFFFF;
     --gris-fondo: #F2F4F6;
 
+    /*COLORES SECUNDARIOS*/
+
     --verde-stokka-light: #e6f0e6;
     --rojo-alerta-light: #fce8e6;
     --amarillo-alerta-light: #fef9e6;
+
+    /*COLORES TERCIARIOS*/
 
     --verde-stokka-mid: #cce0cc;      
     --rojo-alerta-mid: #f9cfcc;       
     --amarillo-alerta-mid: #fdf1b5;
 
+    /*COLORES HISTORIAL*/
+
+    --gris-stokka-historial-fondo: #e9ecef;
+    --verde-stokka-historial-fondo: #d1e7dd;
+    --amarillo-stokka-historial-fondo: #fff3cd;
+    --rojo-stokka-historial-fondo: #f8d7da;
+
+    --gris-stokka-historial-color: #495057;
+    --verde-stokka-historial-color: #0f5132;
+    --amarillo-stokka-historial-color: #856404;
+    --rojo-stokka-historial-color: #842029;
+
+    --gris-stokka-historial-pastel:  2px solid #ced4da;
+    --verde-stokka-historial-pastel: 2px solid #a3cfbb;
+    --amarillo-stokka-historial-pastel: 2px solid #bbac7e;
+    --rojo-stokka-historial-pastel: 2px solid #f1aeb5;
+
+    /*COLORES EXTRAS*/
     --selector-fondo: rgba(255, 255, 255, 0.12);
     --selector-borde: rgba(255, 255, 255, 0.25);
     --selector-hover: rgba(255, 255, 255, 0.22);
+    --borde-editar: #d4a017;
+    --borde-ajuste: #adb5bd;
+    --fondo-suscripcion : #fffdf0;
+
+    /*AJUSTES EXTRAS*/
 
     --header-height: 85px; 
     --sidebar-w: 65px;     

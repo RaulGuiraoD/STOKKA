@@ -13,12 +13,17 @@ from django.utils import timezone
 
 # MODELO EMPRESA
 class Empresa(models.Model):
-    nombre = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=120, unique=True) # Para la URL: empresa-x.stokka.com
+    nombre         = models.CharField(max_length=100, unique=True)
+    slug           = models.SlugField(max_length=120, unique=True)
     fecha_registro = models.DateTimeField(auto_now_add=True)
-    plan_activo = models.BooleanField(default=False) # Se activará tras el "pago"
-    cif      = models.CharField(max_length=20, blank=True, null=True, verbose_name="CIF/NIF")
-    telefono = models.CharField(max_length=20, blank=True, null=True, verbose_name="Teléfono")
+    plan_activo    = models.BooleanField(default=False)
+    cif            = models.CharField(max_length=20, blank=True, null=True, verbose_name="CIF/NIF")
+    telefono       = models.CharField(max_length=20, blank=True, null=True, verbose_name="Teléfono")
+
+    # Suscripción
+    renovacion_automatica  = models.BooleanField(default=True)
+    fecha_vencimiento      = models.DateField(blank=True, null=True)
+    fecha_desactivacion_programada = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return self.nombre

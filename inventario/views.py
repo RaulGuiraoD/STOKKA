@@ -19,6 +19,7 @@ from django.contrib.auth.hashers import check_password
 # 4.  Imports Locales
 from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm, EditarEmpresaForm
 from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia, TemaEmpresa
+from datetime import date, timedelta
 
 User = get_user_model()
 
@@ -329,13 +330,19 @@ def pasarela_pago_view(request):
         return redirect('index')
 
     if request.method == 'POST':
-        empresa.plan_activo = True
-        empresa.save()
-        messages.success(request, f"¡Pago confirmado! Empresa '{empresa.nombre}' activada.")
+        empresa.plan_activo   = True
+        empresa.renovacion_automatica = True
+        # Suscripción mensual ficticia: vence en 30 días
+        empresa.fecha_vencimiento = date.today() + timedelta(days=30)
+        empresa.fecha_desactivacion_programada = None
+        empresa.save(update_fields=[
+            'plan_activo', 'renovacion_automatica',
+            'fecha_vencimiento', 'fecha_desactivacion_programada'
+        ])
+        messages.success(request, f"¡Pago confirmado! '{empresa.nombre}' activada hasta el {empresa.fecha_vencimiento.strftime('%d/%m/%Y')}.")
         return redirect('index')
 
     return render(request, 'registration/pago_ficticio.html', {'empresa': empresa})
-
 
 def cancelar_pago_view(request):
     request.session.pop('empresa_activa_id', None)
@@ -679,12 +686,8 @@ def empresa_view(request):
     total_usuarios    = Membresia.objects.filter(empresa=empresa).count()
     total_productos   = Producto.objects.filter(empresa=empresa).count()
     total_movimientos = HistorialMovimiento.objects.filter(empresa=empresa).count()
-
-    # Otras empresas del dueño para el selector
-    otras_membresias = request.user.membresias.select_related('empresa').exclude(empresa=empresa)
-
-    # Tema actual
-    tema, _ = TemaEmpresa.objects.get_or_create(empresa=empresa)
+    otras_membresias  = request.user.membresias.select_related('empresa').exclude(empresa=empresa)
+    tema, _           = TemaEmpresa.objects.get_or_create(empresa=empresa)
 
     if request.method == 'POST':
         accion = request.POST.get('accion')
@@ -692,15 +695,14 @@ def empresa_view(request):
         if accion == 'guardar_datos':
             form = EditarEmpresaForm(request.POST, instance=empresa)
             if form.is_valid():
-                empresa_editada      = form.save(commit=False)
-                empresa_editada.slug = slugify(empresa_editada.nombre)
-                empresa_editada.save()
+                e      = form.save(commit=False)
+                e.slug = slugify(e.nombre)
+                e.save()
                 messages.success(request, "Datos de la empresa actualizados.")
                 return redirect('empresa')
-            else:
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        messages.error(request, error)
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
 
         elif accion == 'guardar_tema':
             tema.verde_stokka     = request.POST.get('verde_stokka', tema.verde_stokka)
@@ -708,7 +710,7 @@ def empresa_view(request):
             tema.rojo_alerta      = request.POST.get('rojo_alerta', tema.rojo_alerta)
             tema.amarillo_alerta  = request.POST.get('amarillo_alerta', tema.amarillo_alerta)
             tema.save()
-            messages.success(request, "Colores actualizados. Los cambios son visibles para todos los usuarios de la empresa.")
+            messages.success(request, "Colores actualizados.")
             return redirect('empresa')
 
         elif accion == 'restablecer_tema':
@@ -717,13 +719,26 @@ def empresa_view(request):
             tema.rojo_alerta      = '#C10D00'
             tema.amarillo_alerta  = '#F5C907'
             tema.save()
-            messages.success(request, "Colores restablecidos a los valores originales de Stokka.")
+            messages.success(request, "Colores restablecidos.")
+            return redirect('empresa')
+
+        elif accion == 'toggle_renovacion':
+            empresa.renovacion_automatica = not empresa.renovacion_automatica
+            empresa.save(update_fields=['renovacion_automatica'])
+            estado = "activada" if empresa.renovacion_automatica else "desactivada"
+            messages.success(request, f"Renovación automática {estado}.")
             return redirect('empresa')
 
         else:
             form = EditarEmpresaForm(instance=empresa)
     else:
         form = EditarEmpresaForm(instance=empresa)
+
+    # Calcular días restantes si hay fecha de vencimiento
+    dias_restantes = None
+    if empresa.fecha_vencimiento:
+        delta = empresa.fecha_vencimiento - date.today()
+        dias_restantes = max(delta.days, 0)
 
     return render(request, 'stokka/pages/empresa.html', {
         'form':              form,
@@ -734,7 +749,84 @@ def empresa_view(request):
         'total_movimientos': total_movimientos,
         'otras_membresias':  otras_membresias,
         'tema':              tema,
+        'dias_restantes':    dias_restantes,
+        'hoy':               date.today(),
     })
+
+@login_required
+@dueño_required
+def desactivar_empresa_ahora(request):
+    """Desactiva la empresa inmediatamente."""
+    if request.method == 'POST':
+        empresa = get_empresa_activa(request)
+        empresa.plan_activo   = False
+        empresa.renovacion_automatica = False
+        empresa.fecha_desactivacion_programada = None
+        empresa.save(update_fields=['plan_activo', 'renovacion_automatica', 'fecha_desactivacion_programada'])
+
+        # Limpiamos la sesión — el usuario tendrá que "pagar" de nuevo para entrar
+        request.session.pop('empresa_activa_id', None)
+        messages.warning(request, f"La empresa '{empresa.nombre}' ha sido desactivada.")
+
+        # Si tiene más empresas activas, al selector; si no, al registro
+        otras = request.user.membresias.exclude(empresa=empresa).filter(empresa__plan_activo=True)
+        if otras.exists():
+            return redirect('seleccionar_empresa')
+        return redirect('registro_empresa')
+
+    return redirect('empresa')
+
+
+@login_required
+@dueño_required
+def desactivar_empresa_fecha(request):
+    """Programa la desactivación para una fecha concreta."""
+    if request.method == 'POST':
+        empresa = get_empresa_activa(request)
+        fecha_str = request.POST.get('fecha_desactivacion', '')
+
+        try:
+            fecha = date.fromisoformat(fecha_str)
+            if fecha <= date.today():
+                messages.error(request, "La fecha debe ser posterior a hoy.")
+                return redirect('empresa')
+
+            empresa.fecha_desactivacion_programada = fecha
+            empresa.renovacion_automatica = False
+            empresa.save(update_fields=['fecha_desactivacion_programada', 'renovacion_automatica'])
+            messages.success(request, f"La empresa se desactivará el {fecha.strftime('%d/%m/%Y')}.")
+
+        except ValueError:
+            messages.error(request, "Fecha inválida.")
+
+    return redirect('empresa')
+
+
+@login_required
+@dueño_required
+def cancelar_desactivacion(request):
+    """Cancela una desactivación programada y reactiva la renovación automática."""
+    if request.method == 'POST':
+        empresa = get_empresa_activa(request)
+        empresa.fecha_desactivacion_programada = None
+        empresa.renovacion_automatica = True
+        empresa.save(update_fields=['fecha_desactivacion_programada', 'renovacion_automatica'])
+        messages.success(request, "Desactivación programada cancelada. Renovación automática reactivada.")
+    return redirect('empresa')
+
+
+@login_required
+@dueño_required  
+def reactivar_empresa(request):
+    """Redirige a la pasarela de pago para reactivar una empresa inactiva."""
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        # Si venimos desde el selector sin empresa activa en sesión,
+        # necesitamos poner la empresa en sesión antes de pagar
+        empresa_id = request.POST.get('empresa_id')
+        if empresa_id:
+            request.session['empresa_activa_id'] = int(empresa_id)
+    return redirect('pasarela_pago')
 
 @login_required
 @dueño_required
