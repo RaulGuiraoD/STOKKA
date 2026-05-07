@@ -437,7 +437,7 @@ function actualizarLabelToggle(visibles, esMovil) {
     if (!label) return;
 
     if (esMovil) {
-        label.textContent = 'No disponible en móvil';
+        label.textContent = 'No disponible en este formato';
         label.style.color = 'var(--rojo-alerta)';
     } else {
         label.textContent = visibles ? 'Iconos de ayuda visibles' : 'Iconos de ayuda ocultos';

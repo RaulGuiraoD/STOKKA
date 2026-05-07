@@ -36,6 +36,8 @@
                 </label>
                 <input type="date" name="fecha_nacimiento" 
                     value="{{ perfil.fecha_nacimiento|date:'Y-m-d' }}"
+                    min="1900-01-01" 
+                    max="2025-12-31"
                     class="form-control stokka-input bg-light shadow-none">
             </div>
             

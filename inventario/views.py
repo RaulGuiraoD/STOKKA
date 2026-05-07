@@ -19,7 +19,7 @@ from django.contrib.auth.hashers import check_password
 # 4.  Imports Locales
 from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm, EditarEmpresaForm
 from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia, TemaEmpresa
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 
 User = get_user_model()
 
@@ -907,13 +907,34 @@ def editar_perfil_view(request):
                 messages.error(request, "Las contraseñas no coinciden.", extra_tags='open_edit_modal')
                 return redirect('perfil')
             request.user.set_password(password)
+        
+        if fecha_nacimiento and fecha_nacimiento.strip():
+            try:
+                fecha_obj = datetime.strptime(fecha_nacimiento, '%Y-%m-d').date()
+                
+                anio_actual = date.today().year
+                if fecha_obj.year < 1900 or fecha_obj > date.today():
+                    messages.error(request, "Por favor, introduce una fecha de nacimiento coherente.", extra_tags='open_edit_modal')
+                    return redirect('perfil')
+                    
+                perfil.fecha_nacimiento = fecha_obj
+                
+            except ValueError:
+                    messages.error(request, "Formato de fecha incorrecto.", extra_tags='open_edit_modal')
+                    return redirect('perfil')
+            else:
+                perfil.fecha_nacimiento = None
+
 
         request.user.first_name = nombre
         request.user.last_name  = apellido
         request.user.email      = email
         request.user.username   = email
         perfil.telefono = telefono
-        perfil.fecha_nacimiento = fecha_nacimiento
+        if fecha_nacimiento and fecha_nacimiento.strip():
+            perfil.fecha_nacimiento = fecha_nacimiento
+        else:
+            perfil.fecha_nacimiento = None
 
         request.user.save()
         perfil.save()
