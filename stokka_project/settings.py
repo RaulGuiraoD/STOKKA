@@ -122,10 +122,6 @@ LANGUAGES = [
     ('en', _('Inglés')),
 ]
 
-# Indica dónde se guardarán los archivos de traducción
-LOCALE_PATHS = [
-    BASE_DIR / 'locale',
-]
 
 TIME_ZONE = 'Europe/Madrid'
 
