@@ -162,16 +162,3 @@ EMAIL_HOST_USER     = config('EMAIL_HOST_USER',     default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL',  default=f'Stokka <{EMAIL_HOST_USER}>')
 
-# Aviso en arranque si el email no está configurado
-if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
-    import warnings
-    warnings.warn(
-        "\n\n⚠️  EMAIL NO CONFIGURADO — El registro de usuarios no funcionará.\n"
-        "   Crea o edita el archivo .env en la raíz del proyecto con:\n\n"
-        "   EMAIL_HOST_USER=tucuenta@gmail.com\n"
-        "   EMAIL_HOST_PASSWORD=abcdefghijklmnop   ← App Password de Google (16 chars)\n"
-        "   DEFAULT_FROM_EMAIL=Stokka <tucuenta@gmail.com>\n\n"
-        "   Genera el App Password en: https://myaccount.google.com/apppasswords\n"
-        "   (Requiere verificación en dos pasos activada en tu cuenta Google)\n",
-        stacklevel=2
-    )

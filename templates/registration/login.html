@@ -14,20 +14,20 @@
     </div>
     {% endfor %}
 
-    {% if email_no_verificado %}
-    <div class="mb-3 p-3 small text-start"
-         style="background: rgba(255,193,7,0.12); border: 1px solid rgba(255,193,7,0.4);
-                border-radius: 8px; color: #ffe082;">
-        ⚠️ Email pendiente de confirmación.
-        <form method="POST" action="{% url 'reenviar_verificacion' %}" class="d-inline">
-            {% csrf_token %}
-            <input type="hidden" name="email" value="{{ email_no_verificado }}">
-            <button type="submit"
-                    class="btn btn-link p-0 text-warning text-decoration-underline small align-baseline">
-                Reenviar enlace
-            </button>
-        </form>
-    </div>
+    {% if email_pendiente %}
+        <div class="alert small mb-3 text-start"
+            style="background: rgba(255,193,7,0.12); border: 1px solid var(--amarillo-stokka-historial-color);
+                    border-radius: 8px; color: var(--amarillo-stokka-historial-fondo);">
+            <i class="fa-solid fa-hand"></i> <strong>{{ email_pendiente }}</strong> aún no ha verificado su email.
+            <form method="POST" action="{% url 'reenviar_verificacion' %}" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="email" value="{{ email_pendiente|default:'' }}">
+                <button type="submit"
+                        class="btn btn-cancelar-stokka btn-sm fw-bold">
+                    Reenviar enlace de confirmación
+                </button>
+            </form>
+        </div>
     {% endif %}
 
     <form method="POST">
@@ -35,7 +35,7 @@
         <div class="text-start mb-3">
             <label class="text-white small mb-1 d-block">Email</label>
             <input type="email" name="username" class="form-control border-0 rounded-2 py-2"
-                   placeholder="user@gmail.com" style="background: white;"
+                   placeholder="user@gmail.com" style="background: var(--blanco);"
                    value="{{ email_no_verificado|default:'' }}">
         </div>
 
@@ -44,7 +44,7 @@
             <div class="position-relative d-flex align-items-center">
                 <input type="password" name="password" id="id_password"
                        class="form-control border-0 rounded-2 py-2 pe-5 shadow-none"
-                       placeholder="********" style="background: white;" required>
+                       placeholder="********" style="background: var(--blanco);" required>
                 <i class="fa-regular fa-eye position-absolute d-none stokka-eye-icon"
                    id="toggleIcon"
                    style="right: 15px; cursor: pointer; color: var(--verde-stokka); z-index: 10;"

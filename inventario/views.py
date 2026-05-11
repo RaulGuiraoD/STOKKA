@@ -470,7 +470,7 @@ def login_view(request):
                 if not user.email_verificado:
                     messages.warning(request, "Debes confirmar tu email antes de entrar.")
                     return render(request, 'registration/login.html', {
-                        'email_no_verificado': email_ingresado
+                        'email_pendiente': email_ingresado
                     })
                 login(request, user)
 
