@@ -16,14 +16,14 @@
 
     {% if email_pendiente %}
         <div class="alert small mb-3 text-start"
-            style="background: rgba(255,193,7,0.12); border: 1px solid var(--amarillo-stokka-historial-color);
+            style="background: var(--amarillo-stokka-historial-pastel); border: 1px solid var(--amarillo-stokka-historial-color);
                     border-radius: 8px; color: var(--amarillo-stokka-historial-fondo);">
             <i class="fa-solid fa-hand"></i> <strong>{{ email_pendiente }}</strong> aún no ha verificado su email.
             <form method="POST" action="{% url 'reenviar_verificacion' %}" class="mt-2">
                 {% csrf_token %}
                 <input type="hidden" name="email" value="{{ email_pendiente|default:'' }}">
                 <button type="submit"
-                        class="btn btn-cancelar-stokka btn-sm fw-bold">
+                        class="btn btn_selector btn-sm fw-bold">
                     Reenviar enlace de confirmación
                 </button>
             </form>

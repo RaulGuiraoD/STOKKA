@@ -384,7 +384,7 @@ def olvide_password_view(request):
                 )
 
         except User.DoesNotExist:
-            pass  # Respuesta genérica — no revelamos si el email existe
+            pass  # no revelamos si el email existe
 
         # Siempre el mismo mensaje al usuario (seguridad)
         if enviado:
@@ -464,14 +464,15 @@ def login_view(request):
 
         try:
             user_obj = User.objects.get(email=email_ingresado)
+            # Primero comprobamos email verificado, antes de authenticate
+            if not user_obj.email_verificado:
+                messages.warning(request, "Debes confirmar tu email antes de entrar. Revisa tu bandeja de entrada.")
+                return render(request, 'registration/login.html', {
+                    'email_pendiente': email_ingresado
+                })
             user     = authenticate(request, username=user_obj.username, password=password_ingresado)
 
             if user is not None:
-                if not user.email_verificado:
-                    messages.warning(request, "Debes confirmar tu email antes de entrar.")
-                    return render(request, 'registration/login.html', {
-                        'email_pendiente': email_ingresado
-                    })
                 login(request, user)
 
                 if request.POST.get('recordar'):
