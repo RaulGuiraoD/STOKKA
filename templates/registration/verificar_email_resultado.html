@@ -1,0 +1,31 @@
+{% extends 'layouts/base_auth.html' %}
+{% block content %}
+<div class="login-box text-center pb-5" style="max-width: 420px; width: 100%;">
+    {% if exito and not ya_usado %}
+        <h2 class="text-white mb-3">✅ Email confirmado</h2>
+        <p class="text-white">Ya puedes registrar tu empresa y empezar a usar Stokka.</p>
+        <a href="{% url 'registro_empresa' %}" class="btn btn-light fw-bold w-100 mt-3"
+           style="color: var(--verde-stokka);">Registrar empresa</a>
+    {% elif ya_usado %}
+        <h2 class="text-white mb-3">ℹ️ Ya verificado</h2>
+        <p class="text-white">Este enlace ya se usó. Inicia sesión normalmente.</p>
+        <a href="{% url 'login' %}" class="btn btn-light fw-bold w-100 mt-3"
+           style="color: var(--verde-stokka);">Iniciar sesión</a>
+    {% else %}
+        <h2 class="text-white mb-3">❌ Enlace inválido</h2>
+        <p class="text-white">
+            {% if expirado %}El enlace ha caducado.{% else %}El enlace no es válido.{% endif %}
+        </p>
+        {% if expirado %}
+        <form method="POST" action="{% url 'reenviar_verificacion' %}">
+            {% csrf_token %}
+            <input type="hidden" name="email" value="{{ email }}">
+            <button class="btn btn-light fw-bold w-100 mt-2"
+                    style="color: var(--verde-stokka);">Reenviar enlace</button>
+        </form>
+        {% endif %}
+        <a href="{% url 'login' %}" class="d-block mt-3 text-white text-decoration-underline small">
+            Volver al login</a>
+    {% endif %}
+</div>
+{% endblock %}

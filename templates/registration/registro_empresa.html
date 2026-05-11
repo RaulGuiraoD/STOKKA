@@ -23,6 +23,22 @@
         {% endfor %}
     {% endif %}
 
+    {% if email_pendiente %}
+        <div class="alert small mb-3 text-start"
+            style="background: rgba(255,193,7,0.12); border: 1px solid rgba(255,193,7,0.4);
+                    border-radius: 8px; color: #ffe082;">
+            ⚠️ <strong>{{ email_pendiente }}</strong> aún no ha verificado su email.
+            <form method="POST" action="{% url 'reenviar_verificacion' %}" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="email" value="{{ email_pendiente }}">
+                <button type="submit"
+                        class="btn btn-warning btn-sm fw-bold">
+                    Reenviar enlace de confirmación
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
     <form method="POST">
         {% csrf_token %}
 

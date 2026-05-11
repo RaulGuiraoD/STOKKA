@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _ 
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -152,15 +153,25 @@ LOGIN_REDIRECT_URL = 'index' # A donde van justo después de loguearse
 # LOGOUT_ON_GET = True          # Permite cerrar sesión haciendo clic en el enlace
 AUTH_USER_MODEL = 'inventario.Usuario'
 
-# EMAIL (desarrollo: se imprime en consola)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-# Cuando tengas SMTP real (Gmail, etc.), cambia por:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.gmail.com'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'tu@gmail.com'
-# EMAIL_HOST_PASSWORD = 'tu_app_password'
-# DEFAULT_FROM_EMAIL = 'Stokka <tu@gmail.com>'
+# ── EMAIL SMTP ──────────────────────────────────────────────────────────────
+EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST          = 'smtp.gmail.com'
+EMAIL_PORT          = 587
+EMAIL_USE_TLS       = True
+EMAIL_HOST_USER     = config('EMAIL_HOST_USER',     default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL',  default=f'Stokka <{EMAIL_HOST_USER}>')
 
-DEFAULT_FROM_EMAIL = 'Stokka <noreply@stokka.app>'
+# Aviso en arranque si el email no está configurado
+if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+    import warnings
+    warnings.warn(
+        "\n\n⚠️  EMAIL NO CONFIGURADO — El registro de usuarios no funcionará.\n"
+        "   Crea o edita el archivo .env en la raíz del proyecto con:\n\n"
+        "   EMAIL_HOST_USER=tucuenta@gmail.com\n"
+        "   EMAIL_HOST_PASSWORD=abcdefghijklmnop   ← App Password de Google (16 chars)\n"
+        "   DEFAULT_FROM_EMAIL=Stokka <tucuenta@gmail.com>\n\n"
+        "   Genera el App Password en: https://myaccount.google.com/apppasswords\n"
+        "   (Requiere verificación en dos pasos activada en tu cuenta Google)\n",
+        stacklevel=2
+    )

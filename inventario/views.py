@@ -15,11 +15,15 @@ from django.utils import timezone
 from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.contrib.sites.shortcuts import get_current_site
 
 # 4.  Imports Locales
 from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm, EditarEmpresaForm
-from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia, TemaEmpresa
+from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia, TemaEmpresa, TokenVerificacionEmail, TokenRecuperacionPassword
 from datetime import date, timedelta, datetime
+from django.conf import settings as django_settings
 
 User = get_user_model()
 
@@ -114,7 +118,7 @@ def registro_bienvenida_view(request):
 
 
 # ==============================================================================
-# PASO 1: REGISTRAR USUARIO
+# REGISTRAR USUARIO
 # Crea la cuenta. No crea empresa ni membresía.
 # Al terminar redirige a registro_empresa con el email en sesión.
 # ==============================================================================
@@ -122,7 +126,25 @@ def registro_usuario_view(request):
     if request.user.is_authenticated:
         return redirect('seleccionar_empresa')
 
+    # Aviso si el email no está configurado — bloquea el registro
+    email_sin_configurar = (
+        not getattr(django_settings, 'EMAIL_HOST_USER', '') or
+        not getattr(django_settings, 'EMAIL_HOST_PASSWORD', '')
+    )
+
     if request.method == 'POST':
+        if email_sin_configurar:
+            messages.error(
+                request,
+                "El sistema de email no está configurado. "
+                "El administrador debe añadir las credenciales SMTP en el archivo .env "
+                "antes de que los usuarios puedan registrarse."
+            )
+            return render(request, 'registration/registro_usuario.html', {
+                'form': RegistroUsuarioNuevoForm(),
+                'email_sin_configurar': True,
+            })
+
         form = RegistroUsuarioNuevoForm(request.POST)
         if form.is_valid():
             email      = form.cleaned_data['email']
@@ -138,12 +160,28 @@ def registro_usuario_view(request):
                         password=password,
                         first_name=first_name,
                         last_name=last_name,
+                        email_verificado=False,
+                        is_active=False,          
                     )
                     Perfil.objects.create(user=nuevo_usuario)
+                    token_obj = TokenVerificacionEmail.objects.create(usuario=nuevo_usuario)
 
-                # Guardamos el email en sesión para prellenar el form de empresa
+                email_enviado = _enviar_email_verificacion(request, nuevo_usuario, token_obj)
+
+                if email_enviado:
+                    messages.success(
+                        request,
+                        f"¡Cuenta creada! Hemos enviado un enlace de confirmación a {email}. "
+                        f"Debes confirmarlo antes de continuar. Revisa también la carpeta de spam."
+                    )
+                else:
+                    messages.warning(
+                        request,
+                        f"Cuenta creada, pero no pudimos enviar el email a {email}. "
+                        f"Ve al login e introduce tu correo para solicitar el reenvío."
+                    )
+
                 request.session['email_registro'] = email
-                messages.success(request, "¡Usuario creado! Ahora registra tu empresa.")
                 return redirect('registro_empresa')
 
             except Exception as e:
@@ -151,17 +189,19 @@ def registro_usuario_view(request):
     else:
         form = RegistroUsuarioNuevoForm()
 
-    return render(request, 'registration/registro_usuario.html', {'form': form})
+    return render(request, 'registration/registro_usuario.html', {
+        'form': form,
+        'email_sin_configurar': email_sin_configurar,
+    })
 
 
 # ==============================================================================
-# PASO 2: REGISTRAR EMPRESA
+# REGISTRAR EMPRESA
 # Detecta al usuario por email. Crea Empresa + Membresía como fundador/dueño.
 # Funciona tanto para usuarios nuevos (viene del paso 1) como para usuarios
 # ya existentes que quieren añadir una segunda empresa.
 # ==============================================================================
 def registro_empresa_view(request):
-    # Prellenar email si viene del paso 1
     email_previo = request.session.get('email_registro', '')
 
     if request.method == 'POST':
@@ -175,8 +215,21 @@ def registro_empresa_view(request):
             try:
                 usuario = User.objects.get(email=email_usuario)
             except User.DoesNotExist:
-                messages.error(request, "No se encontró el usuario.")
+                messages.error(request, "No se encontró ninguna cuenta con ese email.")
                 return render(request, 'registration/registro_empresa.html', {'form': form})
+
+            # ── VERIFICACIÓN ANTES DE CREAR NADA ──────────────────────────
+            if not usuario.is_active or not usuario.email_verificado:
+                messages.warning(
+                    request,
+                    f"La cuenta de {email_usuario} aún no ha sido verificada. "
+                    f"Revisa tu bandeja de entrada (y la carpeta de spam). "
+                    f"Una vez confirmes el email, vuelve a este paso."
+                )
+                return render(request, 'registration/registro_empresa.html', {
+                    'form': form,
+                    'email_pendiente': email_usuario,   # para el botón de reenvío
+                })
 
             try:
                 with transaction.atomic():
@@ -194,22 +247,203 @@ def registro_empresa_view(request):
                         es_fundador=True,
                     )
 
-                # Limpiamos el email de sesión
                 request.session.pop('email_registro', None)
-
-                # Login automático y empresa activa en sesión
                 login(request, usuario)
                 request.session['empresa_activa_id'] = nueva_empresa.id
-                messages.success(request, f"Empresa '{nueva_empresa.nombre}' creada. Completa el pago para activarla.")
+                messages.success(
+                    request,
+                    f"Empresa '{nueva_empresa.nombre}' creada. Completa el pago para activarla."
+                )
                 return redirect('pasarela_pago')
 
             except Exception as e:
                 messages.error(request, f"Error al crear la empresa: {e}")
     else:
-        # Prellenamos el email si viene del paso 1
         form = RegistroEmpresaForm(initial={'email_usuario': email_previo})
 
     return render(request, 'registration/registro_empresa.html', {'form': form})
+
+# ==============================================================================
+# HELPER PRIVADO — envía el email de verificación
+# ==============================================================================
+def _enviar_email_verificacion(request, usuario, token_obj):
+    dominio   = request.get_host()
+    protocolo = 'https' if request.is_secure() else 'http'
+    enlace    = f"{protocolo}://{dominio}/verificar-email/{token_obj.token}/"
+
+    try:
+        send_mail(
+            subject        = "Confirma tu cuenta en Stokka",
+            message        = (
+                f"Hola {usuario.first_name},\n\n"
+                f"Gracias por registrarte en Stokka.\n\n"
+                f"Confirma tu cuenta haciendo clic en este enlace:\n"
+                f"{enlace}\n\n"
+                f"El enlace caduca en 24 horas.\n\n"
+                f"Si no fuiste tú, ignora este mensaje.\n\n"
+                f"— El equipo de Stokka"
+            ),
+            from_email     = django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list = [usuario.email],
+            fail_silently  = False,
+        )
+        return True
+    except Exception as e:
+        # Loguea el error en consola para el desarrollador
+        import logging
+        logging.getLogger(__name__).error(f"Error enviando email de verificación a {usuario.email}: {e}")
+        return False
+
+# ==============================================================================
+# VERIFICAR EMAIL
+# ==============================================================================
+def verificar_email_view(request, token):
+    try:
+        token_obj = TokenVerificacionEmail.objects.select_related('usuario').get(token=token)
+    except TokenVerificacionEmail.DoesNotExist:
+        messages.error(request, "Enlace de verificación inválido.")
+        return render(request, 'registration/verificar_email_resultado.html', {'exito': False})
+
+    if token_obj.usado:
+        messages.info(request, "Este enlace ya fue usado. Inicia sesión normalmente.")
+        return render(request, 'registration/verificar_email_resultado.html', {'exito': True, 'ya_usado': True})
+
+    if token_obj.ha_expirado():
+        messages.error(request, "El enlace ha caducado. Solicita uno nuevo.")
+        return render(request, 'registration/verificar_email_resultado.html',
+                      {'exito': False, 'expirado': True, 'email': token_obj.usuario.email})
+
+    # Activamos el usuario
+    usuario = token_obj.usuario
+    usuario.is_active        = True
+    usuario.email_verificado = True
+    usuario.save(update_fields=['is_active', 'email_verificado'])
+
+    token_obj.usado = True
+    token_obj.save(update_fields=['usado'])
+
+    messages.success(request, "¡Email confirmado! Ya puedes registrar tu empresa.")
+    return render(request, 'registration/verificar_email_resultado.html', {'exito': True})
+
+
+# ==============================================================================
+# REENVIAR VERIFICACIÓN
+# ==============================================================================
+def reenviar_verificacion_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        try:
+            usuario = User.objects.get(email=email, is_active=False, email_verificado=False)
+            token_obj, _ = TokenVerificacionEmail.objects.get_or_create(usuario=usuario)
+            if token_obj.usado or token_obj.ha_expirado():
+                token_obj.delete()
+                token_obj = TokenVerificacionEmail.objects.create(usuario=usuario)
+            _enviar_email_verificacion(request, usuario, token_obj)
+            messages.success(request, "Correo reenviado. Revisa tu bandeja de entrada.")
+        except User.DoesNotExist:
+            messages.success(request, "Si el correo existe y no está verificado, recibirás un nuevo enlace.")
+    return redirect('login')
+
+
+# ==============================================================================
+# OLVIDÉ MI CONTRASEÑA — pedir email
+# ==============================================================================
+def olvide_password_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        enviado = False
+
+        try:
+            usuario   = User.objects.get(email=email, is_active=True)
+            token_obj = TokenRecuperacionPassword.objects.create(usuario=usuario)
+            dominio   = request.get_host()
+            protocolo = 'https' if request.is_secure() else 'http'
+            enlace    = f"{protocolo}://{dominio}/recuperar-password/{token_obj.token}/"
+
+            try:
+                send_mail(
+                    subject        = "Restablecer contraseña — Stokka",
+                    message        = (
+                        f"Hola {usuario.first_name},\n\n"
+                        f"Recibimos una solicitud para restablecer tu contraseña de Stokka.\n\n"
+                        f"Haz clic en el siguiente enlace (válido durante 2 horas):\n"
+                        f"{enlace}\n\n"
+                        f"Si no lo solicitaste, ignora este mensaje. "
+                        f"Tu contraseña no cambiará.\n\n"
+                        f"— El equipo de Stokka"
+                    ),
+                    from_email     = django_settings.DEFAULT_FROM_EMAIL,
+                    recipient_list = [usuario.email],
+                    fail_silently  = False,
+                )
+                enviado = True
+            except Exception as smtp_error:
+                import logging
+                logging.getLogger(__name__).error(
+                    f"Error SMTP enviando recuperación a {email}: {smtp_error}"
+                )
+
+        except User.DoesNotExist:
+            pass  # Respuesta genérica — no revelamos si el email existe
+
+        # Siempre el mismo mensaje al usuario (seguridad)
+        if enviado:
+            messages.success(
+                request,
+                f"Hemos enviado las instrucciones a {email}. "
+                f"Revisa también la carpeta de spam. El enlace caduca en 2 horas."
+            )
+        else:
+            messages.warning(
+                request,
+                "No pudimos enviar el correo en este momento. "
+                "Comprueba que el email es correcto o inténtalo más tarde."
+            )
+
+        return redirect('olvide_password')
+
+    return render(request, 'registration/olvide_password.html')
+
+
+# ==============================================================================
+# OLVIDÉ MI CONTRASEÑA — paso 2: formulario nueva contraseña
+# ==============================================================================
+def resetear_password_view(request, token):
+    try:
+        token_obj = TokenRecuperacionPassword.objects.select_related('usuario').get(
+            token=token, usado=False
+        )
+    except TokenRecuperacionPassword.DoesNotExist:
+        messages.error(request, "Enlace inválido o ya utilizado.")
+        return render(request, 'registration/resetear_password.html', {'token_invalido': True})
+
+    if token_obj.ha_expirado():
+        messages.error(request, "El enlace ha caducado. Solicita uno nuevo.")
+        return render(request, 'registration/resetear_password.html', {'token_invalido': True})
+
+    if request.method == 'POST':
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
+
+        if len(password1) < 8:
+            messages.error(request, "La contraseña debe tener al menos 8 caracteres.")
+            return render(request, 'registration/resetear_password.html', {'token': token})
+
+        if password1 != password2:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return render(request, 'registration/resetear_password.html', {'token': token})
+
+        usuario = token_obj.usuario
+        usuario.set_password(password1)
+        usuario.save()
+
+        token_obj.usado = True
+        token_obj.save(update_fields=['usado'])
+
+        messages.success(request, "¡Contraseña actualizada! Ya puedes iniciar sesión.")
+        return redirect('login')
+
+    return render(request, 'registration/resetear_password.html', {'token': token})
 
 
 # ==============================================================================
@@ -233,6 +467,11 @@ def login_view(request):
             user     = authenticate(request, username=user_obj.username, password=password_ingresado)
 
             if user is not None:
+                if not user.email_verificado:
+                    messages.warning(request, "Debes confirmar tu email antes de entrar.")
+                    return render(request, 'registration/login.html', {
+                        'email_no_verificado': email_ingresado
+                    })
                 login(request, user)
 
                 if request.POST.get('recordar'):

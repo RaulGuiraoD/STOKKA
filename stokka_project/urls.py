@@ -32,8 +32,14 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('seleccionar-empresa/', views.seleccionar_empresa, name='seleccionar_empresa'), 
     path('registro/', views.registro_bienvenida_view, name='registro'),
-    path('registro/usuario/', views.registro_usuario_view,    name='registro_usuario'),
-    path('registro/empresa/', views.registro_empresa_view,    name='registro_empresa'),
+    path('registro/usuario/', views.registro_usuario_view, name='registro_usuario'),
+    path('registro/empresa/', views.registro_empresa_view, name='registro_empresa'),
+
+    # --- VERIFICACIÓN EMAIL Y RECUPERACIÓN CONTRASEÑA ---
+    path('verificar-email/<uuid:token>/', views.verificar_email_view, name='verificar_email'),
+    path('reenviar-verificacion/', views.reenviar_verificacion_view, name='reenviar_verificacion'),
+    path('olvide-password/', views.olvide_password_view,  name='olvide_password'),
+    path('recuperar-password/<uuid:token>/', views.resetear_password_view, name='resetear_password'),
     
     # --- FLUJO DE PAGO ---
     path('registro/pago/', views.pasarela_pago_view, name='pasarela_pago'),
@@ -43,12 +49,12 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
 
     # --- GESTIÓN DE EMPRESA (DUEÑO) ---
-    path('empresa/',          views.empresa_view,    name='empresa'),
+    path('empresa/',  views.empresa_view, name='empresa'),
     path('empresa/eliminar/', views.eliminar_empresa, name='eliminar_empresa'),
-    path('empresa/desactivar/ahora/',   views.desactivar_empresa_ahora,  name='desactivar_empresa_ahora'),
-    path('empresa/desactivar/fecha/',   views.desactivar_empresa_fecha,   name='desactivar_empresa_fecha'),
-    path('empresa/desactivar/cancelar/', views.cancelar_desactivacion,    name='cancelar_desactivacion'),
-    path('empresa/reactivar/',          views.reactivar_empresa,          name='reactivar_empresa'),
+    path('empresa/desactivar/ahora/', views.desactivar_empresa_ahora, name='desactivar_empresa_ahora'),
+    path('empresa/desactivar/fecha/', views.desactivar_empresa_fecha, name='desactivar_empresa_fecha'),
+    path('empresa/desactivar/cancelar/', views.cancelar_desactivacion, name='cancelar_desactivacion'),
+    path('empresa/reactivar/', views.reactivar_empresa, name='reactivar_empresa'),
 
     # --- PERFIL DE USUARIO ---
     path('perfil/', views.perfil_view, name='perfil'),
@@ -56,7 +62,7 @@ urlpatterns = [
     path('perfil/cambiar-foto/', views.cambiar_foto, name='cambiar_foto'),
     path('perfil/eliminar-foto/', views.eliminar_foto, name='eliminar_foto'),
     path('perfil/preferencias/daltonismo/', views.guardar_preferencia_daltonismo, name='pref_daltonismo'),
-    path('perfil/preferencias/iconos/',     views.guardar_preferencia_iconos, name='pref_iconos'),
+    path('perfil/preferencias/iconos/', views.guardar_preferencia_iconos, name='pref_iconos'),
 
     # --- GESTIÓN DE USUARIOS (DEUO/ADMIN) ---
     path('gestion-usuarios/', views.gestion_usuarios, name='gestion_usuarios'),
