@@ -440,6 +440,15 @@ def resetear_password_view(request, token):
         token_obj.usado = True
         token_obj.save(update_fields=['usado'])
 
+        usuario = token_obj.usuario
+
+        if check_password(password1, usuario.password):
+            messages.error(request, "La nueva contraseña no puede ser igual a la anterior.")
+            return render(request, 'registration/resetear_password.html', {'token': token})
+
+        usuario.set_password(password1)
+        usuario.save()
+
         messages.success(request, "¡Contraseña actualizada! Ya puedes iniciar sesión.")
         return redirect('login')
 
