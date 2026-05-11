@@ -9,7 +9,7 @@ from django.db import models, transaction
 from django.utils import timezone
 
 
-# 3. Local App Imports 
+import uuid
 
 # MODELO EMPRESA
 class Empresa(models.Model):
@@ -30,9 +30,8 @@ class Empresa(models.Model):
     
 # MODELO USUARIOS
 class Usuario(AbstractUser):
-    # username lo seguimos teniendo pero lo rellenamos automáticamente con el email
-    # en el registro. El usuario nunca lo ve ni lo escribe.
-    # email es el único identificador que importa al usuario final.
+    
+    email_verificado = models.BooleanField(default=False)
 
     def get_membresia(self, empresa):
         """Devuelve la Membresia de este usuario en una empresa concreta, o None."""
@@ -150,8 +149,6 @@ class Producto(models.Model):
         return "ok"
     
 
-
-
 def validar_tamano_foto(value):
     limit = 2 * 1024 * 1024  #2MB
     if value.size > limit:
@@ -247,3 +244,42 @@ class TemaEmpresa(models.Model):
 
     def __str__(self):
         return f"Tema de {self.empresa.nombre}"    
+    
+
+class TokenVerificacionEmail(models.Model):
+    """Token de un solo uso para verificar el email al registrarse."""
+    usuario   = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='token_verificacion'
+    )
+    token     = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    usado     = models.BooleanField(default=False)
+
+    def ha_expirado(self):
+        """El enlace caduca a las 24 horas."""
+        from django.utils import timezone
+        return timezone.now() > self.creado_en + timezone.timedelta(hours=24)
+
+    def __str__(self):
+        return f"Token {self.usuario.email} — usado={self.usado}"
+
+
+class TokenRecuperacionPassword(models.Model):
+    """Token de un solo uso para restablecer contraseña."""
+    usuario   = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='tokens_recuperacion'
+    )
+    token     = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    usado     = models.BooleanField(default=False)
+
+    def ha_expirado(self):
+        from django.utils import timezone
+        return timezone.now() > self.creado_en + timezone.timedelta(hours=2)
+
+    def __str__(self):
+        return f"Recuperación {self.usuario.email}"

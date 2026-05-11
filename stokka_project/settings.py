@@ -151,3 +151,16 @@ LOGIN_REDIRECT_URL = 'index' # A donde van justo después de loguearse
 # LOGOUT_REDIRECT_URL = 'login' # A dónde va el usuario tras cerrar sesión
 # LOGOUT_ON_GET = True          # Permite cerrar sesión haciendo clic en el enlace
 AUTH_USER_MODEL = 'inventario.Usuario'
+
+# EMAIL (desarrollo: se imprime en consola)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Cuando tengas SMTP real (Gmail, etc.), cambia por:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'tu@gmail.com'
+# EMAIL_HOST_PASSWORD = 'tu_app_password'
+# DEFAULT_FROM_EMAIL = 'Stokka <tu@gmail.com>'
+
+DEFAULT_FROM_EMAIL = 'Stokka <noreply@stokka.app>'
