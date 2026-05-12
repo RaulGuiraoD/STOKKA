@@ -50,11 +50,8 @@
                    style="right: 15px; cursor: pointer; color: var(--verde-stokka); z-index: 10;"
                    onclick="togglePassword('id_password', 'toggleIcon')"></i>
             </div>
-            <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 12px;">
-                <label class="text-white">
-                    <input type="checkbox" name="recordar" class="form-check-input me-1"> Recuérdame
-                </label>
-                <a href="{% url 'olvide_password' %}" class="text-white text-decoration-none">
+            <div class="d-flex flex-row-reverse mt-2" style="font-size: 12px;">
+                <a href="{% url 'olvide_password' %}" class="text-white ">
                     ¿Olvidaste la contraseña?
                 </a>
             </div>
