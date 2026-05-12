@@ -22,6 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'django-insecure-3))uh@5n*y@bbfk4g-3tzbvbk1qz37jfu#t%&aufuofz08e&_^'
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
 ALLOWED_HOSTS = []
 
 
@@ -144,32 +150,16 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 LOGIN_URL = 'login'          # A donde van si intentan entrar al index sin cuenta
 LOGIN_REDIRECT_URL = 'index' # A donde van justo después de loguearse
 
+# LOGOUT_REDIRECT_URL = 'login' # A dónde va el usuario tras cerrar sesión
+# LOGOUT_ON_GET = True          # Permite cerrar sesión haciendo clic en el enlace
 AUTH_USER_MODEL = 'inventario.Usuario'
 
-env = environ.Env()
-environ.Env.read_env(BASE_DIR / '.env')
-
 # ── EMAIL SMTP ──────────────────────────────────────────────────────────────
-# Email
-EMAIL_HOST          = env('EMAIL_HOST', default='smtp.gmail.com')
-EMAIL_PORT          = env.int('EMAIL_PORT', default=587)
-EMAIL_USE_TLS       = env.bool('EMAIL_USE_TLS', default=True)
-EMAIL_HOST_USER     = env('EMAIL_HOST_USER', default='')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL  = env('DEFAULT_FROM_EMAIL', default=EMAIL_HOST_USER)
+EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST          = 'smtp.gmail.com'
+EMAIL_PORT          = 587
+EMAIL_USE_TLS       = True
+EMAIL_HOST_USER     = config('EMAIL_HOST_USER',     default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL',  default=f'Stokka <{EMAIL_HOST_USER}>')
 
-SECRET_KEY = env('SECRET_KEY')
-DEBUG = env.bool('DEBUG', default=False)
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
-
-# # Base de datos (preparado para el cambio)
-# DATABASES = {
-#     'default': {
-#         'ENGINE':   env('DB_ENGINE',   default='django.db.backends.sqlite3'),
-#         'NAME':     env('DB_NAME',     default=str(BASE_DIR / 'db.sqlite3')),
-#         'USER':     env('DB_USER',     default=''),
-#         'PASSWORD': env('DB_PASSWORD', default=''),
-#         'HOST':     env('DB_HOST',     default=''),
-#         'PORT':     env('DB_PORT',     default=''),
-#     }
-# }
