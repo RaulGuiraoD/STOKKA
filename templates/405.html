@@ -1,0 +1,12 @@
+{% extends 'layouts/base_auth.html' %}
+{% block content %}
+<div class="text-center text-white py-5">
+    <h1 style="font-size: 6rem; font-weight: 700;">405</h1>
+    <p class="fs-4">Esa no es la forma de registrar esto.</p>
+    <p class="text-white-50">Estás intentando usar un método de envío que no aceptamos en esta ventanilla.</p>
+
+    <div class="mt-4">
+        <a href="{% url 'index' %}" class="btn btn_selector">Ir a un sitio seguro</a>
+    </div>
+</div>
+{% endblock %}
