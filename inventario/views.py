@@ -745,8 +745,8 @@ def gestion_usuarios(request):
                         email=email,
                         password=password,
                         first_name=first_name,
-                        is_active=False,              # añadir
-                        email_verificado=False,       # añadir
+                        is_active=False,              
+                        email_verificado=False,       
                     )
                     Membresia.objects.create(
                         usuario=nuevo_usuario,
@@ -756,7 +756,7 @@ def gestion_usuarios(request):
                     )
                     Perfil.objects.get_or_create(user=nuevo_usuario)
                     token_obj = TokenVerificacionEmail.objects.create(usuario=nuevo_usuario)
-                _enviar_email_verificacion(request, nuevo_usuario, token_obj)  # añadir
+                _enviar_email_verificacion(request, nuevo_usuario, token_obj)  
                 messages.success(request, f"Usuario {first_name} creado. Se le ha enviado un email de verificación.")
             except Exception as e:
                 messages.error(request, f"Error al crear el usuario: {e}", extra_tags='open_add_modal')
@@ -775,7 +775,7 @@ def gestion_usuarios(request):
         form = RegistroColaboradorForm(user_request=request.user)
 
     return render(request, 'stokka/pages/gestion_usuarios.html', {
-        'membresias': membresias_empresa,  # antes 'usuarios', ahora 'membresias'
+        'membresias': membresias_empresa,  
         'form': form,
         'empresa': empresa,
         'membresia_activa': membresia_activa,
@@ -1163,20 +1163,19 @@ def editar_perfil_view(request):
         
         if fecha_nacimiento and fecha_nacimiento.strip():
             try:
-                fecha_obj = datetime.strptime(fecha_nacimiento, '%Y-%m-d').date()
+                fecha_obj = datetime.strptime(fecha_nacimiento, '%Y-%m-%d').date()
                 
-                anio_actual = date.today().year
                 if fecha_obj.year < 1900 or fecha_obj > date.today():
-                    messages.error(request, "Por favor, introduce una fecha de nacimiento coherente.", extra_tags='open_edit_modal')
+                    messages.error(request, "Por favor, introduce una fecha coherente.", extra_tags='open_edit_modal')
                     return redirect('perfil')
                     
-                perfil.fecha_nacimiento = fecha_obj
+                perfil.fecha_nacimiento = fecha_obj 
                 
             except ValueError:
-                    messages.error(request, "Formato de fecha incorrecto.", extra_tags='open_edit_modal')
-                    return redirect('perfil')
-            else:
-                perfil.fecha_nacimiento = None
+                messages.error(request, "Formato de fecha incorrecto.", extra_tags='open_edit_modal')
+                return redirect('perfil')
+        else:
+            perfil.fecha_nacimiento = None
 
 
         request.user.first_name = nombre
