@@ -6,9 +6,8 @@
     <p class="text-white-50">No tienes permisos para acceder a esta sección de la empresa.</p>
 
     <div class="mt-4">
-        <a href="{% url 'index' %}" class="btn btn_selector m-1">Inicio</a>
-        <a href="{% url 'inventario' %}" class="btn btn_selector m-1">Inventario</a>
-        <a href="{% url 'perfil' %}" class="btn btn_selector m-1">Mi Perfil</a>
+        <a href="javascript:history.back()" class="btn btn_selector">Volver atrás</a>
+        <a href="{% url 'index' %}" class="btn btn_selector">Ir al Inicio</a>
     </div>
 </div>
 {% endblock %}
