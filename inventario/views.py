@@ -741,10 +741,12 @@ def gestion_usuarios(request):
             try:
                 with transaction.atomic():
                     nuevo_usuario = User.objects.create_user(
-                        username=email,  # username autogenerado, invisible
+                        username=email,
                         email=email,
                         password=password,
                         first_name=first_name,
+                        is_active=False,              # añadir
+                        email_verificado=False,       # añadir
                     )
                     Membresia.objects.create(
                         usuario=nuevo_usuario,
@@ -753,7 +755,9 @@ def gestion_usuarios(request):
                         es_fundador=False
                     )
                     Perfil.objects.get_or_create(user=nuevo_usuario)
-                    messages.success(request, f"Usuario {first_name} creado correctamente.")
+                    token_obj = TokenVerificacionEmail.objects.create(usuario=nuevo_usuario)
+                _enviar_email_verificacion(request, nuevo_usuario, token_obj)  # añadir
+                messages.success(request, f"Usuario {first_name} creado. Se le ha enviado un email de verificación.")
             except Exception as e:
                 messages.error(request, f"Error al crear el usuario: {e}", extra_tags='open_add_modal')
 
