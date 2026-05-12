@@ -28,6 +28,9 @@ from django.conf import settings as django_settings
 User = get_user_model()
 
 
+def linkedin_team_view(request):
+    return render(request, 'registration/social_media/linkedin_team.html')
+
 # ==============================================================================
 # HELPERS Y DECORADORES
 # ==============================================================================

@@ -58,7 +58,7 @@
 }
 
 .brand-container span:last-child {
-    max-width: 150px; /* Ajusta según veas */
+    max-width: 150px; 
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -109,6 +109,54 @@ main, .container-fluid, .card {
 /* --- ------------------------------------------------------------------------------- --- */
 /* --- BOTONES STOKKA --- */
 /* --- ------------------------------------------------------------------------------- --- */
+/* Botón Principal  */
+.btn-stokka {
+    background-color: var(--verde-stokka) !important;
+    color: white !important;
+    border: none;
+}
+.btn-stokka:hover {
+    filter: brightness(1.2);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 61, 0, 0.2) !important;
+}
+
+/* Botón Cancelar  */
+.btn-cancelar-stokka {
+    color: var(--rojo-alerta) !important;
+    border: 2px solid var(--rojo-alerta) !important;
+    background: transparent;
+}
+.btn-cancelar-stokka:hover {
+    background-color: var(--rojo-alerta) !important;
+    color: white !important;
+    transform: translateY(-2px);
+}
+
+/* Botón Cancelar Alternativo (Verde) */
+.btn-cancelar2-stokka {
+    color: var(--verde-stokka) !important;
+    border: 2px solid var(--verde-stokka) !important;
+    background: transparent;
+}
+.btn-cancelar2-stokka:hover {
+    background-color: var(--verde-stokka) !important;
+    color: white !important;
+    transform: translateY(-2px);
+}
+
+/* Botón Editar  */
+.btn-editar-stokka {
+    color: var(--amarillo-alerta) !important;
+    border: 2px solid var(--amarillo-alerta) !important;
+    background: transparent;
+}
+.btn-editar-stokka:hover {
+    background-color: var(--amarillo-alerta) !important;
+    color: black !important;
+    transform: translateY(-2px);
+}
+
 .btn-stokka, .btn-cancelar-stokka, .btn-cancelar2-stokka, .btn-editar-stokka {
     font-weight: 600 !important;
     text-transform: uppercase;
@@ -231,55 +279,6 @@ main, .container-fluid, .card {
     cursor: pointer;
     /* Evita que el icono empuje otros elementos */
     flex-shrink: 0; 
-}
-
-/*----------------------------------------------------------------------------*/
-/* Botón Principal  */
-.btn-stokka {
-    background-color: var(--verde-stokka) !important;
-    color: white !important;
-    border: none;
-}
-.btn-stokka:hover {
-    filter: brightness(1.2);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 61, 0, 0.2) !important;
-}
-
-/* Botón Cancelar  */
-.btn-cancelar-stokka {
-    color: var(--rojo-alerta) !important;
-    border: 2px solid var(--rojo-alerta) !important;
-    background: transparent;
-}
-.btn-cancelar-stokka:hover {
-    background-color: var(--rojo-alerta) !important;
-    color: white !important;
-    transform: translateY(-2px);
-}
-
-/* Botón Cancelar Alternativo (Verde) */
-.btn-cancelar2-stokka {
-    color: var(--verde-stokka) !important;
-    border: 2px solid var(--verde-stokka) !important;
-    background: transparent;
-}
-.btn-cancelar2-stokka:hover {
-    background-color: var(--verde-stokka) !important;
-    color: white !important;
-    transform: translateY(-2px);
-}
-
-/* Botón Editar  */
-.btn-editar-stokka {
-    color: var(--amarillo-alerta) !important;
-    border: 2px solid var(--amarillo-alerta) !important;
-    background: transparent;
-}
-.btn-editar-stokka:hover {
-    background-color: var(--amarillo-alerta) !important;
-    color: black !important;
-    transform: translateY(-2px);
 }
 
 /* --- BADGES Y ROLES --- */
@@ -413,8 +412,8 @@ input::-webkit-credentials-auto-fill-button {
 
 /* ESTILO MODAL ADVERTENCIA FINAL ELIMINACIÓN EMPRESA */
 #modalConfirmacionFinal .modal-content {
-    border: 2px solid #dc3545 !important;
-    box-shadow: 0 0 20px rgba(220, 53, 69, 0.4);
+    border: 2px solid var(--rojo-alerta) !important;
+    box-shadow: 0 0 20px var(--rojo-alerta-mid)
 }
 
 .stokka-input:focus {
@@ -463,6 +462,102 @@ input::-webkit-credentials-auto-fill-button {
     --verde-stokka: #000 !important;
     --texto-base: #000 !important;
     background-color: #fff !important;
+}
+
+/* ==========================================
+   TARJETAS DE EQUIPO (FLIP CARDS) - STOKKA
+   ========================================== */
+
+/* Contenedor principal de la tarjeta */
+.flip-card {
+    background-color: transparent;
+    width: 280px;
+    height: 380px;
+    perspective: 1500px; /* Profundidad del giro */
+}
+
+/* El cuerpo que gira */
+.flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+}
+
+.flip-card:hover .flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+/* Caras de la tarjeta */
+.flip-card-front, .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--verde-stokka-mid);
+}
+
+/* Parte Delantera: Estilo Identificación Blanca */
+.flip-card-front {
+    background-color: var(--blanco);
+    color: var(--verde-stokka);
+    box-shadow: 0 5px 15px var(--verde-stokka-historial-fondo);
+}
+
+/* Simulación de la ranura para el cordón (Badge holder) */
+.flip-card-front::before {
+    content: "";
+    position: absolute;
+    top: 15px;
+    width: 40px;
+    height: 8px;
+    background: var(--verde-stokka-mid);
+    border-radius: 10px;
+}
+
+/* Parte Trasera */
+.flip-card-back {
+    background-color: var(--blanco);
+    color: var(--verde-stokka);
+    transform: rotateY(180deg);
+    box-shadow: 0 5px 15px var(--verde-stokka-historial-fondo);
+}
+
+/* Imagen de perfil */
+.profile-img-card {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 20px;
+    border: 4px solid var(--verde-stokka-light);
+    padding: 3px;
+    background: white;
+}
+
+/* Botón dentro de la tarjeta trasera (Reutilizando tus estilos) */
+.btn-linkedin-card {
+    background-color: var(--verde-stokka) !important;
+    color: var(--blanco) !important;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 10px 25px;
+    border-radius: 10px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-linkedin-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
 }
 
 /* --- MEDIA QUERY: BOTONES RESPONSIVOS --- */

@@ -1,0 +1,63 @@
+{% extends 'layouts/base_auth.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-2 mb-5">
+    <div class="text-center mb-3">
+        <p class="text-uppercase fw-bold ls-2 opacity-75" style="letter-spacing: 3px;">The Team behind</p>
+        <h2 class="text-white fw-bold italic mt-2 mb-4" style="font-family: 'Merriweather', serif;"> STOKKA INDUSTRIES</h2>
+    </div>
+
+    <div class="row g-6 justify-content-center mt-2">
+        
+        <div class="col-md-5 d-flex justify-content-center">
+            <div class="flip-card">
+                <div class="flip-card-inner shadow-stokka">
+                    <div class="flip-card-front p-4">
+                        <img src="{% static 'assets/gato_raul.jpg' %}" class="profile-img-card shadow-sm" alt="Tu nombre">
+                        <h3 class="h4 fw-bold mb-1">Raúl Guirao</h3>
+                        <p class="text-muted small text-uppercase">Full Stack Developer</p>
+                        <div class="badge rol-stokka bg-stokka-dueno mt-2">Co-Founder</div>
+                    </div>
+                    <div class="flip-card-back p-4">
+                        <i class="fa-brands fa-linkedin display-3 mb-4"></i>
+                        <h4 class="fw-bold mb-3">Conecta conmigo</h4>
+                        <p class="small opacity-75 mb-4">Encantado de compartir mi experiencia en el desarrollo de Stokka.</p>
+                        <a href="https://www.linkedin.com/in/raulguirao" target="_blank" class="btn-linkedin-card">
+                            Ver LinkedIn
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-5 d-flex justify-content-center">
+            <div class="flip-card">
+                <div class="flip-card-inner shadow-stokka">
+                    <div class="flip-card-front p-4">
+                        <img src="{% static 'assets/foto_pedro.jpg' %}" class="profile-img-card shadow-sm" alt="Nombre Compañero">
+                        <h3 class="h4 fw-bold mb-1">Pedro Luis Sanchez</h3>
+                        <p class="text-muted small text-uppercase">Full Stack Developer</p>
+                        <div class="badge rol-stokka bg-stokka-dueno mt-2">Co-Founder</div>
+                    </div>
+                    <div class="flip-card-back p-4">
+                        <i class="fa-brands fa-linkedin display-3 mb-4"></i>
+                        <h4 class="fw-bold mb-3">Conectemos</h4>
+                        <p class="small opacity-75 mb-4">Apasionado por la optimización de procesos y el diseño UI de Stokka.</p>
+                        <a href="https://www.linkedin.com/in/pedro-sanchezgonzalez/" target="_blank" class="btn-linkedin-card">
+                            Ver LinkedIn
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="{% url 'login' %}" class="btn_selector py-2 px-4 rounded-pill">
+            <i class="fa-solid fa-arrow-left me-2"></i> Volver a la plataforma
+        </a>
+    </div>
+</div>
+{% endblock content %}

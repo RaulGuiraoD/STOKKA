@@ -27,6 +27,7 @@ urlpatterns = [
     
     # --- CORE ---
     path('', views.index, name='index'),
+    path('equipo-stokka/', views.linkedin_team_view, name='linkedin_team'),
 
     # --- AUTENTICACIÓN ---
     path('login/', views.login_view, name='login'),
