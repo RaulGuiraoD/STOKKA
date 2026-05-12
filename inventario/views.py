@@ -1432,13 +1432,21 @@ def editar_producto(request, pk):
             )
             messages.success(request, f"Producto '{producto_editado.nombre}' actualizado.")
             return redirect('inventario')
+        else:
+            messages.error(request, "Error al actualizar el producto. Revisa los datos introducidos.")
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return render(request, 'stokka/modales/form_editar_parcial.html', {'form': form, 'producto': producto})
     else:
         form = ProductoForm(instance=producto)
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return render(request, 'stokka/modales/form_editar_parcial.html', {'form': form, 'producto': producto})
 
-    return render(request, 'stokka/pages/form_producto.html', {'form': form, 'titulo': 'Editar'})
+    return render(request, 'stokka/pages/inventario.html', {
+        'form': form, 
+        'titulo': 'Editar',
+        'productos': Producto.objects.filter(empresa=empresa)
+    })
 
 
 @login_required

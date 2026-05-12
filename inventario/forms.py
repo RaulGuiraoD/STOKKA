@@ -5,51 +5,7 @@ from django.contrib.auth.hashers import check_password
 from .models import Producto, Empresa, Membresia, Usuario
 
 User = get_user_model()
-
-# class RegistroUsuarioForm(forms.Form):
-#     first_name = forms.CharField(
-#         label="Nombre",
-#         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tu nombre'})
-#     )
-#     email = forms.EmailField(
-#         label="Email Corporativo",
-#         required=True,
-#         widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'ejemplo@stokka.com'})
-#     )
-#     password = forms.CharField(
-#         label="Contraseña",
-#         widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'mínimo 8 caracteres'})
-#     )
-#     confirm_password = forms.CharField(
-#         label="Confirmar Contraseña",
-#         widget=forms.PasswordInput(attrs={'class': 'form-control'})
-#     )
-#     nombre_empresa = forms.CharField(
-#         label="Nombre de tu Empresa",
-#         widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Stokka Logistics'})
-#     )
-
-#     def clean_email(self):
-#         email = self.cleaned_data.get('email')
-#         if User.objects.filter(email=email).exists():
-#             raise forms.ValidationError("Este email ya está registrado.")
-#         return email
-
-#     def clean_nombre_empresa(self):
-#         nombre = self.cleaned_data.get('nombre_empresa')
-#         if Empresa.objects.filter(nombre__iexact=nombre).exists():
-#             raise forms.ValidationError("Este nombre de empresa ya está registrado.")
-#         return nombre
-
-#     def clean(self):
-#         cleaned_data = super().clean()
-#         password = cleaned_data.get("password")
-#         confirm_password = cleaned_data.get("confirm_password")
-#         if password and confirm_password and password != confirm_password:
-#             self.add_error('confirm_password', "Las contraseñas no coinciden.")
-#         return cleaned_data
-
-    
+   
 class EditarUsuarioAdminForm(forms.ModelForm):
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
@@ -143,7 +99,7 @@ class ProductoForm(forms.ModelForm):
         model = Producto
         fields = ['nombre', 'referencia', 'descripcion', 'stock_actual', 'umbrales_amarillo', 'umbrales_rojo', 'factura']
         widgets = {
-            'nombre': forms.TextInput(attrs={'class': 'firn-control', 'placeholder': 'Ej: Lápices'}),
+            'nombre': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Lápices'}),
             'referencia': forms.TextInput(attrs={'class': 'form-control'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'stock_actual': forms.NumberInput(attrs={'class': 'form-control'}),
@@ -151,6 +107,25 @@ class ProductoForm(forms.ModelForm):
             'umbrales_rojo': forms.NumberInput(attrs={'class': 'form-control'}),
             'factura': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
+
+    def clean_factura(self):
+        """Validación específica para el archivo de factura"""
+        factura = self.cleaned_data.get('factura')
+        if factura:
+            # Validar por extensión
+            extension = factura.name.split('.')[-1].lower()
+            extensiones_permitidas = ['pdf', 'jpg', 'jpeg', 'png']
+            
+            if extension not in extensiones_permitidas:
+                raise forms.ValidationError(
+                    f"Formato no permitido (.{extension}). Solo se aceptan: {', '.join(extensiones_permitidas)}."
+                )
+            
+            # Validar por tamaño (Opcional: Ejemplo para 5MB)
+            if factura.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("El archivo es demasiado grande. El máximo permitido son 5MB.")
+                
+        return factura
     
     def clean(self):
         cleaned_data = super().clean()

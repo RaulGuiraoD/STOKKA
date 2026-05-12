@@ -26,12 +26,15 @@
             <i class="fa-solid fa-filter me-2"></i> FILTROS
         </button>
         <div class="d-flex gap-2">
-            <button type="button" class="btn btn-stokka" data-bs-toggle="modal" data-bs-target="#modalCopia">
-                <i class="fa-solid fa-floppy-disk me-2"></i> Copia de seguridad
-            </button>
             <button id="btn-eliminar-masivo" class="btn btn-inventario-cancelar-stokka shadow-stokka d-none"
                 data-bs-toggle="modal" data-bs-target="#modalEliminarMasivo">
                 <i class="fa-solid fa-trash-can me-2"></i> ELIMINAR (<span id="count-seleccionados">0</span>)
+            </button>
+            <button type="button" class="btn btn-stokka" data-bs-toggle="modal" data-bs-target="#modalCopia">
+                <i class="fa-solid fa-floppy-disk me-2"></i> Copia de seguridad
+            </button>
+            <button type="button" class="btn btn-stokka" data-bs-toggle="modal" data-bs-target="#modalFacturas">
+                <i class="fa-solid fa-file-invoice me-2"></i> Facturas
             </button>
             <button class="btn btn-inventario-stokka shadow-stokka" data-bs-toggle="modal" data-bs-target="#modalAñadir"
                 style="background-color: var(--verde-secundario) !important;">
@@ -280,7 +283,7 @@
                     <div class="row g-3">
                         {% for field in form_añadir %}
                         <div
-                            class="col-{% if field.name == 'descripcion' or field.name == 'nombre' or field.name == 'foto' %}12{% else %}6{% endif %}">
+                            class="col-{% if field.name == 'descripcion' or field.name == 'nombre' or field.name == 'factura' %}12{% else %}6{% endif %}">
                             <label class="small text-dark fw-bold">{{ field.label }}
                                 {% if field.field.required %}
                                 <span class="text-danger">*</span>
@@ -325,6 +328,66 @@
                 <div class="text-center p-5">
                     <div class="spinner-border text-success" role="status"></div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE FACTURAS -->
+ <div class="modal fade" id="modalFacturas" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-stokka">
+            <div class="modal-header border-0 px-4 pt-4 pb-2">
+                <h5 class="fw-bold">
+                    <i class="fa-solid fa-file-invoice me-2" style="color: var(--verde-stokka);"></i>
+                    Facturas adjuntas
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 pb-4">
+                {% with productos_con_factura=productos|dictsort:"nombre" %}
+                    {% if productos|length == 0 %}
+                        <p class="text-muted text-center py-4">No hay facturas adjuntas en este inventario.</p>
+                    {% else %}
+                        <div class="list-group list-group-flush">
+                            {% for p in productos %}
+                                {% if p.factura %}
+                                <a href="{{ p.factura.url }}" target="_blank"
+                                   class="list-group-item list-group-item-action d-flex align-items-center gap-3 rounded-3 mb-2 border px-3 py-3"
+                                   style="text-decoration: none;">
+                                    <div class="flex-shrink-0">
+                                        <i class="fa-solid fa-file-pdf fs-4" style="color: var(--rojo-alerta);"></i>
+                                    </div>
+                                    <div class="flex-grow-1 min-width-0">
+                                        <div class="fw-bold text-dark text-truncate">{{ p.nombre }}</div>
+                                        <div class="small text-muted">
+                                            Ref: {{ p.referencia|default:"S/R" }} &nbsp;·&nbsp;
+                                            #{{ p.id_formateado }}
+                                        </div>
+                                    </div>
+                                    <div class="flex-shrink-0">
+                                        <span class="badge rounded-pill px-3 py-2"
+                                              style="background: var(--verde-stokka); color: white; font-size: 0.7rem;">
+                                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Abrir
+                                        </span>
+                                    </div>
+                                </a>
+                                {% endif %}
+                            {% empty %}
+                                <p class="text-muted text-center py-4">Ningún producto tiene factura adjunta.</p>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Contador -->
+                        <div class="text-end mt-3">
+                            <small class="text-muted">
+                                {% with total=productos|length %}
+                                    {{ total }} producto{% if total != 1 %}s{% endif %} en inventario
+                                {% endwith %}
+                            </small>
+                        </div>
+                    {% endif %}
+                {% endwith %}
             </div>
         </div>
     </div>

@@ -2,18 +2,60 @@
     {% csrf_token %}
     <div class="modal-body p-4">
         <div class="row g-3">
+            {# Bucle para campos estándar #}
             {% for field in form %}
-            <div class="col-{% if field.name == 'descripcion' or field.name == 'nombre' %}12{% else %}6{% endif %}">
-                <label class="small text-muted fw-bold">{{ field.label }}
-                    {% if field.field.required %}
-                    <span class="text-danger">*</span>
-                    {% endif %}
-                </label>
-                {{ field }}
-            </div>
+                {% if field.name != 'factura' %}
+                <div class="col-{% if field.name == 'descripcion' or field.name == 'nombre' %}12{% else %}6{% endif %}">
+                    <label class="small text-muted fw-bold">{{ field.label }}
+                        {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                    </label>
+                    {{ field }}
+                </div>
+                {% endif %}
             {% endfor %}
+
+            <div class="col-12 mt-4">
+                <div class="p-3 border rounded-3 bg-light shadow-sm">
+                    <label class="small text-muted fw-bold mb-2 d-block">
+                         Factura (Opcional)
+                    </label>
+                    
+                    {% if producto.factura %}
+                        <div class="d-flex align-items-center mb-3 p-2 bg-white border rounded shadow-sm">
+                            <div class="flex-grow-1 overflow-hidden d-flex align-items-center">
+                                <i class="fa-solid fa-paperclip text-success me-2"></i>
+                                <div class="overflow-hidden">
+                                    <p class="small mb-0 fw-bold text-muted" style="font-size: 0.7rem;">ARCHIVO ACTUAL:</p>
+                                    <a href="{{ producto.factura.url }}" target="_blank" 
+                                    class="small text-stokka fw-bold text-decoration-none d-inline-block text-truncate" 
+                                    style="max-width: 450px;" 
+                                    title="Ver archivo completo">
+                                        {{ producto.factura.name|truncatechars:60 }}
+                                        <i class="fa-solid fa-external-link ms-1" style="font-size: 0.65rem;"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="ms-2 ps-2 border-start custom-delete-check">
+                                <div class="form-check form-switch p-0 m-0 d-flex flex-column align-items-center">
+                                    <input class="form-check-input ms-0" type="checkbox" name="factura-clear" id="factura-clear_id" style="cursor: pointer;">
+                                    <label class="form-check-label small text-danger fw-bold mt-1" for="factura-clear_id" style="font-size: 0.65rem; cursor: pointer;">BORRAR</label>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="mt-2">
+                        <label class="small text-muted d-block mb-1" style="font-size: 0.75rem;">
+                            {% if producto.factura %}Reemplazar por nuevo archivo:{% else %}Subir documento:{% endif %}
+                        </label>
+                        <input type="file" name="factura" class="form-control form-control-sm shadow-sm" id="id_factura">
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
     <div class="modal-footer border-0 p-4 pt-0">
         <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
             <button type="submit"
