@@ -15,7 +15,7 @@
             </span>
             <div class="info-wrapper d-inline-block ms-2 mt-2">
                 <i class="fa-solid fa-circle-info info-icon-2"
-                    data-info="Registra tus productos de manera sencilla. Asignar umbrales te permitirán saber de manera rápida y fácil los productos que necesitas con urgencia."></i>
+                    data-info="Registra tus productos de manera sencilla. Asignar umbrales te permitirán saber de manera rápida y fácil los productos que necesitas con urgencia. Se generan copias de seguridad cada 30 minutos de manera automática."></i>
             </div>
         </div>
     </div>
@@ -26,6 +26,9 @@
             <i class="fa-solid fa-filter me-2"></i> FILTROS
         </button>
         <div class="d-flex gap-2">
+            <button type="button" class="btn btn-stokka" data-bs-toggle="modal" data-bs-target="#modalCopia">
+                <i class="fa-solid fa-floppy-disk me-2"></i> Copia de seguridad
+            </button>
             <button id="btn-eliminar-masivo" class="btn btn-inventario-cancelar-stokka shadow-stokka d-none"
                 data-bs-toggle="modal" data-bs-target="#modalEliminarMasivo">
                 <i class="fa-solid fa-trash-can me-2"></i> ELIMINAR (<span id="count-seleccionados">0</span>)
@@ -33,7 +36,7 @@
             <button class="btn btn-inventario-stokka shadow-stokka" data-bs-toggle="modal" data-bs-target="#modalAñadir"
                 style="background-color: var(--verde-secundario) !important;">
                 <i class="fa-solid fa-plus me-2"></i> NUEVO PRODUCTO
-            </button>
+            </button>  
         </div>
     </div>
 
@@ -326,6 +329,67 @@
         </div>
     </div>
 </div>
+
+<!-- MODAL COPIA DE SEGURIDAD -->
+<div class="modal fade" id="modalCopia" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered text-center">
+        <div class="modal-content rounded-4 border-0 shadow-stokka text-center">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
+                <h5 class="fw-bold">
+                    <i class="fa-solid fa-database me-2" style="color: var(--verde-stokka);"></i>
+                    Copia de Seguridad
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4 py-3 text-center">
+
+                {% if copia and copia.fecha %}
+                    <p class="text-muted small mb-4">
+                        Última copia: 
+                        <strong>{{ copia.fecha|date:"d/m/Y H:i:s" }}</strong>
+                    </p>
+                {% else %}
+                    <p class="text-muted small mb-4">Sin copias realizadas aún.</p>
+                {% endif %}
+
+                <div class="d-flex flex-column gap-2">
+
+                    <!-- Hacer copia ahora -->
+                    <form method="POST" action="{% url 'copia_seguridad' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="crear_copia">
+                        <button type="submit" class="btn btn-stokka w-100">
+                            <i class="fa-solid fa-rotate me-2"></i> Hacer copia ahora
+                        </button>
+                    </form>
+
+                    <!-- Enviar última copia -->
+                    <form method="POST" action="{% url 'copia_seguridad' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="enviar_ultima">
+                        <button type="submit" class="btn btn-cancelar2-stokka w-100">
+                            <i class="fa-solid fa-envelope me-2"></i> Enviar última copia por correo
+                        </button>
+                    </form>
+
+                    <!-- Crear y enviar -->
+                    <form method="POST" action="{% url 'copia_seguridad' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="accion" value="crear_y_enviar">
+                        <button type="submit" class="btn btn-cancelar2-stokka w-100">
+                            <i class="fa-solid fa-paper-plane me-2"></i> Crear copia y enviar por correo
+                        </button>
+                    </form>
+
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0">
+                <button type="button" class="btn btn-cancelar-stokka w-100" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script src="{% static 'js/inventario.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/inventario.css' %}">

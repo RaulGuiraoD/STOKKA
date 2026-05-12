@@ -1,5 +1,7 @@
 # 1. Library Imports
 import json
+import csv
+import io
 
 # 2. Django Core & Imports Comunes
 from django.contrib import messages
@@ -10,6 +12,7 @@ from django.db.models import Max, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.http import HttpResponse
 
 # 3. Django Auth & Seguridad
 from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash, logout
@@ -21,7 +24,7 @@ from django.contrib.sites.shortcuts import get_current_site
 
 # 4.  Imports Locales
 from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm, EditarEmpresaForm
-from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia, TemaEmpresa, TokenVerificacionEmail, TokenRecuperacionPassword
+from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia, TemaEmpresa, TokenVerificacionEmail, TokenRecuperacionPassword, CopiaSeguridad
 from datetime import date, timedelta, datetime
 from django.conf import settings as django_settings
 
@@ -1271,6 +1274,11 @@ def inventario_view(request):
     productos_qs = Producto.objects.filter(empresa=empresa).order_by('-fecha_registro')
     max_stock_real = productos_qs.aggregate(Max('stock_actual'))['stock_actual__max'] or 0
 
+    copia, _ = CopiaSeguridad.objects.get_or_create(
+    empresa=empresa,
+    defaults={'datos_json': []}
+    )
+
     if query:
         productos_qs = productos_qs.filter(
             Q(nombre__icontains=query) | Q(referencia__icontains=query)
@@ -1290,6 +1298,7 @@ def inventario_view(request):
         'query_actual':   query,
         'form_añadir':    ProductoForm(),
         'empresa':        empresa,
+        'copia': copia,
     })
 
 
@@ -1496,3 +1505,89 @@ def historial_movimientos(request):
         'movimientos': movimientos,
         'empresa': empresa,
     })
+
+@login_required
+@admin_required
+def copia_seguridad_view(request):
+    empresa  = get_empresa_activa(request)
+    membresia = get_membresia_activa(request, empresa)
+    copia, _ = CopiaSeguridad.objects.get_or_create(
+        empresa=empresa,
+        defaults={'datos_json': []}
+    )
+
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+
+        def _serializar():
+            return [
+                {
+                    'id':          p.id_formateado,
+                    'nombre':      p.nombre,
+                    'referencia':  p.referencia or '',
+                    'descripcion': p.descripcion or '',
+                    'stock':       p.stock_actual,
+                    'aviso':       p.umbrales_amarillo,
+                    'critico':     p.umbrales_rojo,
+                }
+                for p in Producto.objects.filter(empresa=empresa)
+            ]
+
+        if accion == 'crear_copia':
+            copia.datos_json = _serializar()
+            copia.save()
+            messages.success(request, "Copia de seguridad creada correctamente.")
+
+        elif accion == 'enviar_ultima':
+            if not copia.datos_json:
+                messages.warning(request, "No hay ninguna copia disponible. Crea una primero.")
+            else:
+                _enviar_copia_por_correo(request, empresa, copia, membresia)
+                messages.success(
+                    request,
+                    f"Copia del {copia.fecha.strftime('%d/%m/%Y %H:%M:%S')} enviada por correo."
+                )
+
+        elif accion == 'crear_y_enviar':
+            copia.datos_json = _serializar()
+            copia.save()
+            _enviar_copia_por_correo(request, empresa, copia, membresia)
+            messages.success(request, "Copia creada y enviada por correo.")
+
+        return redirect('inventario')
+
+    return redirect('inventario')
+
+def _enviar_copia_por_correo(request, empresa, copia, membresia):
+    import csv, io
+    from django.core.mail import EmailMessage
+
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=['id', 'nombre', 'referencia', 'descripcion', 'stock', 'aviso', 'critico']
+    )
+    writer.writeheader()
+    writer.writerows(copia.datos_json)
+    csv_content = output.getvalue()
+
+    # Destinatarios: siempre el dueño/fundador, y también el admin si es quien lo pide
+    destinatarios = set()
+    dueño = Membresia.objects.filter(empresa=empresa, es_fundador=True).select_related('usuario').first()
+    if dueño:
+        destinatarios.add(dueño.usuario.email)
+    if membresia and membresia.rol == 'admin':
+        destinatarios.add(request.user.email)
+
+    email = EmailMessage(
+        subject=f"Copia de seguridad — {empresa.nombre}",
+        body=(
+            f"Adjuntamos la copia de seguridad del inventario de {empresa.nombre}.\n"
+            f"Fecha de la copia: {copia.fecha.strftime('%d/%m/%Y %H:%M:%S')}\n\n"
+            f"— Stokka"
+        ),
+        from_email=django_settings.DEFAULT_FROM_EMAIL,
+        to=list(destinatarios),
+    )
+    email.attach(f'inventario_{empresa.slug}.csv', csv_content, 'text/csv')
+    email.send()

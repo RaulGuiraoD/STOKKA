@@ -7,6 +7,8 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 import uuid
@@ -283,3 +285,41 @@ class TokenRecuperacionPassword(models.Model):
 
     def __str__(self):
         return f"Recuperación {self.usuario.email}"
+    
+class CopiaSeguridad(models.Model):
+    empresa      = models.OneToOneField(Empresa, on_delete=models.CASCADE, related_name='copia_seguridad')
+    datos_json   = models.JSONField()
+    fecha        = models.DateTimeField(auto_now=True)  # se actualiza sola al guardar
+
+    def __str__(self):
+        return f"Copia de {self.empresa.nombre} — {self.fecha}"
+
+@receiver(post_save, sender=Producto)
+def actualizar_copia_automatica(sender, instance, **kwargs):
+    from django.utils import timezone
+    empresa = instance.empresa
+    if not empresa:
+        return
+
+    copia, _ = CopiaSeguridad.objects.get_or_create(
+        empresa=empresa,
+        defaults={'datos_json': []}
+    )
+
+    # Solo actualiza si han pasado más de 30 minutos desde la última copia
+    if (timezone.now() - copia.fecha).seconds < 1800:
+        return
+
+    productos = Producto.objects.filter(empresa=empresa)
+    copia.datos_json = [
+        {
+            'id':         p.id_formateado,
+            'nombre':     p.nombre,
+            'referencia': p.referencia or '',
+            'stock':      p.stock_actual,
+            'aviso':      p.umbrales_amarillo,
+            'critico':    p.umbrales_rojo,
+        }
+        for p in productos
+    ]
+    copia.save()
