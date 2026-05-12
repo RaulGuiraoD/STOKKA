@@ -20,7 +20,7 @@
 
 .fila-stokka.stokka-critico td {
     background-color: var(--rojo-alerta) !important;
-    color: white !important;
+    color:  var(--blanco) !important;
 }
 
 .fila-stokka.stokka-critico .btn-group .fa-pen {
@@ -52,7 +52,7 @@
 
 .btn-inventario-stokka {
     background-color: var(--verde-stokka) !important;
-    color: white !important;
+    color:  var(--blanco) !important;
     border: none;
     transition: all 0.3s ease;
 }
@@ -72,7 +72,7 @@
 
 .btn-inventario-cancelar-stokka:hover {
     background-color: var(--rojo-alerta);
-    color: white;
+    color:  var(--blanco);
     transform: translateY(-2px);
 }
 
@@ -85,7 +85,7 @@
 
 .btn-inventario-cancelar2-stokka:hover {
     background-color: var(--verde-stokka);
-    color: white;
+    color:  var(--blanco);
     transform: translateY(-2px);
 }
 
@@ -162,7 +162,7 @@
 /* Botones de filtro activos con tus colores oficiales */
 .active-critico {
     background-color: var(--rojo-alerta) !important;
-    color: white !important;
+    color:  var(--blanco) !important;
     border-color: var(--rojo-alerta) !important;
 }
 
@@ -179,7 +179,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: white;
+    background-color:  var(--blanco);
     color: var(--verde-stokka);
     text-decoration: none;
     border-radius: 8px;
@@ -219,7 +219,7 @@
 }
 
 .btn-white {
-    background-color: white;
+    background-color:  var(--blanco);
     border: 1px solid #dee2e6;
 }
 
@@ -237,7 +237,7 @@
     font-size: 0.9rem;
     border: 1px solid #dee2e6;
     border-radius: 10px;
-    background-color: white;
+    background-color:  var(--blanco);
 }
 
 .modal-body input:focus,
@@ -464,7 +464,7 @@ body.modal-open {
     /* 2. Colores de Estado (Inundación total) */
     #tabla-inventario tr.stokka-critico {
         background-color: var(--rojo-alerta) !important;
-        color: white !important;
+        color:  var(--blanco) !important;
     }
 
     #tabla-inventario tr.stokka-aviso {
@@ -614,4 +614,31 @@ body.modal-open {
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+
+
+
+
+
+/* Estilo para que el switch de borrar resalte al estar activo */
+.custom-delete-check .form-check-input:checked {
+    background-color: var(--rojo-alerta);
+    border-color: var(--rojo-alerta);
+}
+
+.custom-delete-check .form-check-input:checked + .form-check-label {
+    color: var(--rojo-alerta) !important;
+    
+}
+
+/* Cursor de mano para que sepa que es clickable */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* Ajuste para que el input file se vea como el resto de Stokka */
+#id_factura:focus {
+    border-color: var(--verde-stokka);
+    box-shadow: 0 0 0 0.25rem rgba(0, 61, 0, 0.1);
 }

@@ -1,0 +1,13 @@
+{% extends 'layouts/base_auth.html' %}
+{% block content %}
+<div class="text-center text-white py-5">
+    <h1 style="font-size: 6rem; font-weight: 700;">400</h1>
+    <p class="fs-4">Tu navegador nos ha enviado un pedido muy extraño.</p>
+    <p class="text-white-50">La solicitud está mal formada y no podemos procesarla.</p>
+
+    <div class="mt-4">
+        <a href="{% url 'index' %}" class="btn btn_selector" style="color: var(--verde-stokka);">Volver a la oficina
+            (Inicio)</a>
+    </div>
+</div>
+{% endblock %}

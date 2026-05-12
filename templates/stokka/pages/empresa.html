@@ -1,0 +1,531 @@
+{% extends "layouts/base.html" %}
+{% load static %}
+
+{% block title %}Mi Empresa - STOKKA{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4" style="max-width: 860px;">
+
+    <div
+        class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
+        <div class="section-header d-flex align-items-end gap-3 mb-2">
+            <h1 class="fw-bold text-dark m-0">Mi Empresa</h1>
+            <span class="text-dark pb-1 d-none d-md-inline" style="font-size: 1.4rem; font-weight: 300;">
+                | {{ empresa.nombre }}
+            </span>
+            <div class="info-wrapper d-inline-block ms-2 mb-2">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                    data-info="Monotoriza los datos, edita el estilo de la app, o navega entre tus otras empresas registradas. Ten cuidado con eliminar tu empresa por error. "></i>
+            </div>
+        </div>
+        <span class="badge px-3 py-2 rounded-pill fw-bold"
+            style="background: {% if empresa.plan_activo %}var(--verde-secundario){% else %}var(--rojo-alerta){% endif %}; color: white; font-size: 0.8rem;">
+            {% if empresa.plan_activo %}Plan activo{% else %}Plan inactivo{% endif %}
+        </span>
+    </div>
+
+    <!-- ESTADÍSTICAS RÁPIDAS -->
+    <div class="row g-3 mb-5">
+        <div class="col-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 border-top text-center border-4 h-100"
+                style="border-color: var(--verde-secundario) !important;">
+                <small class="text-dark fw-bold text-uppercase"
+                    style="font-size: 10px; letter-spacing: 1px;">Usuarios</small>
+                <h3 class="fw-bold mb-0 mt-1">{{ total_usuarios }}</h3>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 border-top text-center border-4 h-100"
+                style="border-color: var(--amarillo-alerta) !important;">
+                <small class="text-dark fw-bold text-uppercase"
+                    style="font-size: 10px; letter-spacing: 1px;">Productos</small>
+                <h3 class="fw-bold mb-0 mt-1">{{ total_productos }}</h3>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="card border-0 shadow-stokka rounded-4 p-3 border-top text-center border-4 h-100"
+                style="border-color: var(--rojo-alerta) !important;"> <small class="text-dark fw-bold text-uppercase"
+                    style="font-size: 10px; letter-spacing: 1px;">Movimientos</small>
+                <h3 class="fw-bold mb-0 mt-1">{{ total_movimientos }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- SELECTOR DE EMPRESA (solo si tiene más de una) -->
+    {% if otras_membresias %}
+    <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 mb-5">
+        <h5 class="fw-bold mb-3 d-flex align-items-center justify-content-between" style="color: var(--verde-stokka);">
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-building me-2"></i>
+                <span>Cambiar de empresa</span>
+            </div>
+
+            <div class="info-wrapper">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                    data-info="Navega entre tus otras empresas registradas de manera sencilla y rápida. "></i>
+            </div>
+        </h5>
+
+        <p class="text-muted small mb-3">
+            Tienes acceso a otras empresas.
+        </p>
+
+        <div class="d-flex flex-column gap-2">
+            {% for m in otras_membresias %}
+            <form method="POST" action="{% url 'seleccionar_empresa' %}">
+                {% csrf_token %}
+                <input type="hidden" name="empresa_id" value="{{ m.empresa.id }}">
+                <button type="submit"
+                    class="btn btn_selector-2 w-100 d-flex align-items-center justify-content-between px-4 py-3 rounded-3">
+                    <div class="text-start">
+                        <span class="d-block fw-bold">{{ m.empresa.nombre }}</span>
+                        <span class="d-block" style="font-size: 0.78rem; opacity: 0.7;">
+                            {{ m.get_rol_display }}
+                            {% if m.es_fundador %}· Fundador{% endif %}
+                        </span>
+                    </div>
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </button>
+            </form>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- PERSONALIZACIÓN DE COLORES -->
+    <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 mb-5">
+        <h5 class="fw-bold mb-3 d-flex align-items-center justify-content-between" style="color: var(--verde-stokka);">
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-palette me-2"></i>Personalización de colores</span>
+            </div>
+
+            <div class="info-wrapper">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                    data-info="Cambia la mayoría de colores de la app, adaptalo al estilo de tu empresa. ¡OJO! La mayoría de textos no cambiarán el color, por lo que puede ser ilegible para algunos usuarios."></i>
+            </div>
+        </h5>
+        <p class="text-muted small mb-4">
+            Los cambios afectan a todos los usuarios de <strong class="fw-bolder" style="color: var(--verde-stokka);">{{empresa.nombre }}</strong>.
+        </p>
+
+        <!-- Preview en vivo -->
+        <div class="d-flex gap-2 mb-4 flex-wrap" id="preview-colores">
+            <span class="badge px-3 py-2 rounded-pill" id="prev-verde"
+                style="background: {{ tema.verde_stokka }}; color: white;">Principal</span>
+            <span class="badge px-3 py-2 rounded-pill" id="prev-secundario"
+                style="background: {{ tema.verde_secundario }}; color: white;">Secundario</span>
+            <span class="badge px-3 py-2 rounded-pill" id="prev-rojo"
+                style="background: {{ tema.rojo_alerta }}; color: white;">Alerta</span>
+            <span class="badge px-3 py-2 rounded-pill" id="prev-amarillo"
+                style="background: {{ tema.amarillo_alerta }}; color: black;">Aviso</span>
+        </div>
+
+        <form method="POST" id="formTema">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="guardar_tema">
+
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted d-block">
+                        Color principal
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="color" name="verde_stokka" id="pick-verde" value="{{ tema.verde_stokka }}"
+                            class="form-control form-control-color rounded-3 border-0"
+                            style="width: 48px; height: 48px; cursor: pointer; padding: 2px;">
+                        <input type="text" id="hex-verde" value="{{ tema.verde_stokka }}"
+                            class="form-control stokka-input shadow-none" maxlength="7" placeholder="#003D00"
+                            style="font-family: monospace; font-size: 0.85rem;">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted d-block">
+                        Color secundario
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="color" name="verde_secundario" id="pick-secundario"
+                            value="{{ tema.verde_secundario }}"
+                            class="form-control form-control-color rounded-3 border-0"
+                            style="width: 48px; height: 48px; cursor: pointer; padding: 2px;">
+                        <input type="text" id="hex-secundario" value="{{ tema.verde_secundario }}"
+                            class="form-control stokka-input shadow-none" maxlength="7" placeholder="#1CA300"
+                            style="font-family: monospace; font-size: 0.85rem;">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted d-block">
+                        Color alerta
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="color" name="rojo_alerta" id="pick-rojo" value="{{ tema.rojo_alerta }}"
+                            class="form-control form-control-color rounded-3 border-0"
+                            style="width: 48px; height: 48px; cursor: pointer; padding: 2px;">
+                        <input type="text" id="hex-rojo" value="{{ tema.rojo_alerta }}"
+                            class="form-control stokka-input shadow-none" maxlength="7" placeholder="#C10D00"
+                            style="font-family: monospace; font-size: 0.85rem;">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <label class="form-label fw-bold small text-uppercase text-muted d-block">
+                        Color aviso
+                    </label>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="color" name="amarillo_alerta" id="pick-amarillo" value="{{ tema.amarillo_alerta }}"
+                            class="form-control form-control-color rounded-3 border-0"
+                            style="width: 48px; height: 48px; cursor: pointer; padding: 2px;">
+                        <input type="text" id="hex-amarillo" value="{{ tema.amarillo_alerta }}"
+                            class="form-control stokka-input shadow-none" maxlength="7" placeholder="#F5C907"
+                            style="font-family: monospace; font-size: 0.85rem;">
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div class="d-flex gap-2">
+                    <!-- Botón Aleatorio: No envía formulario, solo ejecuta JS -->
+                    <button type="button" class="btn btn-cancelar2-stokka px-3 py-2 fw-bold"
+                        onclick="aplicarAleatorios()">
+                        <i class="fa-solid fa-shuffle me-1"></i>Aleatorios
+                    </button>
+
+                    <!-- Botón Restablecer: Envía el formulario con valor 'restablecer_tema' -->
+                    <button type="submit" name="accion" value="restablecer_tema"
+                        class="btn btn-cancelar-stokka px-3 py-2 fw-bold">
+                        <i class="fa-solid fa-rotate-left me-1"></i>Restablecer
+                    </button>
+                </div>
+
+                <!-- Botón Guardar: Envía el formulario con valor 'guardar_tema' -->
+                <button type="submit" name="accion" value="guardar_tema"
+                    class="btn btn-stokka px-4 py-2 fw-bold shadow-sm">
+                    <i class="fa-solid fa-floppy-disk me-2"></i>Guardar colores
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- EDITAR DATOS -->
+    <div class="card border-0 shadow-stokka rounded-4 p-4 p-md-5 mb-5">
+        <h5 class="fw-bold mb-3 d-flex align-items-center justify-content-between" style="color: var(--verde-stokka);">
+            <div class="d-flex align-items-center">
+                <i class="fa-solid fa-pen-to-square me-2"></i>Datos de la empresa
+            </div>
+
+            <div class="info-wrapper">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                    data-info="Edita los datos de tu empresa. Los cambios de nombre se realizan a nivel general."></i>
+            </div>
+        </h5>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="accion" value="guardar_datos">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-bold small text-uppercase text-muted">
+                        Nombre de la empresa <span class="text-danger">*</span>
+                    </label>
+                    {{ form.nombre }}
+                    {% if form.nombre.errors %}
+                    <div class="text-danger small mt-1">{{ form.nombre.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold small text-uppercase text-muted">CIF / NIF</label>
+                    {{ form.cif }}
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Teléfono</label>
+                    {{ form.telefono }}
+                </div>
+
+                <div class="col-12 py-2 border-top mt-2">
+                    <small class="text-muted" style="font-size: 0.75rem; ">
+                        <i class="fa-solid fa-circle-info me-1" style="color: var(--verde-stokka);"></i>
+                        El slug de la URL se actualiza automáticamente al cambiar el nombre.
+                    </small>
+                </div>
+
+                <div class="col-12 d-flex justify-content-end">
+                    <button type="submit" class="btn btn-stokka px-5 py-2 fw-bold shadow-sm">
+                        <i class="fa-solid fa-floppy-disk me-2"></i>Guardar cambios
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- GESTIÓN DE SUSCRIPCIÓN -->
+        <div class="card border-0 rounded-4 p-4 p-md-5 mb-4"
+            style="border: 1.5px solid var(--borde-editar) !important; background: var(--fondo-suscripcion);">
+
+            <h5 class="fw-bold mb-2 d-flex align-items-center gap-2" style="color: var(--amarillo-stokka-historial-color);">
+                <i class="fa-solid fa-credit-card"></i>Suscripción
+            </h5>
+            <p class="text-muted small mb-4">
+                Gestiona el estado de tu plan. Al desactivar la empresa, todos los usuarios
+                perderán el acceso hasta que se reactive.
+            </p>
+
+            <!-- Estado actual -->
+            <div class="rounded-3 p-3 mb-4 d-flex flex-wrap justify-content-between align-items-center gap-3"
+                style="background: white; border: 1px solid var(--borde-editar);">
+
+                <div>
+                    <div class="fw-bold small text-uppercase mb-1" style="color: var(--amarillo-stokka-historial-color); letter-spacing: 0.5px;">
+                        Estado del plan
+                    </div>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge rounded-pill px-3 py-2 fw-bold"
+                            style="background: {% if empresa.plan_activo %}var(--verde-secundario){% else %}var(--rojo-alerta){% endif %}; color: white;">
+                            {% if empresa.plan_activo %}Activo{% else %}Inactivo{% endif %}
+                        </span>
+
+                        {% if empresa.fecha_vencimiento %}
+                        <span class="text-muted small">
+                            <i class="fa-regular fa-calendar me-1"></i>
+                            Vence el {{ empresa.fecha_vencimiento|date:"d/m/Y" }}
+                            {% if dias_restantes is not None %}
+                                <strong
+                                    {% if dias_restantes <= 5 %}style="color: var(--rojo-alerta);"
+                                    {% elif dias_restantes <= 10 %}style="color: var(--amarillo-alerta);"
+                                    {% else %}style="color: var(--verde-stokka);"{% endif %}>
+                                    {{ dias_restantes }} día{{ dias_restantes|pluralize:"s" }} restante{{ dias_restantes|pluralize:"s" }}
+                                </strong>
+                            {% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Renovación automática -->
+                <form method="POST">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion" value="toggle_renovacion">
+                    <button type="submit"
+                        class="btn px-3 py-2 fw-bold small"
+                        style="border-radius: 8px;
+                            background: {% if empresa.renovacion_automatica %}var(--verde-stokka-light){% else %}var(--rojo-alerta-light){% endif %};
+                            border: 1px solid {% if empresa.renovacion_automatica %}var(--verde-stokka-mid){% else %}var(--rojo-alerta-mid){% endif %};
+                            color: {% if empresa.renovacion_automatica %}var(--verde-stokka){% else %}var(--rojo-alerta){% endif %};">
+                        <i class="fa-solid {% if empresa.renovacion_automatica %}fa-rotate me-1{% else %}fa-rotate-slash me-1{% endif %}"></i>
+                        Renovación automática: {% if empresa.renovacion_automatica %}activada{% else %}desactivada{% endif %}
+                    </button>
+                </form>
+            </div>
+
+            <!-- Desactivación programada activa -->
+            {% if empresa.fecha_desactivacion_programada %}
+            <div class="alert d-flex align-items-center justify-content-between gap-3 py-2 mb-4 rounded-3"
+                style="background: var(--amarillo-stokka-historial-fondo); border: 1px solid var(--borde-editar); color: var(--amarillo-stokka-historial-color); font-size: 0.85rem;">
+                <span>
+                    <i class="fa-solid fa-clock me-2"></i>
+                    Desactivación programada para el
+                    <strong>{{ empresa.fecha_desactivacion_programada|date:"d/m/Y" }}</strong>.
+                </span>
+                <form method="POST" action="{% url 'cancelar_desactivacion' %}" class="m-0">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm fw-bold px-3"
+                            style="background: var(--amarillo-stokka-historial-color); color: var(--blanco); border-radius: 6px; font-size: 0.78rem;">
+                        Cancelar
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Acciones -->
+            <div class="d-flex flex-wrap gap-2">
+
+                <!-- Desactivar ahora -->
+                <button type="button" class="btn fw-bold px-4 py-2"
+                        style="background: var(--rojo-alerta-light); color: var(--rojo-alerta);
+                            border: 1px solid var(--rojo-alerta-mid); border-radius: 10px;"
+                        data-bs-toggle="modal" data-bs-target="#modalDesactivarAhora">
+                    <i class="fa-solid fa-power-off me-2"></i>Desactivar ahora
+                </button>
+
+                <!-- Programar desactivación -->
+                <button type="button" class="btn fw-bold px-4 py-2"
+                        style="background: var(--amarillo-stokka-historial-fondo); color: var(--amarillo-stokka-historial-color);
+                            border: 1px solid var(--borde-editar); border-radius: 10px;"
+                        data-bs-toggle="modal" data-bs-target="#modalProgramarDesactivacion">
+                    <i class="fa-solid fa-calendar-xmark me-2"></i>Programar desactivación
+                </button>
+
+            </div>
+        </div>
+
+        <!-- MODAL: DESACTIVAR AHORA -->
+        <div class="modal fade" id="modalDesactivarAhora" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-body p-4 text-center">
+                        <i class="fa-solid fa-power-off fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                        <h5 class="fw-bold mb-2">¿Desactivar ahora?</h5>
+                        <p class="text-muted small mb-4">
+                            Todos los usuarios de <strong>{{ empresa.nombre }}</strong> perderán
+                            el acceso inmediatamente. Podrás reactivarla en cualquier momento.
+                        </p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-cancelar2-stokka px-3 fw-bold"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                            <form method="POST" action="{% url 'desactivar_empresa_ahora' %}" class="m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-cancelar-stokka fw-bold px-3">
+                                    Sí, desactivar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL: PROGRAMAR DESACTIVACIÓN -->
+        <div class="modal fade" id="modalProgramarDesactivacion" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-body p-4">
+                        <h5 class="fw-bold mb-1">
+                            <i class="fa-solid fa-calendar-xmark me-2" style="color: var(--amarillo-stokka-historial-color);"></i>
+                            Programar desactivación
+                        </h5>
+                        <p class="text-muted small mb-4">
+                            La empresa se desactivará automáticamente en la fecha elegida.
+                            La renovación automática se desactivará también.
+                        </p>
+
+                        <form method="POST" action="{% url 'desactivar_empresa_fecha' %}">
+                            {% csrf_token %}
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-uppercase text-muted">
+                                    Fecha de desactivación
+                                </label>
+                                <input type="date" name="fecha_desactivacion"
+                                    class="form-control stokka-input shadow-none"
+                                    min="{{ hoy|date:'Y-m-d' }}"
+                                    {% if empresa.fecha_vencimiento %}
+                                    max="{{ empresa.fecha_vencimiento|date:'Y-m-d' }}"
+                                    value="{{ empresa.fecha_vencimiento|date:'Y-m-d' }}"
+                                    {% endif %}
+                                    required>
+                                {% if empresa.fecha_vencimiento %}
+                                <small class="text-muted" style="font-size: 0.75rem;">
+                                    <i class="fa-solid fa-circle-info me-1"></i>
+                                    Tu plan vence el {{ empresa.fecha_vencimiento|date:"d/m/Y" }}.
+                                    La desactivación no puede ser posterior a esa fecha.
+                                </small>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex gap-2 justify-content-end">
+                                <button type="button" class="btn btn-cancelar-stokka px-4 fw-bold"
+                                        data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-stokka px-4 fw-bold">
+                                    <i class="fa-solid fa-calendar-check me-1"></i>Confirmar fecha
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    <!-- ZONA DE PELIGRO -->
+    <div class="card border-0 rounded-4 p-4 p-md-5"
+        style="border: 1.5px solid var(--rojo-alerta) !important; background: #fff8f8;">
+        <h5 class="fw-bold mb-2" style="color: var(--rojo-alerta);">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>Zona de peligro
+        </h5>
+        <p class="text-muted small mb-4">
+            Eliminar la empresa borrará permanentemente todos sus productos, historial de movimientos,
+            usuarios y membresías asociadas. Esta acción <strong class="text-dark">no se puede deshacer</strong>.
+        </p>
+
+        <button type="button" class="btn fw-bold px-4 py-2"
+            style="background: var(--rojo-alerta); color: white; border-radius: 10px;" data-bs-toggle="modal"
+            data-bs-target="#modalEliminarEmpresa">
+            <i class="fa-solid fa-building-circle-xmark me-2"></i>Eliminar empresa
+        </button>
+    </div>
+</div>
+
+<!-- MODAL 1: ESCRIBIR NOMBRE -->
+<div class="modal fade" id="modalEliminarEmpresa" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body p-4 p-md-5 text-center">
+                <i class="fa-solid fa-building-circle-xmark fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                <h5 class="fw-bold mb-2">Confirmar eliminación</h5>
+                <p class="small text-muted">Para proceder, escribe el nombre de la empresa: <br><strong
+                        class="fw-bolder text-dark">{{ empresa.nombre }}</strong></p>
+
+                <input type="text" id="inputConfirmacionEmpresa" data-nombre="{{ empresa.nombre }}"
+                    class="form-control mb-3 text-center stokka-input text-white" autocomplete="off">
+
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-cancelar2-stokka" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnSiguienteEliminar" class="btn btn-cancelar-stokka fw-bold" disabled
+                        style="opacity: 0.5;">
+                        Siguiente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 2: ADVERTENCIA DE DATOS -->
+<div class="modal fade" id="modalConfirmacionFinal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-body text-center p-4 p-md-5">
+                <i class="fa-solid fa-skull-crossbones fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                <h5 class="fw-bold text-dark">¡ACCIÓN IRREVERSIBLE!</h5>
+                <p class="text-dark">Estás a punto de borrar <strong class="fw-bold"
+                        style="color: var(--verde-stokka);">{{ empresa.nombre }}</strong> y todos sus datos.</p>
+                <p class="small text-muted">Esta acción eliminará empleados, inventario e historial de forma permanente.
+                </p>
+
+                <div class="d-flex gap-2 justify-content-center mt-4">
+                    <button type="button" class="btn btn-cancelar2-stokka" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" id="btnIrAlUltimoPaso" class="btn btn-cancelar-stokka fw-bold">
+                        Entiendo, eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 3: CONFIRMACIÓN DEFINITIVA (MÁS OSCURO Y PEQUEÑO) -->
+<div class="modal fade" id="modalUltimoAviso" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" border-radius: 1.5rem;>
+            <div class="modal-body text-center p-4">
+                <i class="fa-solid fa-ghost fs-1 mb-3" style="color: var(--rojo-alerta);"></i>
+                <h6 class="fw-bold mb-3">¿ESTÁS COMPLETAMENTE SEGURO?</h6>
+                <p class="x-small opacity-75 mb-4">No habrá vuelta atrás despues de este paso.</p>
+
+                <form method="POST" action="{% url 'eliminar_empresa' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="confirmacion" id="inputHiddenNombre">
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-cancelar-stokka fw-bold py-2" style="border-radius: 10px;">
+                            SÍ, ELIMINAR AHORA
+                        </button>
+                        <button type="button" class="btn btn-cancelar2-stokka text-white-50 btn-sm text-decoration-none"
+                            data-bs-dismiss="modal">
+                            No, cancelar todo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/empresa.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'layouts/base_auth.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center py-4">
+    <div class="card shadow-lg border-0 rounded-4 p-4 p-md-5" style="max-width: 480px; width: 100%; background: white;">
+
+        <!-- CABECERA -->
+        <div class="text-center mb-4">
+            <img src="{% static 'assets/Logo_Stokka2.png' %}" style="width: 60px;" alt="Logo Stokka">
+            <h4 class="fw-bold mt-3 mb-1" style="color: var(--verde-stokka);">Activar suscripción</h4>
+            <p class="text-muted small mb-0">
+                Plan <strong>Stokka Pro</strong> para
+                <strong style="color: var(--verde-stokka);">{{ empresa.nombre }}</strong>
+            </p>
+        </div>
+
+        <!-- RESUMEN DEL PLAN -->
+        <div class="rounded-3 p-3 mb-4 d-flex justify-content-between align-items-center"
+            style="background: var(--verde-stokka-light, #e6f0e6); border: 1px solid var(--verde-stokka-mid, #cce0cc);">
+            <div>
+                <span class="fw-bold small text-uppercase" style="color: var(--verde-stokka); letter-spacing: 0.5px;">
+                    Stokka Pro — Mensual
+                </span>
+                <div class="text-muted" style="font-size: 0.78rem;">Usuarios ilimitados · Inventario ilimitado</div>
+            </div>
+            <span class="fw-bold fs-5" style="color: var(--verde-stokka);">9,99 €</span>
+        </div>
+
+        <!-- AVISO SIMULADO -->
+        <div class="alert d-flex align-items-center gap-2 py-2 mb-4 rounded-3"
+            style="font-size: 0.82rem; background: var(--amarillo-stokka-historial-fondo); border: 1px solid var(--amarillo-alerta); color: var(--amarillo-stokka-historial-color);">
+            <i class="fa-solid fa-flask-vial flex-shrink-0"></i>
+            <span>Entorno de pruebas — ningún cargo real será efectuado.</span>
+        </div>
+
+        <form method="POST" id="formPago" novalidate>
+            {% csrf_token %}
+
+            <!-- TITULAR -->
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.72rem;">
+                    Titular de la tarjeta
+                </label>
+                <input type="text" id="inputTitular" class="form-control stokka-input shadow-none"
+                    placeholder="Nombre y apellidos" autocomplete="cc-name" required>
+            </div>
+
+            <!-- NÚMERO DE TARJETA -->
+            <div class="mb-3">
+                <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.72rem;">
+                    Número de tarjeta
+                </label>
+                <div class="position-relative">
+                    <input type="text" id="inputTarjeta" class="form-control stokka-input shadow-none"
+                        placeholder="0000 0000 0000 0000" maxlength="19" autocomplete="cc-number" inputmode="numeric"
+                        required>
+                    <span id="iconoTarjeta" class="position-absolute"
+                        style="right: 14px; top: 50%; transform: translateY(-50%); font-size: 1.3rem; color: var(--borde-ajuste);">
+                        <i class="fa-regular fa-credit-card"></i>
+                    </span>
+                </div>
+            </div>
+
+            <!-- CADUCIDAD + CVV -->
+            <div class="row g-3 mb-4">
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-uppercase text-muted" style="font-size: 0.72rem;">
+                        Caducidad
+                    </label>
+                    <input type="text" id="inputCaducidad" class="form-control stokka-input shadow-none"
+                        placeholder="MM / AA" maxlength="7" autocomplete="cc-exp" inputmode="numeric" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label small fw-bold text-uppercase text-muted d-flex align-items-center gap-1"
+                        style="font-size: 0.72rem;">
+                        CVV
+                        <i class="fa-solid fa-circle-question text-muted" style="font-size: 0.75rem; cursor: help;"
+                            title="Los 3 dígitos del reverso de tu tarjeta (4 en Amex)"></i>
+                    </label>
+                    <div class="position-relative">
+                        <input type="password" id="inputCVV" class="form-control stokka-input shadow-none"
+                            placeholder="•••" maxlength="4" autocomplete="cc-csc" inputmode="numeric" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTÓN PAGAR -->
+            <button type="submit" class="btn btn-stokka w-100 py-3 fw-bold text-uppercase shadow-sm" id="btnPagar"
+                style="border-radius: 10px; font-size: 0.95rem;">
+                <span id="textoBtnPagar">
+                    <i class="fa-solid fa-lock me-2"></i>Pagar 9,99 € y activar empresa
+                </span>
+                <span id="spinnerPagar" class="d-none">
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    Procesando pago...
+                </span>
+            </button>
+
+            <div class="text-center mt-3">
+                <a href="{% url 'cancelar_pago' %}" class="btn btn-cancelar-stokka px-4 py-2 fw-bold">
+                    Cancelar y salir
+                </a>
+            </div>
+        </form>
+
+        <!-- PIE DE SEGURIDAD -->
+        <div class="d-flex align-items-center justify-content-center gap-3 mt-4 pt-3 border-top">
+            <span class="text-muted" style="font-size: 0.72rem;">
+                <i class="fa-solid fa-shield-halved me-1" style="color: var(--verde-stokka);"></i>
+                Pago seguro SSL
+            </span>
+            <span class="text-muted" style="font-size: 0.72rem;">
+                <i class="fa-brands fa-cc-visa me-1 fs-6"></i>
+                <i class="fa-brands fa-cc-mastercard me-1 fs-6"></i>
+                <i class="fa-brands fa-cc-amex fs-6"></i>
+            </span>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/registro.js' %}"></script>
+{% endblock %}

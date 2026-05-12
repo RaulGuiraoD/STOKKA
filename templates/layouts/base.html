@@ -5,7 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STOKKA - {% block title %}{% endblock %}</title>
+    <title>{{ empresa.nombre|upper }} | {% block title %}{% endblock %} - STOKKA</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@300;400;700;900&display=swap" rel="stylesheet">
@@ -13,16 +13,60 @@
 
     <link rel="stylesheet" href="{% static 'css/estilos.css' %}">
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+     <!-- ETIQUETA STYLE PARA PODER CAMBIAR LOS COLORES PARA LAS EMRPESAS -->
+    {% if tema %}
+    <style>
+        :root {
+            --verde-stokka:     {{ tema.verde_stokka }};
+            --verde-secundario: {{ tema.verde_secundario }};
+            --rojo-alerta:      {{ tema.rojo_alerta }};
+            --amarillo-alerta:  {{ tema.amarillo_alerta }};
+
+            /* Variantes light y mid generadas automáticamente desde JS al cargar */
+            --verde-stokka-light:    {{ tema.verde_stokka }}15;
+            --rojo-alerta-light:     {{ tema.rojo_alerta }}15;
+            --amarillo-alerta-light: {{ tema.amarillo_alerta }}15;
+            --verde-stokka-mid:      {{ tema.verde_stokka }}33;
+            --rojo-alerta-mid:       {{ tema.rojo_alerta }}33;
+            --amarillo-alerta-mid:   {{ tema.amarillo_alerta }}33;
+        }
+    </style>
+    {% endif %}
 </head>
 
 <body class="bg-light">
+    <!-- SVG PARRA DALTONISMO -->
+    <svg style="display: none;">
+        <defs>
+            <!-- Protanopia -->
+            <filter id="protanopia-filter">
+            <feColorMatrix type="matrix" values="0.567, 0.433, 0, 0, 0, 0.558, 0.442, 0, 0, 0, 0, 0.242, 0.758, 0, 0, 0, 0, 0, 1, 0"/>
+            </filter>
+            <!-- Deuteranopia -->
+            <filter id="deuteranopia-filter">
+            <feColorMatrix type="matrix" values="0.625, 0.375, 0, 0, 0, 0.7, 0.3, 0, 0, 0, 0, 0.3, 0.7, 0, 0, 0, 0, 0, 1, 0"/>
+            </filter>
+            <!-- Tritanopia -->
+            <filter id="tritanopia-filter">
+            <feColorMatrix type="matrix" values="0.95, 0.05, 0, 0, 0, 0, 0.433, 0.567, 0, 0, 0, 0.475, 0.525, 0, 0, 0, 0, 0, 1, 0"/>
+            </filter>
+            <!-- Acromatopsia (Escala de grises) -->
+            <filter id="acromatopsia-filter">
+            <feColorMatrix type="matrix" values="0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0.2126, 0.7152, 0.0722, 0, 0, 0, 0, 0, 1, 0"/>
+            </filter>
+        </defs>
+    </svg>
     <header class="dashboard-header fixed-top d-flex align-items-center justify-content-between px-3 px-md-4 shadow">
-        <div class="header-left d-flex align-items-center gap-2 cursor-pointer"
-            onclick="location.href='{% url 'index' %}'">
+        <div class="header-left d-flex align-items-center gap-2 cursor-pointer" onclick="location.href='{% url 'index' %}'">
             <img src="{% static 'assets/Logo stokka.png' %}" style="width: 42px;" class="mini-logo" alt="Logo">
-            <span class="brand-name d-none d-md-block text-white fs-3 fw-bolder" style="letter-spacing: 1.5px;">
-                STOKKA
-            </span>
+            <div class="brand-container d-none d-md-flex flex-column" style="line-height: 1;">
+                <span class="brand-name text-white fs-4 mt-2 fw-bolder" style="letter-spacing: 1px;">
+                    STOKKA
+                </span>
+                <span class="text-white-50 fw-light mt-1" style="font-size: 0.65rem; letter-spacing: 0.5px; text-transform: uppercase;">
+                    {{ empresa.nombre }}
+                </span>
+            </div>
         </div>
 
         <div class="header-center flex-grow-1 d-flex justify-content-center px-2 px-md-5">
@@ -42,13 +86,13 @@
         <div class="header-right">
             <a href="{% url 'perfil' %}"
                 class="user-identity d-flex align-items-center gap-3 px-4 py-2 rounded-pill text-decoration-none"
-                style="background: rgba(255, 255, 255, 0.1);">
+                style="background: var(--selector-fondo);">
                 <div class="user-text text-end d-none d-sm-block">
                     <span class="user-name d-block fw-bold text-white fs-6 mb-0" style="line-height: 1.1;">
                         Hola, {{ user.first_name|capfirst }}
                     </span>
-                    <span class="user-role d-block text-white-50" style="font-size: 0.75rem;">
-                        {{ user.get_rol_display|capfirst }}
+                    <span class="user-role d-block text-white-50" style="font-size: 0.75rem; text-align: center;">
+                        {{ membresia.get_rol_display|capfirst }}
                     </span>
                 </div>
                 <div class="bg-white border border-2 border-white shadow-sm rounded-circle overflow-hidden d-flex align-items-center justify-content-center"
@@ -82,7 +126,14 @@
                     </a>
                 </li>
 
-                {% if user.es_admin_o_dueño %}
+                <li class="nav-item-container">
+                    <a href="{% url 'historial_movimientos' %}" class="nav-link-stokka {% if request.resolver_match.url_name == 'historial_movimientos' %}active{% endif %}">
+                        <i class="fa-solid fa-calendar-days"></i>
+                        <span class="nav-text">Historial</span>
+                    </a>
+                </li>
+
+                {% if es_jefe %}
                 <li class="nav-item-container">
                     <a href="{% url 'gestion_usuarios' %}"
                         class="nav-link-stokka {% if request.resolver_match.url_name == 'gestion_usuarios' %}active{% endif %}">
@@ -92,19 +143,15 @@
                 </li>
                 {% endif %}
 
+                {% if membresia.es_fundador %}
                 <li class="nav-item-container">
-                    <a href="{% url 'historial_movimientos' %}" class="nav-link-stokka {% if request.resolver_match.url_name == 'historial_movimientos' %}active{% endif %}">
-                        <i class="fa-solid fa-clock-rotate-left"></i>
-                        <span class="nav-text">Historial</span>
+                    <a href="{% url 'empresa' %}"
+                        class="nav-link-stokka {% if request.resolver_match.url_name == 'empresa' %}active{% endif %}">
+                        <i class="fa-solid fa-building"></i>
+                        <span class="nav-text">Empresa</span>
                     </a>
                 </li>
-
-                <li class="nav-item-container">
-                    <a href="#" class="nav-link-stokka">
-                        <i class="fa-solid fa-pen-to-square"></i>
-                        <span class="nav-text">Editar</span>
-                    </a>
-                </li>
+                {% endif %}
 
                 <li class="nav-item-container">
                     <a href="{% url 'perfil' %}"
@@ -139,6 +186,21 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/general.js' %}"></script>
+
+    <!-- SCRIPT PARA APLICACIÓN DALTONISMO, NO TOCAR, NO MOVER A STATIC/JS -->
+   {% if user.is_authenticated %}
+    <script>
+        window.STOKKA_PREFS = {
+            iconos_info: {{ user.perfil.iconos_info|yesno:"true,false" }},
+            daltonismo: "{{ user.perfil.daltonismo|default:'normal' }}",
+            urls: {
+                pref_daltonismo: "{% url 'pref_daltonismo' %}",
+                pref_iconos: "{% url 'pref_iconos' %}"
+            },
+            csrfToken: "{{ csrf_token }}"
+        };
+    </script>
+    {% endif %}
 
 </body>
 

@@ -5,65 +5,151 @@ from PIL import Image
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-# 3. Local App Imports 
 
-# MODELO USUARIOS
-class Usuario(AbstractUser):
-    ROL_CHOICES = (
-        ('dueño', 'Dueño/Admin Principal'),
-        ('admin', 'Administrador Delegado'),
-        ('empleado', 'Empleado'),
-    )
+import uuid
 
-    rol = models.CharField(max_length=20, choices=ROL_CHOICES, default='empleado')
+# MODELO EMPRESA
+class Empresa(models.Model):
+    nombre         = models.CharField(max_length=100, unique=True)
+    slug           = models.SlugField(max_length=120, unique=True)
+    fecha_registro = models.DateTimeField(auto_now_add=True)
+    plan_activo    = models.BooleanField(default=False)
+    cif            = models.CharField(max_length=20, blank=True, null=True, verbose_name="CIF/NIF")
+    telefono       = models.CharField(max_length=20, blank=True, null=True, verbose_name="Teléfono")
 
-    def es_dueño(self):
-        return self.rol == 'dueño' or self.id == 1
-    
-    def es_admin_o_dueño(self):
-        return self.rol in ['dueño', 'admin']
-
-# 2. MODELO PRODUCTOS
-class Producto(models.Model):
-    nombre = models.CharField(max_length=100, verbose_name="Nombre del Producto")
-    referencia = models.CharField(max_length=50, blank=True, null=True, verbose_name="Referencia/SKU")
-    descripcion = models.TextField(blank=True, verbose_name="Descripción Breve")
-    stock_actual = models.PositiveIntegerField(default=0, verbose_name="Stock Disponible")
-    umbrales_amarillo = models.PositiveIntegerField(verbose_name= "Aviso", default=10) # Añadido default para evitar errores
-    umbrales_rojo = models.PositiveIntegerField(verbose_name="Crítico", default=5)
-    factura = models.FileField(upload_to='facturas/%Y/%m/', null=True, blank=True, verbose_name="Factura (Opcional)")
-    fecha_registro = models.DateTimeField(default=timezone.now)
+    # Suscripción
+    renovacion_automatica  = models.BooleanField(default=True)
+    fecha_vencimiento      = models.DateField(blank=True, null=True)
+    fecha_desactivacion_programada = models.DateField(blank=True, null=True)
 
     def __str__(self):
         return self.nombre
     
+# MODELO USUARIOS
+class Usuario(AbstractUser):
+    
+    email_verificado = models.BooleanField(default=False)
+
+    def get_membresia(self, empresa):
+        """Devuelve la Membresia de este usuario en una empresa concreta, o None."""
+        return self.membresias.filter(empresa=empresa).first()
+
+    def es_fundador_de(self, empresa):
+        """True si este usuario fundó (registró) esa empresa."""
+        m = self.get_membresia(empresa)
+        return m is not None and m.es_fundador
+
+    def es_dueño_en(self, empresa):
+        """True si tiene rol dueño en esa empresa (incluye al fundador)."""
+        m = self.get_membresia(empresa)
+        return m is not None and m.rol == 'dueño'
+
+    def es_admin_o_dueño_en(self, empresa):
+        """True si puede acceder a gestión de usuarios en esa empresa."""
+        m = self.get_membresia(empresa)
+        return m is not None and m.rol in ['dueño', 'admin']
+
+    def __str__(self):
+        return self.email or self.username  
+# ==============================================================================
+# MEMBRESIA
+# Tabla pivote entre Usuario y Empresa.
+# Cada fila = un usuario en una empresa con un rol concreto.
+# Un usuario con 2 empresas tendrá 2 filas aquí.
+# ==============================================================================
+class Membresia(models.Model):
+    ROL_CHOICES = (
+        ('dueño',    'Dueño'),
+        ('admin',    'Administrador'),
+        ('empleado', 'Empleado'),
+    )
+
+    usuario     = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='membresias'
+    )
+    empresa     = models.ForeignKey(
+        Empresa,
+        on_delete=models.CASCADE,
+        related_name='membresias'
+    )
+    rol         = models.CharField(max_length=20, choices=ROL_CHOICES, default='empleado')
+    es_fundador = models.BooleanField(default=False)
+    # es_fundador marca al primer usuario que registró esta empresa.
+    # Es inmutable: una vez True, ninguna vista ni form debe poder cambiarlo a False.
+    # Garantiza que siempre hay alguien con acceso total a cada empresa.
+
+    fecha_ingreso = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('usuario', 'empresa')
+        # Un usuario no puede tener dos membresías en la misma empresa.
+        verbose_name = 'Membresía'
+        verbose_name_plural = 'Membresías'
+
+    def __str__(self):
+        return f"{self.usuario.email} — {self.empresa.nombre} ({self.rol})"
+
+
+# 2. MODELO PRODUCTOS
+class Producto(models.Model):
+    nombre            = models.CharField(max_length=100, verbose_name="Nombre del Producto")
+    referencia        = models.CharField(max_length=50, blank=True, null=True, verbose_name="Referencia/SKU")
+    descripcion       = models.TextField(blank=True, verbose_name="Descripción Breve")
+    stock_actual      = models.PositiveIntegerField(default=0, verbose_name="Stock Disponible")
+    umbrales_amarillo = models.PositiveIntegerField(verbose_name="Aviso", default=10)
+    umbrales_rojo     = models.PositiveIntegerField(verbose_name="Crítico", default=5)
+    factura           = models.FileField(upload_to='facturas/%Y/%m/', null=True, blank=True, verbose_name="Factura (Opcional)")
+    fecha_registro    = models.DateTimeField(default=timezone.now)
+    empresa           = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='productos', null=True, blank=True)
+    # Este campo es lo que el usuario ve como "#0001", "#0002"...
+    orden_empresa = models.PositiveIntegerField(default=0, editable=False)
+
+    class Meta:
+        unique_together = ('empresa', 'orden_empresa')
+        indexes = [
+            models.Index(fields=['empresa', 'orden_empresa'])
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            with transaction.atomic():
+                ultimo = (
+                    Producto.objects
+                    .select_for_update()
+                    .filter(empresa=self.empresa)
+                    .aggregate(models.Max('orden_empresa'))['orden_empresa__max']
+                ) or 0
+                self.orden_empresa = ultimo + 1
+        self.clean()  # solo valida umbrales, no unique
+        super().save(*args, **kwargs)
+
+    @property
+    def id_formateado(self):
+        # Esto es lo que ven los templates: #0001, #0042...
+        return f"{self.orden_empresa:04d}"
+
     def clean(self):
         if self.umbrales_amarillo is not None and self.umbrales_rojo is not None:
             if self.umbrales_amarillo <= self.umbrales_rojo:
                 raise ValidationError({
                     'umbrales_amarillo': 'El umbral de aviso debe ser mayor al umbral crítico.'
                 })
-        
-    def save(self, *args,**kwargs):
-        self.full_clean()   # Ejecuta la validación clean() antes de guardar
-        super().save(*args, **kwargs)
-
-    @property
-    def id_formateado(self):
-        return f"{self.id:04d}"
 
     @property
     def semaforo(self):
         if self.stock_actual <= self.umbrales_rojo:
-            return "critico"    # Rojo
+            return "critico"
         elif self.stock_actual <= self.umbrales_amarillo:
-            return "aviso"      #Amarillo
-        return "ok"             #Verde
-
-
+            return "aviso"
+        return "ok"
+    
 
 def validar_tamano_foto(value):
     limit = 2 * 1024 * 1024  #2MB
@@ -72,36 +158,40 @@ def validar_tamano_foto(value):
 
 # MODELOS PERFILES    
 class Perfil(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    telefono = models.CharField(max_length=15, blank=True, null=True)
-    foto = models.ImageField(
-        upload_to='perfiles/', 
-        blank=True, 
+    user             = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    telefono         = models.CharField(max_length=15, blank=True, null=True)
+    fecha_nacimiento = models.DateField(blank=True, null=True)
+    foto             = models.ImageField(
+        upload_to='perfiles/',
+        blank=True,
         null=True,
-        validators=[validar_tamano_foto] # Aplicamos el validador
+        validators=[validar_tamano_foto]
     )
 
-    def save(self, *args, **kwargs):
-        # Primero guardamos para tener el archivo en el sistema
-        super().save(*args, **kwargs)
+    # Preferencias de accesibilidad — se sincronizan con localStorage en el cliente
+    DALTONISMO_CHOICES = [
+        ('normal',        'Normal'),
+        ('protanopia',    'Protanopia'),
+        ('deuteranopia',  'Deuteranopia'),
+        ('tritanopia',    'Tritanopia'),
+        ('acromatopsia',  'Acromatopsia'),
+        ('alto_contraste','Alto contraste'),
+    ]
+    daltonismo        = models.CharField(max_length=20, choices=DALTONISMO_CHOICES, default='normal')
+    iconos_info       = models.BooleanField(default=True)  # True = visibles
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
         if self.foto:
             img = Image.open(self.foto.path)
-
-            # 1. Si es muy grande, redimensionamos a un tamaño lógico para avatar (400x400)
             if img.height > 400 or img.width > 400:
-                output_size = (400, 400)
-                img.thumbnail(output_size, Image.LANCZOS)
-            
-            # 2. Convertir a RGB si es necesario (evita errores con PNG transparentes al pasar a JPEG)
+                img.thumbnail((400, 400), Image.LANCZOS)
             if img.mode in ("RGBA", "P"):
                 img = img.convert("RGB")
-
-            # 3. Comprimir y sobreescribir como JPEG para ahorrar espacio
             img.save(self.foto.path, "JPEG", quality=80, optimize=True)
 
     def __str__(self):
-        return f"Perfil de {self.user.username}"
+        return f"Perfil de {self.user.email}"
     
 # MODELOS HISTORIAL
 class HistorialMovimiento(models.Model):
@@ -113,25 +203,123 @@ class HistorialMovimiento(models.Model):
         ('ELIMINACION', 'Producto Eliminado'),
     ]
 
-    producto_nombre = models.CharField(max_length=255)
-    producto_id = models.IntegerField(null=True, blank=True)
-    usuario = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
+    producto_nombre  = models.CharField(max_length=255)
+    producto_id      = models.IntegerField(null=True, blank=True)
+    producto_orden   = models.PositiveIntegerField(null=True, blank=True)  # nuevo: el #0001 visible
+    usuario          = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name='movimientos'
     )
-    tipo_accion = models.CharField(max_length=20, choices=TIPOS_ACCION)
-    cambio = models.IntegerField(default=0) 
+    tipo_accion      = models.CharField(max_length=20, choices=TIPOS_ACCION)
+    cambio           = models.IntegerField(default=0)
     stock_resultante = models.IntegerField()
-    fecha = models.DateTimeField(auto_now_add=True)
-    detalles = models.TextField(null=True, blank=True)
-    stock_anterior = models.IntegerField(default=0)
+    fecha            = models.DateTimeField(auto_now_add=True)
+    detalles         = models.TextField(null=True, blank=True)
+    stock_anterior   = models.IntegerField(default=0)
+    empresa          = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name='movimientos_historial', null=True, blank=True)
 
     class Meta:
         ordering = ['-fecha']
         verbose_name = "Historial de Movimiento"
         verbose_name_plural = "Historial de Movimientos"
 
+    @property
+    def id_producto_formateado(self):
+        if self.producto_orden:
+            return f"{self.producto_orden:04d}"
+        if self.producto_id:
+            return f"{self.producto_id:04d}"
+        return "---"
+
     def __str__(self):
         return f"{self.producto_nombre} | {self.tipo_accion} | {self.cambio}"
+    
+# MODELO PARA ESTILOS EMPRESARIAL
+class TemaEmpresa(models.Model):
+    empresa           = models.OneToOneField(Empresa, on_delete=models.CASCADE, related_name='tema')
+    verde_stokka      = models.CharField(max_length=7, default='#003D00')
+    verde_secundario  = models.CharField(max_length=7, default='#1CA300')
+    rojo_alerta       = models.CharField(max_length=7, default='#C10D00')
+    amarillo_alerta   = models.CharField(max_length=7, default='#F5C907')
+
+    def __str__(self):
+        return f"Tema de {self.empresa.nombre}"    
+    
+
+class TokenVerificacionEmail(models.Model):
+    """Token de un solo uso para verificar el email al registrarse."""
+    usuario   = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='token_verificacion'
+    )
+    token     = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    usado     = models.BooleanField(default=False)
+
+    def ha_expirado(self):
+        """El enlace caduca a las 24 horas."""
+        from django.utils import timezone
+        return timezone.now() > self.creado_en + timezone.timedelta(hours=24)
+
+    def __str__(self):
+        return f"Token {self.usuario.email} — usado={self.usado}"
+
+
+class TokenRecuperacionPassword(models.Model):
+    """Token de un solo uso para restablecer contraseña."""
+    usuario   = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='tokens_recuperacion'
+    )
+    token     = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    creado_en = models.DateTimeField(auto_now_add=True)
+    usado     = models.BooleanField(default=False)
+
+    def ha_expirado(self):
+        from django.utils import timezone
+        return timezone.now() > self.creado_en + timezone.timedelta(hours=2)
+
+    def __str__(self):
+        return f"Recuperación {self.usuario.email}"
+    
+class CopiaSeguridad(models.Model):
+    empresa      = models.OneToOneField(Empresa, on_delete=models.CASCADE, related_name='copia_seguridad')
+    datos_json   = models.JSONField()
+    fecha        = models.DateTimeField(auto_now=True)  # se actualiza sola al guardar
+
+    def __str__(self):
+        return f"Copia de {self.empresa.nombre} — {self.fecha}"
+
+@receiver(post_save, sender=Producto)
+def actualizar_copia_automatica(sender, instance, **kwargs):
+    from django.utils import timezone
+    empresa = instance.empresa
+    if not empresa:
+        return
+
+    copia, _ = CopiaSeguridad.objects.get_or_create(
+        empresa=empresa,
+        defaults={'datos_json': []}
+    )
+
+    # Solo actualiza si han pasado más de 30 minutos desde la última copia
+    if (timezone.now() - copia.fecha).seconds < 1800:
+        return
+
+    productos = Producto.objects.filter(empresa=empresa)
+    copia.datos_json = [
+        {
+            'id':         p.id_formateado,
+            'nombre':     p.nombre,
+            'referencia': p.referencia or '',
+            'stock':      p.stock_actual,
+            'aviso':      p.umbrales_amarillo,
+            'critico':    p.umbrales_rojo,
+        }
+        for p in productos
+    ]
+    copia.save()

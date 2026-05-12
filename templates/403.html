@@ -1,0 +1,13 @@
+{% extends 'layouts/base_auth.html' %}
+{% block content %}
+<div class="text-center text-white py-5">
+    <h1 style="font-size: 6rem; font-weight: 700;">403</h1>
+    <p class="fs-4">¡Alto ahí! Todavía no puedes acceder a este lugar desconocido.</p>
+    <p class="text-white-50">No tienes permisos para acceder a esta sección de la empresa.</p>
+
+    <div class="mt-4">
+        <a href="javascript:history.back()" class="btn btn_selector">Volver atrás</a>
+        <a href="{% url 'index' %}" class="btn btn_selector">Ir al Inicio</a>
+    </div>
+</div>
+{% endblock %}

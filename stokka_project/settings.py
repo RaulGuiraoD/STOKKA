@@ -10,8 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 import os
+import environ
 from pathlib import Path
 from django.utils.translation import gettext_lazy as _ 
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -55,6 +57,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'inventario.middleware.PlanActivoMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -72,6 +75,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'inventario.context_processors.empresa_activa',
             ],
         },
     },
@@ -120,10 +124,6 @@ LANGUAGES = [
     ('en', _('Inglés')),
 ]
 
-# Indica dónde se guardarán los archivos de traducción
-LOCALE_PATHS = [
-    BASE_DIR / 'locale',
-]
 
 TIME_ZONE = 'Europe/Madrid'
 
@@ -150,6 +150,16 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 LOGIN_URL = 'login'          # A donde van si intentan entrar al index sin cuenta
 LOGIN_REDIRECT_URL = 'index' # A donde van justo después de loguearse
 
-LOGOUT_REDIRECT_URL = 'login' # A dónde va el usuario tras cerrar sesión
-LOGOUT_ON_GET = True          # Permite cerrar sesión haciendo clic en el enlace
+# LOGOUT_REDIRECT_URL = 'login' # A dónde va el usuario tras cerrar sesión
+# LOGOUT_ON_GET = True          # Permite cerrar sesión haciendo clic en el enlace
 AUTH_USER_MODEL = 'inventario.Usuario'
+
+# ── EMAIL SMTP ──────────────────────────────────────────────────────────────
+EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST          = 'smtp.gmail.com'
+EMAIL_PORT          = 587
+EMAIL_USE_TLS       = True
+EMAIL_HOST_USER     = config('EMAIL_HOST_USER',     default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL',  default=f'Stokka <{EMAIL_HOST_USER}>')
+

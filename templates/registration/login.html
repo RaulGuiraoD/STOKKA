@@ -8,12 +8,26 @@
     </a>
     <h2 class="auth-subtitle mb-4 text-white" style="letter-spacing: 4px; font-weight: 400;">INICIO DE SESIÓN</h2>
 
-    {% if messages %}
     {% for message in messages %}
     <div class="alert alert-{{ message.tags }} py-2 small mb-3" role="alert">
         {{ message }}
     </div>
     {% endfor %}
+
+    {% if email_pendiente %}
+        <div class="alert small mb-3 text-start"
+            style="background: var(--amarillo-stokka-historial-pastel); border: 1px solid var(--amarillo-stokka-historial-color);
+                    border-radius: 8px; color: var(--amarillo-stokka-historial-fondo);">
+            <i class="fa-solid fa-hand"></i> <strong>{{ email_pendiente }}</strong> aún no ha verificado su email.
+            <form method="POST" action="{% url 'reenviar_verificacion' %}" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="email" value="{{ email_pendiente|default:'' }}">
+                <button type="submit"
+                        class="btn btn_selector btn-sm fw-bold">
+                    Reenviar enlace de confirmación
+                </button>
+            </form>
+        </div>
     {% endif %}
 
     <form method="POST">
@@ -21,35 +35,36 @@
         <div class="text-start mb-3">
             <label class="text-white small mb-1 d-block">Email</label>
             <input type="email" name="username" class="form-control border-0 rounded-2 py-2"
-                placeholder="user@gmail.com" style="background: white;">
+                   placeholder="user@gmail.com" style="background: var(--blanco);"
+                   value="{{ email_no_verificado|default:'' }}">
         </div>
 
         <div class="text-start mb-4">
             <label class="text-white small mb-1 d-block">Contraseña</label>
             <div class="position-relative d-flex align-items-center">
                 <input type="password" name="password" id="id_password"
-                    class="form-control border-0 rounded-2 py-2 pe-5 shadow-none" 
-                    placeholder="********" style="background: white;" required>
-                
-                <i class="fa-regular fa-eye position-absolute d-none stokka-eye-icon" 
-                id="toggleIcon" 
-                style="right: 15px; cursor: pointer; color: var(--verde-stokka); z-index: 10;"
-                onclick="togglePassword('id_password', 'toggleIcon')"></i>
+                       class="form-control border-0 rounded-2 py-2 pe-5 shadow-none"
+                       placeholder="********" style="background: var(--blanco);" required>
+                <i class="fa-regular fa-eye position-absolute d-none stokka-eye-icon"
+                   id="toggleIcon"
+                   style="right: 15px; cursor: pointer; color: var(--verde-stokka); z-index: 10;"
+                   onclick="togglePassword('id_password', 'toggleIcon')"></i>
             </div>
-            <div class="d-flex justify-content-between align-items-center mt-2" style="font-size: 12px;">
-                <label class="text-white"><input type="checkbox" class="form-check-input me-1"> Recuérdame</label>
-                <a href="#" class="text-white text-decoration-none">¿Olvidaste la contraseña?</a>
+            <div class="d-flex flex-row-reverse mt-2" style="font-size: 12px;">
+                <a href="{% url 'olvide_password' %}" class="text-white ">
+                    ¿Olvidaste la contraseña?
+                </a>
             </div>
         </div>
 
         <button type="submit" class="btn btn-light fw-bold text-uppercase w-100 py-2 mt-3"
-            style="color: var(--verde-stokka); border-radius: 10px; padding: 12px 60px;">
+                style="color: var(--verde-stokka); border-radius: 10px; padding: 12px 60px;">
             Confirmar
         </button>
 
         <a href="{% url 'registro' %}" class="d-block mt-4 text-white text-decoration-underline"
-            style="font-size: 13px;">
-            No estoy registrado
+           style="font-size: 13px;">
+            Registrarme / Registrar Empresa
         </a>
     </form>
 </div>

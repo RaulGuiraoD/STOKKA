@@ -25,22 +25,47 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     
-    # --- CORE / DASHBOARD ---
+    # --- CORE ---
     path('', views.index, name='index'),
-    path('login/', views.login_view, name='login'),
+    path('equipo-stokka/', views.linkedin_team_view, name='linkedin_team'),
 
     # --- AUTENTICACIÓN ---
-    path('registro/', views.registro_view, name='registro'),
-    path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    path('login/', views.login_view, name='login'),
+    path('seleccionar-empresa/', views.seleccionar_empresa, name='seleccionar_empresa'), 
+    path('registro/', views.registro_bienvenida_view, name='registro'),
+    path('registro/usuario/', views.registro_usuario_view, name='registro_usuario'),
+    path('registro/empresa/', views.registro_empresa_view, name='registro_empresa'),
+
+    # --- VERIFICACIÓN EMAIL Y RECUPERACIÓN CONTRASEÑA ---
+    path('verificar-email/<uuid:token>/', views.verificar_email_view, name='verificar_email'),
+    path('reenviar-verificacion/', views.reenviar_verificacion_view, name='reenviar_verificacion'),
+    path('olvide-password/', views.olvide_password_view,  name='olvide_password'),
+    path('recuperar-password/<uuid:token>/', views.resetear_password_view, name='resetear_password'),
+    
+    # --- FLUJO DE PAGO ---
+    path('registro/pago/', views.pasarela_pago_view, name='pasarela_pago'),
+    path('pago/cancelar/', views.cancelar_pago_view, name='cancelar_pago'), 
+    
+    # Logout 
+    path('logout/', views.logout_view, name='logout'),
+
+    # --- GESTIÓN DE EMPRESA (DUEÑO) ---
+    path('empresa/',  views.empresa_view, name='empresa'),
+    path('empresa/eliminar/', views.eliminar_empresa, name='eliminar_empresa'),
+    path('empresa/desactivar/ahora/', views.desactivar_empresa_ahora, name='desactivar_empresa_ahora'),
+    path('empresa/desactivar/fecha/', views.desactivar_empresa_fecha, name='desactivar_empresa_fecha'),
+    path('empresa/desactivar/cancelar/', views.cancelar_desactivacion, name='cancelar_desactivacion'),
+    path('empresa/reactivar/', views.reactivar_empresa, name='reactivar_empresa'),
 
     # --- PERFIL DE USUARIO ---
     path('perfil/', views.perfil_view, name='perfil'),
     path('perfil/editar/', views.editar_perfil_view, name='editar_perfil'),
     path('perfil/cambiar-foto/', views.cambiar_foto, name='cambiar_foto'),
     path('perfil/eliminar-foto/', views.eliminar_foto, name='eliminar_foto'),
+    path('perfil/preferencias/daltonismo/', views.guardar_preferencia_daltonismo, name='pref_daltonismo'),
+    path('perfil/preferencias/iconos/', views.guardar_preferencia_iconos, name='pref_iconos'),
 
-    # --- GESTIÓN DE USUARIOS (ADMIN) ---
+    # --- GESTIÓN DE USUARIOS (DEUO/ADMIN) ---
     path('gestion-usuarios/', views.gestion_usuarios, name='gestion_usuarios'),
     path('gestion-usuarios/editar/<int:user_id>/', views.editar_usuario_admin, name='editar_usuario_admin'),
     path('eliminar-usuario/<int:user_id>/', views.eliminar_usuario, name='eliminar_usuario'),
@@ -55,6 +80,7 @@ urlpatterns = [
     path('inventario/eliminar-masivo/', views.eliminar_masivo, name='eliminar_masivo'),
     path('actualizar-stocks/', views.actualizar_stocks_ajax, name='actualizar_stocks_ajax'),
     path('inventario/registrar-historial-rapido/<int:pk>/', views.registrar_historial_rapido, name='registrar_historial_rapido'),
+    path('inventario/copia_seguridad/', views.copia_seguridad_view, name='copia_seguridad'),
 
     # --- BARRA BUSQUEDA HEADER ---
     path('buscar/', views.buscador_global, name='buscador_global'),

@@ -1,180 +1,625 @@
-# 1. Standard Library Imports
+# 1. Library Imports
 import json
+import csv
+import io
 
-# 2. Django Core & Common Imports
+# 2. Django Core & Imports Comunes
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import models
-from django.db.models import Count, Max, Q, Sum
+from django.db import models, transaction
+from django.utils.text import slugify
+from django.db.models import Max, Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.http import HttpResponse
 
-# 3. Django Auth & Security
+# 3. Django Auth & Seguridad
 from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.contrib.sites.shortcuts import get_current_site
 
-# 4. Local App Imports
-from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroUsuarioForm
-from .models import Perfil, Producto, Usuario, HistorialMovimiento
+# 4.  Imports Locales
+from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm, EditarEmpresaForm
+from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia, TemaEmpresa, TokenVerificacionEmail, TokenRecuperacionPassword, CopiaSeguridad
+from datetime import date, timedelta, datetime
+from django.conf import settings as django_settings
 
-# Esto detecta automáticamente el Usuario personalizado
 User = get_user_model()
 
-# PERMISOS DE ADMINISTRADOR
+
+def linkedin_team_view(request):
+    return render(request, 'registration/social_media/linkedin_team.html')
+
+# ==============================================================================
+# HELPERS Y DECORADORES
+# ==============================================================================
+
+def get_empresa_activa(request):
+    """
+    Devuelve el objeto Empresa que el usuario eligió en el selector.
+    Verifica que el usuario realmente tiene membresía en esa empresa.
+    Devuelve None si no hay empresa en sesión o si la membresía no existe.
+    """
+    empresa_id = request.session.get('empresa_activa_id')
+    if not empresa_id:
+        return None
+    try:
+        membresia = request.user.membresias.select_related('empresa').get(empresa_id=empresa_id)
+        return membresia.empresa
+    except Membresia.DoesNotExist:
+        return None
+
+
+def get_membresia_activa(request, empresa):
+    """
+    Devuelve el objeto Membresia del usuario en la empresa activa.
+    Útil para leer el rol o es_fundador dentro de las vistas.
+    """
+    if not empresa:
+        return None
+    return request.user.get_membresia(empresa)
+
+
 def admin_required(view_func):
-    def _wrapped_view_func(request, *args, **kwarsg):
-        if request.user.is_authenticated and (request.user.es_admin_o_dueño()):
-            return view_func(request, *args, **kwarsg)
+    """
+    Decorador: solo dueños y admins de la empresa activa pueden acceder.
+    Si no hay empresa activa en sesión, lanza PermissionDenied.
+    """
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            raise PermissionDenied
+        empresa = get_empresa_activa(request)
+        if empresa and request.user.es_admin_o_dueño_en(empresa):
+            return view_func(request, *args, **kwargs)
         raise PermissionDenied
-    return _wrapped_view_func
+    return _wrapped
 
-# LÓGICA DE GESTIÓN DE USUARIOS
+
+# ==============================================================================
+# SELECTOR DE EMPRESA
+# Primera pantalla tras el login si el usuario tiene más de una empresa.
+# ==============================================================================
+
 @login_required
-@admin_required
-def gestion_usuarios(request):
-    query = request.GET.get('q')
-    usuarios = User.objects.all().order_by('id')
-    
-    if query:
-        usuarios = usuarios.filter(
-            Q(username__icontains=query) | Q(first_name__icontains=query) | Q(email__icontains=query)
-        )
+def seleccionar_empresa(request):
+    membresias = request.user.membresias.select_related('empresa').all()
+    total = membresias.count()
+
+    # Sin ninguna empresa registrada
+    if total == 0:
+        messages.error(request, "Tu cuenta no tiene ninguna empresa registrada. Regístrala primero.")
+        return render(request, 'registration/seleccionar_empresa.html', {
+            'membresias': membresias,
+            'sin_empresas': True,
+        })
+
+    # Una sola empresa: entramos directo sin mostrar selector
+    if total == 1:
+        request.session['empresa_activa_id'] = membresias.first().empresa.id
+        return redirect('index')
+
+    # Varias empresas: mostramos el selector
+    if request.method == 'POST':
+        empresa_id = request.POST.get('empresa_id', '').strip()
+        if empresa_id and membresias.filter(empresa_id=empresa_id).exists():
+            request.session['empresa_activa_id'] = int(empresa_id)
+            return redirect('index')
+        messages.error(request, "Empresa no válida. Selecciona una de la lista.")
+
+    return render(request, 'registration/seleccionar_empresa.html', {'membresias': membresias})
+
+
+# ==============================================================================
+# PANTALLA DE BIENVENIDA AL REGISTRO
+# Solo muestra dos botones: registrar usuario / registrar empresa
+# ==============================================================================
+def registro_bienvenida_view(request):
+    if request.user.is_authenticated:
+        return redirect('seleccionar_empresa')
+    return render(request, 'registration/registro_bienvenida.html')
+
+
+# ==============================================================================
+# REGISTRAR USUARIO
+# Crea la cuenta. No crea empresa ni membresía.
+# Al terminar redirige a registro_empresa con el email en sesión.
+# ==============================================================================
+def registro_usuario_view(request):
+    if request.user.is_authenticated:
+        return redirect('seleccionar_empresa')
+
+    # Aviso si el email no está configurado — bloquea el registro
+    email_sin_configurar = (
+        not getattr(django_settings, 'EMAIL_HOST_USER', '') or
+        not getattr(django_settings, 'EMAIL_HOST_PASSWORD', '')
+    )
 
     if request.method == 'POST':
-        form = RegistroUsuarioForm(request.POST, user_request=request.user)
+        if email_sin_configurar:
+            messages.error(
+                request,
+                "El sistema de email no está configurado. "
+                "El administrador debe añadir las credenciales SMTP en el archivo .env "
+                "antes de que los usuarios puedan registrarse."
+            )
+            return render(request, 'registration/registro_usuario.html', {
+                'form': RegistroUsuarioNuevoForm(),
+                'email_sin_configurar': True,
+            })
+
+        form = RegistroUsuarioNuevoForm(request.POST)
         if form.is_valid():
-            nuevo_usuario = form.save(commit=False)
-            nuevo_usuario.set_password(form.cleaned_data['password'])
-            nuevo_usuario.save()
-            Perfil.objects.get_or_create(user=nuevo_usuario)
-            messages.success(request, f"Usuario {nuevo_usuario.username} creado.")
-            return redirect('gestion_usuarios')
-        else:
-            # CORRECCIÓN DEL KEYERROR '__all__'
-            for field, errors in form.errors.items():
-                for error in errors:
-                    if field == '__all__':
-                        # Errores generales del formulario (ej: contraseñas no coinciden)
-                        messages.error(request, f"Error: {error}", extra_tags='open_add_modal')
-                    else:
-                        # Errores de campos específicos (ej: email duplicado)
-                        label = form.fields[field].label or field.capitalize()
-                        messages.error(request, f"{label}: {error}", extra_tags='open_add_modal')
-            return redirect('gestion_usuarios')
+            email      = form.cleaned_data['email']
+            first_name = form.cleaned_data['first_name']
+            last_name  = form.cleaned_data.get('last_name', '')
+            password   = form.cleaned_data['password']
+
+            try:
+                with transaction.atomic():
+                    nuevo_usuario = User.objects.create_user(
+                        username=email,
+                        email=email,
+                        password=password,
+                        first_name=first_name,
+                        last_name=last_name,
+                        email_verificado=False,
+                        is_active=False,          
+                    )
+                    Perfil.objects.create(user=nuevo_usuario)
+                    token_obj = TokenVerificacionEmail.objects.create(usuario=nuevo_usuario)
+
+                email_enviado = _enviar_email_verificacion(request, nuevo_usuario, token_obj)
+
+                if email_enviado:
+                    messages.success(
+                        request,
+                        f"¡Cuenta creada! Hemos enviado un enlace de confirmación a {email}. "
+                        f"Debes confirmarlo antes de continuar. Revisa también la carpeta de spam."
+                    )
+                else:
+                    messages.warning(
+                        request,
+                        f"Cuenta creada, pero no pudimos enviar el email a {email}. "
+                        f"Ve al login e introduce tu correo para solicitar el reenvío."
+                    )
+
+                request.session['email_registro'] = email
+                return redirect('registro_empresa')
+
+            except Exception as e:
+                messages.error(request, f"Error al crear el usuario: {e}")
     else:
-        form = RegistroUsuarioForm(user_request=request.user)
+        form = RegistroUsuarioNuevoForm()
 
-    return render(request, 'stokka/pages/gestion_usuarios.html', {
-        'usuarios': usuarios,
-        'form': form
-    })
-
-# LÓGICA DE GESTIÓN DE USUARIOS -> EDITAR USUARIOS
-@login_required
-@admin_required
-def editar_usuario_admin(request, user_id):
-    # Usamos get_object_or_404 por seguridad
-    usuario_a_editar = get_object_or_404(User, id=user_id)
-    
-    # --- BLOQUE DE SEGURIDAD DE ACCESO ---
-    # 1. Un Admin NO puede editar al Dueño Primario (ID 1)
-    if usuario_a_editar.id == 1 and request.user.id != 1:
-        messages.error(request, "El Dueño Fundador es intocable.")
-        return redirect('gestion_usuarios')
-    
-    # 2. Solo el Dueño puede editar a otros usuarios con rol 'dueño'
-    if usuario_a_editar.rol == 'dueño' and not request.user.es_dueño():
-        messages.error(request, "No tienes permisos para editar perfiles de nivel Dueño.")
-        return redirect('gestion_usuarios')
-
-    # --- PROCESAMIENTO DEL FORMULARIO ---
-    if request.method == 'POST':
-        form = EditarUsuarioAdminForm(request.POST, instance=usuario_a_editar, user_request=request.user)
-        
-        if form.is_valid():
-            usuario = form.save(commit=False)
-            nueva_clave = form.cleaned_data.get('password')
-            
-            # Gestión de Contraseña
-            if nueva_clave:
-                usuario.set_password(nueva_clave)
-                # Si el admin se edita a sí mismo, mantenemos la sesión activa
-                if usuario.id == request.user.id:
-                    update_session_auth_hash(request, usuario)
-            
-            # Protección de roles (Auto-degradación e ID 1)
-            if usuario.id == request.user.id:
-                usuario.rol = request.user.rol
-            if usuario.id == 1:
-                usuario.rol = 'dueño'
-
-            usuario.save()
-            messages.success(request, f"Usuario {usuario.username} actualizado con éxito.")
-            return redirect('gestion_usuarios')
-        else:
-            # Si el formulario no es válido, mandamos los errores a los mensajes flash superiores
-            for field, errors in form.errors.items():
-                for error in errors:
-                    label = form.fields[field].label or field.capitalize()
-                    # Añadimos 'open_admin_edit_modal' y el ID del usuario para que el JS sepa cuál abrir
-                    messages.error(request, f"{label}: {error}", extra_tags=f'open_admin_edit_modal_{usuario_a_editar.id}')
-            
-            return redirect('gestion_usuarios')
-            # Importante: No redirigimos aquí, dejamos que baje al render final para mostrar el form con errores
-    else:
-        form = EditarUsuarioAdminForm(instance=usuario_a_editar, user_request=request.user)
-        
-    return render(request, 'stokka/modales/editar_usuario_admin.html', {
+    return render(request, 'registration/registro_usuario.html', {
         'form': form,
-        'usuario_editado': usuario_a_editar
+        'email_sin_configurar': email_sin_configurar,
     })
 
-# LÓGICA DE GESTIÓN DE USUARIOS -> ELIMINAR USUARIO
+
+# ==============================================================================
+# REGISTRAR EMPRESA
+# Detecta al usuario por email. Crea Empresa + Membresía como fundador/dueño.
+# Funciona tanto para usuarios nuevos (viene del paso 1) como para usuarios
+# ya existentes que quieren añadir una segunda empresa.
+# ==============================================================================
+def registro_empresa_view(request):
+    email_previo = request.session.get('email_registro', '')
+
+    if request.method == 'POST':
+        form = RegistroEmpresaForm(request.POST)
+        if form.is_valid():
+            email_usuario  = form.cleaned_data['email_usuario']
+            nombre_empresa = form.cleaned_data['nombre_empresa']
+            cif            = form.cleaned_data.get('cif', '')
+            telefono       = form.cleaned_data.get('telefono', '')
+
+            try:
+                usuario = User.objects.get(email=email_usuario)
+            except User.DoesNotExist:
+                messages.error(request, "No se encontró ninguna cuenta con ese email.")
+                return render(request, 'registration/registro_empresa.html', {'form': form})
+
+            # ── VERIFICACIÓN ANTES DE CREAR NADA ──────────────────────────
+            if not usuario.is_active or not usuario.email_verificado:
+                messages.warning(
+                    request,
+                    f"La cuenta de {email_usuario} aún no ha sido verificada. "
+                    f"Revisa tu bandeja de entrada (y la carpeta de spam). "
+                    f"Una vez confirmes el email, vuelve a este paso."
+                )
+                return render(request, 'registration/registro_empresa.html', {
+                    'form': form,
+                    'email_pendiente': email_usuario,   # para el botón de reenvío
+                })
+
+            try:
+                with transaction.atomic():
+                    nueva_empresa = Empresa.objects.create(
+                        nombre=nombre_empresa,
+                        slug=slugify(nombre_empresa),
+                        cif=cif,
+                        telefono=telefono,
+                        plan_activo=False,
+                    )
+                    Membresia.objects.create(
+                        usuario=usuario,
+                        empresa=nueva_empresa,
+                        rol='dueño',
+                        es_fundador=True,
+                    )
+
+                request.session.pop('email_registro', None)
+                login(request, usuario)
+                request.session['empresa_activa_id'] = nueva_empresa.id
+                messages.success(
+                    request,
+                    f"Empresa '{nueva_empresa.nombre}' creada. Completa el pago para activarla."
+                )
+                return redirect('pasarela_pago')
+
+            except Exception as e:
+                messages.error(request, f"Error al crear la empresa: {e}")
+    else:
+        form = RegistroEmpresaForm(initial={'email_usuario': email_previo})
+
+    return render(request, 'registration/registro_empresa.html', {'form': form})
+
+# ==============================================================================
+# HELPER PRIVADO — envía el email de verificación
+# ==============================================================================
+def _enviar_email_verificacion(request, usuario, token_obj):
+    dominio   = request.get_host()
+    protocolo = 'https' if request.is_secure() else 'http'
+    enlace    = f"{protocolo}://{dominio}/verificar-email/{token_obj.token}/"
+
+    try:
+        send_mail(
+            subject        = "Confirma tu cuenta en Stokka",
+            message        = (
+                f"Hola {usuario.first_name},\n\n"
+                f"Gracias por registrarte en Stokka.\n\n"
+                f"Confirma tu cuenta haciendo clic en este enlace:\n"
+                f"{enlace}\n\n"
+                f"El enlace caduca en 24 horas.\n\n"
+                f"Si no fuiste tú, ignora este mensaje.\n\n"
+                f"— El equipo de Stokka"
+            ),
+            from_email     = django_settings.DEFAULT_FROM_EMAIL,
+            recipient_list = [usuario.email],
+            fail_silently  = False,
+        )
+        return True
+    except Exception as e:
+        # Loguea el error en consola para el desarrollador
+        import logging
+        logging.getLogger(__name__).error(f"Error enviando email de verificación a {usuario.email}: {e}")
+        return False
+
+# ==============================================================================
+# VERIFICAR EMAIL
+# ==============================================================================
+def verificar_email_view(request, token):
+    try:
+        token_obj = TokenVerificacionEmail.objects.select_related('usuario').get(token=token)
+    except TokenVerificacionEmail.DoesNotExist:
+        messages.error(request, "Enlace de verificación inválido.")
+        return render(request, 'registration/verificar_email_resultado.html', {'exito': False})
+
+    if token_obj.usado:
+        messages.info(request, "Este enlace ya fue usado. Inicia sesión normalmente.")
+        return render(request, 'registration/verificar_email_resultado.html', {'exito': True, 'ya_usado': True})
+
+    if token_obj.ha_expirado():
+        messages.error(request, "El enlace ha caducado. Solicita uno nuevo.")
+        return render(request, 'registration/verificar_email_resultado.html',
+                      {'exito': False, 'expirado': True, 'email': token_obj.usuario.email})
+
+    # Activamos el usuario
+    usuario = token_obj.usuario
+    usuario.is_active        = True
+    usuario.email_verificado = True
+    usuario.save(update_fields=['is_active', 'email_verificado'])
+
+    token_obj.usado = True
+    token_obj.save(update_fields=['usado'])
+
+    messages.success(request, "¡Email confirmado! Ya puedes registrar tu empresa.")
+    return render(request, 'registration/verificar_email_resultado.html', {'exito': True})
+
+
+# ==============================================================================
+# REENVIAR VERIFICACIÓN
+# ==============================================================================
+def reenviar_verificacion_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        try:
+            usuario = User.objects.get(email=email, is_active=False, email_verificado=False)
+            token_obj, _ = TokenVerificacionEmail.objects.get_or_create(usuario=usuario)
+            if token_obj.usado or token_obj.ha_expirado():
+                token_obj.delete()
+                token_obj = TokenVerificacionEmail.objects.create(usuario=usuario)
+            _enviar_email_verificacion(request, usuario, token_obj)
+            messages.success(request, "Correo reenviado. Revisa tu bandeja de entrada.")
+        except User.DoesNotExist:
+            messages.success(request, "Si el correo existe y no está verificado, recibirás un nuevo enlace.")
+    return redirect('login')
+
+
+# ==============================================================================
+# OLVIDÉ MI CONTRASEÑA — pedir email
+# ==============================================================================
+def olvide_password_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        enviado = False
+
+        try:
+            usuario   = User.objects.get(email=email, is_active=True)
+            token_obj = TokenRecuperacionPassword.objects.create(usuario=usuario)
+            dominio   = request.get_host()
+            protocolo = 'https' if request.is_secure() else 'http'
+            enlace    = f"{protocolo}://{dominio}/recuperar-password/{token_obj.token}/"
+
+            try:
+                send_mail(
+                    subject        = "Restablecer contraseña — Stokka",
+                    message        = (
+                        f"Hola {usuario.first_name},\n\n"
+                        f"Recibimos una solicitud para restablecer tu contraseña de Stokka.\n\n"
+                        f"Haz clic en el siguiente enlace (válido durante 2 horas):\n"
+                        f"{enlace}\n\n"
+                        f"Si no lo solicitaste, ignora este mensaje. "
+                        f"Tu contraseña no cambiará.\n\n"
+                        f"— El equipo de Stokka"
+                    ),
+                    from_email     = django_settings.DEFAULT_FROM_EMAIL,
+                    recipient_list = [usuario.email],
+                    fail_silently  = False,
+                )
+                enviado = True
+            except Exception as smtp_error:
+                import logging
+                logging.getLogger(__name__).error(
+                    f"Error SMTP enviando recuperación a {email}: {smtp_error}"
+                )
+
+        except User.DoesNotExist:
+            pass  # no revelamos si el email existe
+
+        # Siempre el mismo mensaje al usuario (seguridad)
+        if enviado:
+            messages.success(
+                request,
+                f"Hemos enviado las instrucciones a {email}. "
+                f"Revisa también la carpeta de spam. El enlace caduca en 2 horas."
+            )
+        else:
+            messages.warning(
+                request,
+                "No pudimos enviar el correo en este momento. "
+                "Comprueba que el email es correcto o inténtalo más tarde."
+            )
+
+        return redirect('olvide_password')
+
+    return render(request, 'registration/olvide_password.html')
+
+
+# ==============================================================================
+# OLVIDÉ MI CONTRASEÑA — paso 2: formulario nueva contraseña
+# ==============================================================================
+def resetear_password_view(request, token):
+    try:
+        token_obj = TokenRecuperacionPassword.objects.select_related('usuario').get(
+            token=token, usado=False
+        )
+    except TokenRecuperacionPassword.DoesNotExist:
+        messages.error(request, "Enlace inválido o ya utilizado.")
+        return render(request, 'registration/resetear_password.html', {'token_invalido': True})
+
+    if token_obj.ha_expirado():
+        messages.error(request, "El enlace ha caducado. Solicita uno nuevo.")
+        return render(request, 'registration/resetear_password.html', {'token_invalido': True})
+
+    if request.method == 'POST':
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
+
+        if len(password1) < 8:
+            messages.error(request, "La contraseña debe tener al menos 8 caracteres.")
+            return render(request, 'registration/resetear_password.html', {'token': token})
+
+        if password1 != password2:
+            messages.error(request, "Las contraseñas no coinciden.")
+            return render(request, 'registration/resetear_password.html', {'token': token})
+
+        usuario = token_obj.usuario
+        usuario.set_password(password1)
+        usuario.save()
+
+        token_obj.usado = True
+        token_obj.save(update_fields=['usado'])
+
+        usuario = token_obj.usuario
+
+        if check_password(password1, usuario.password):
+            messages.error(request, "La nueva contraseña no puede ser igual a la anterior.")
+            return render(request, 'registration/resetear_password.html', {'token': token})
+
+        usuario.set_password(password1)
+        usuario.save()
+
+        messages.success(request, "¡Contraseña actualizada! Ya puedes iniciar sesión.")
+        return redirect('login')
+
+    return render(request, 'registration/resetear_password.html', {'token': token})
+
+
+# ==============================================================================
+# LOGIN / LOGOUT / REGISTRO
+# ==============================================================================
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('seleccionar_empresa')
+
+    if request.method == 'POST':
+        email_ingresado    = request.POST.get('username', '').strip()
+        password_ingresado = request.POST.get('password', '')
+
+        if not email_ingresado or not password_ingresado:
+            messages.error(request, "Introduce tu correo y contraseña.")
+            return render(request, 'registration/login.html')
+
+        try:
+            user_obj = User.objects.get(email=email_ingresado)
+            # Primero comprobamos email verificado, antes de authenticate
+            if not user_obj.email_verificado:
+                messages.warning(request, "Debes confirmar tu email antes de entrar. Revisa tu bandeja de entrada.")
+                return render(request, 'registration/login.html', {
+                    'email_pendiente': email_ingresado
+                })
+            user     = authenticate(request, username=user_obj.username, password=password_ingresado)
+
+            if user is not None:
+                login(request, user)
+
+                if request.POST.get('recordar'):
+                    request.session.set_expiry(1209600)
+                else:
+                    request.session.set_expiry(0)
+
+                nombre_mostrar = user.first_name if user.first_name else user.email
+                messages.success(request, f"¡Hola de nuevo, {nombre_mostrar}! Bienvenido/a a Stokka.")
+                return redirect('seleccionar_empresa')
+            else:
+                messages.error(request, "La contraseña introducida es incorrecta.")
+
+        except User.DoesNotExist:
+            messages.error(request, "Este correo electrónico no está registrado en el sistema.")
+
+        return render(request, 'registration/login.html')
+
+    return render(request, 'registration/login.html')
+
+def logout_view(request):
+    # Limpiamos también la empresa activa de la sesión
+    request.session.pop('empresa_activa_id', None)
+    logout(request)
+    return redirect('login')
+
+
+def registro_view(request):
+    if request.method == 'POST':
+        form = RegistroUsuarioNuevoForm(request.POST)
+        if form.is_valid():
+            nombre        = form.cleaned_data['first_name']
+            email         = form.cleaned_data['email']
+            password      = form.cleaned_data['password']
+            nombre_empresa = form.cleaned_data['nombre_empresa']
+
+            try:
+                with transaction.atomic():
+                    # 1. Crear empresa
+                    nueva_empresa = Empresa.objects.create(
+                        nombre=nombre_empresa,
+                        slug=slugify(nombre_empresa),
+                        plan_activo=False
+                    )
+
+                    # 2. Crear usuario — username = email (invisible para el usuario)
+                    nuevo_usuario = User.objects.create_user(
+                        username=email,
+                        email=email,
+                        password=password,
+                        first_name=nombre,
+                        is_staff=True,
+                        is_superuser=True,
+                    )
+
+                    # 3. Crear membresía como fundador y dueño
+                    Membresia.objects.create(
+                        usuario=nuevo_usuario,
+                        empresa=nueva_empresa,
+                        rol='dueño',
+                        es_fundador=True
+                    )
+
+                    # 4. Crear perfil
+                    Perfil.objects.create(user=nuevo_usuario)
+
+                    # 5. Login + empresa activa en sesión
+                    login(request, nuevo_usuario)
+                    request.session['empresa_activa_id'] = nueva_empresa.id
+                    return redirect('pasarela_pago')
+
+            except Exception as e:
+                return render(request, 'registration/registro.html', {
+                    'form': form,
+                    'error': f'Error en el registro: {e}'
+                })
+        # Si el form no es válido, lo devolvemos con los errores
+        return render(request, 'registration/registro.html', {'form': form})
+
+    form = RegistroUsuarioNuevoForm()
+    return render(request, 'registration/registro.html', {'form': form})
+
+
+# ==============================================================================
+# PASARELA DE PAGO (ficticia)
+# ==============================================================================
+
 @login_required
-@admin_required
-def eliminar_usuario(request, user_id):
-    usuario_a_eliminar = User.objects.get(id=user_id)
+def pasarela_pago_view(request):
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
 
-    # 1. El Dueño Primario (ID 1) es el ÚNICO inmortal
-    if usuario_a_eliminar.id == 1:
-        messages.error(request, "El Dueño fundacional no puede ser eliminado.")
-        return redirect('gestion_usuarios')
+    if empresa.plan_activo:
+        return redirect('index')
 
-    # 2. Solo el Dueño Primario (ID 1) puede eliminar a otros usuarios con rol 'dueño'
-    if usuario_a_eliminar.rol == 'dueño' and request.user.id != 1:
-        messages.error(request, "Solo el Dueño primario puede eliminar a otros usuarios con rango de Dueño.")
-        return redirect('gestion_usuarios')
+    if request.method == 'POST':
+        empresa.plan_activo   = True
+        empresa.renovacion_automatica = True
+        # Suscripción mensual ficticia: vence en 30 días
+        empresa.fecha_vencimiento = date.today() + timedelta(days=30)
+        empresa.fecha_desactivacion_programada = None
+        empresa.save(update_fields=[
+            'plan_activo', 'renovacion_automatica',
+            'fecha_vencimiento', 'fecha_desactivacion_programada'
+        ])
+        messages.success(request, f"¡Pago confirmado! '{empresa.nombre}' activada hasta el {empresa.fecha_vencimiento.strftime('%d/%m/%Y')}.")
+        return redirect('index')
 
-    # 3. El resto de reglas se mantienen
-    if request.user.id == user_id:
-        messages.error(request, "No puedes eliminarte a ti mismo.")
-        return redirect('gestion_usuarios')
+    return render(request, 'registration/pago_ficticio.html', {'empresa': empresa})
 
-    if usuario_a_eliminar.rol == 'admin' and not request.user.es_dueño():
-        messages.error(request, "Permisos insuficientes para eliminar administradores.")
-        return redirect('gestion_usuarios')
-
-    usuario_a_eliminar.delete()
-    messages.success(request, "Usuario eliminado.")
-    return redirect('gestion_usuarios')
+def cancelar_pago_view(request):
+    request.session.pop('empresa_activa_id', None)
+    logout(request)
+    return redirect('registro')
 
 
-# LÓGICA DEL INDEX 
+# ==============================================================================
+# INDEX
+# ==============================================================================
+
 @login_required
 def index(request):
-    productos = Producto.objects.all()
-    
-    # 1. KPIs y Semáforo
-    criticos_cont = 0
-    aviso_cont = 0
-    ok_cont = 0
-    
-    uds_criticas = 0
-    uds_aviso = 0
-    uds_ok = 0
-    stock_total = 0
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
+
+    membresia = get_membresia_activa(request, empresa)
+    productos = Producto.objects.filter(empresa=empresa)
+
+    criticos_cont = aviso_cont = ok_cont = 0
+    uds_criticas = uds_aviso = uds_ok = stock_total = 0
 
     for p in productos:
         stock_total += p.stock_actual
@@ -188,315 +633,728 @@ def index(request):
             ok_cont += 1
             uds_ok += p.stock_actual
 
-    # 2. Top 5 y Recientes
-    top_5 = productos.order_by('-stock_actual')[:5]
-    ultimos = productos.order_by('-fecha_registro')[:5]
-    
-    # 3. Métricas extra para tarjetas (KPIs)
-    # Productos sin referencia o referencia vacía
-    sin_ref = productos.filter(models.Q(referencia__isnull=True) | models.Q(referencia='')).count()    # Productos creados en los últimos 7 días
-    hace_una_semana = timezone.now() - timezone.timedelta(days=7)
-    nuevos_7d = productos.filter(fecha_registro__gte=timezone.now() - timezone.timedelta(days=7)).count()
-
-    stats_categoria = productos.values('nombre')[:5] # Ejemplo rápido
-    # Lo ideal es: Producto.objects.values('categoria').annotate(total=Count('id'))
-    # --- 4. ÚLTIMOS REGISTROS (NUEVO) ---
+    top_5            = productos.order_by('-stock_actual')[:5]
     ultimos_productos = productos.order_by('-fecha_registro')[:5]
-    # 4. Lógica de Roles STOKKA
+    sin_ref          = productos.filter(Q(referencia__isnull=True) | Q(referencia='')).count()
+    nuevos_7d        = productos.filter(fecha_registro__gte=timezone.now() - timezone.timedelta(days=7)).count()
 
-    es_jefe = request.user.es_admin_o_dueño()
-    total_empleados = Usuario.objects.filter(rol='empleado').count() if es_jefe else 0
+    es_jefe = request.user.es_admin_o_dueño_en(empresa)
+    # Total empleados solo de esta empresa
+    total_empleados = Membresia.objects.filter(empresa=empresa, rol='empleado').count() if es_jefe else 0
 
     context = {
-        'semaforo_data': [criticos_cont, aviso_cont, ok_cont],
-        'balance_data': [uds_criticas, uds_aviso, uds_ok], # DATOS REALES
+        'empresa': empresa,
+        'membresia': membresia,
+        'semaforo_data':    [criticos_cont, aviso_cont, ok_cont],
+        'balance_data':     [uds_criticas, uds_aviso, uds_ok],
         'nombres_top_json': json.dumps([p.nombre for p in top_5]),
         'valores_top_json': json.dumps([p.stock_actual for p in top_5]),
-        'stock_total': stock_total,
-        'sin_ref': sin_ref,
-        'nuevos_7d': nuevos_7d,
+        'stock_total':      stock_total,
+        'sin_ref':          sin_ref,
+        'nuevos_7d':        nuevos_7d,
         'ultimos_productos': ultimos_productos,
-        'es_jefe': es_jefe,
-        'total_empleados': total_empleados,
-        'stats_categoria' : stats_categoria,
+        'es_jefe':          es_jefe,
+        'total_empleados':  total_empleados,
     }
+    # GRAFICO PARA HISTORIAL (VISIBLE DUEÑO Y ADMINS)
+    hoy = timezone.now().date()
+    labels_grafico = []
+    datos_grafico  = []
+
+    for i in range(6, -1, -1):
+        dia = hoy - timezone.timedelta(days=i)
+        cantidad = HistorialMovimiento.objects.filter(
+            empresa=empresa,
+            fecha__date=dia
+        ).count()
+        labels_grafico.append(dia.strftime('%d %b'))
+        datos_grafico.append(cantidad)
+
+    context['labels_grafico_json'] = json.dumps(labels_grafico)
+    context['datos_grafico_json']  = json.dumps(datos_grafico)
+
     return render(request, 'stokka/pages/index.html', context)
 
-# LÓGICA DE LA BARRA DE BUSQUEDA 
+
+# ==============================================================================
+# BUSCADOR GLOBAL
+# ==============================================================================
+
 @login_required
 def buscador_global(request):
     query = request.GET.get('q', '').strip()
-    
+    empresa = get_empresa_activa(request)
+
     if not query:
         return redirect(request.META.get('HTTP_REFERER', 'index'))
 
-    # 1. Prioridad: ¿Es un producto? (Nombre o Referencia)
-    if Producto.objects.filter(Q(nombre__icontains=query) | Q(referencia__icontains=query)).exists():
+    if not empresa:
+        return redirect('seleccionar_empresa')
+
+    if Producto.objects.filter(
+        Q(empresa=empresa) &
+        (Q(nombre__icontains=query) | Q(referencia__icontains=query))
+    ).exists():
         return redirect(f'/inventario/?q={query}')
 
-    # 2. Segunda opción: ¿Es un usuario? (Solo si el que busca tiene permisos)
-    if request.user.es_admin_o_dueño():
-        if Usuario.objects.filter(Q(username__icontains=query) | Q(first_name__icontains=query) | Q(email__icontains=query)).exists():
+    if request.user.es_admin_o_dueño_en(empresa):
+        # Buscamos usuarios que tengan membresía en esta empresa
+        usuarios_empresa = Membresia.objects.filter(empresa=empresa).values_list('usuario_id', flat=True)
+        if User.objects.filter(
+            Q(id__in=usuarios_empresa) &
+            (Q(first_name__icontains=query) | Q(email__icontains=query))
+        ).exists():
             return redirect(f'/gestion-usuarios/?q={query}')
 
-    # 3. Si no encuentra nada
-    messages.error(request, f"No se encontraron resultados para '{query}'")
+    messages.error(request, f"No se encontraron resultados para '{query}'.")
     return redirect(request.META.get('HTTP_REFERER', 'index'))
 
-# LÓGICA DEL LOGIN Y REGISTRO 
-def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('index')
+
+# ==============================================================================
+# GESTIÓN DE USUARIOS
+# ==============================================================================
+
+@login_required
+@admin_required
+def gestion_usuarios(request):
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
+
+    membresia_activa = get_membresia_activa(request, empresa)
+    query = request.GET.get('q')
+
+    # Usuarios de esta empresa a través de sus membresías
+    membresias_empresa = Membresia.objects.filter(empresa=empresa).select_related('usuario').order_by('id')
+
+    if query:
+        membresias_empresa = membresias_empresa.filter(
+            Q(usuario__first_name__icontains=query) |
+            Q(usuario__email__icontains=query)
+        )
 
     if request.method == 'POST':
-        email_ingresado = request.POST.get('username')
-        password_ingresado = request.POST.get('password')
+        # Pasamos la empresa activa al form para filtrar roles según permisos
+        request.user._empresa_activa = empresa
+        form = RegistroColaboradorForm(request.POST, user_request=request.user)
+
+        if form.is_valid():
+            email     = form.cleaned_data['email']
+            password  = form.cleaned_data['password']
+            first_name = form.cleaned_data['first_name']
+            rol       = form.cleaned_data['rol']
+
+            try:
+                with transaction.atomic():
+                    nuevo_usuario = User.objects.create_user(
+                        username=email,
+                        email=email,
+                        password=password,
+                        first_name=first_name,
+                        is_active=False,              
+                        email_verificado=False,       
+                    )
+                    Membresia.objects.create(
+                        usuario=nuevo_usuario,
+                        empresa=empresa,
+                        rol=rol,
+                        es_fundador=False
+                    )
+                    Perfil.objects.get_or_create(user=nuevo_usuario)
+                    token_obj = TokenVerificacionEmail.objects.create(usuario=nuevo_usuario)
+                _enviar_email_verificacion(request, nuevo_usuario, token_obj)  
+                messages.success(request, f"Usuario {first_name} creado. Se le ha enviado un email de verificación.")
+            except Exception as e:
+                messages.error(request, f"Error al crear el usuario: {e}", extra_tags='open_add_modal')
+
+            return redirect('gestion_usuarios')
+
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    label = form.fields[field].label if field != '__all__' else ''
+                    messages.error(request, f"{label}: {error}".strip(': '), extra_tags='open_add_modal')
+            return redirect('gestion_usuarios')
+
+    else:
+        request.user._empresa_activa = empresa
+        form = RegistroColaboradorForm(user_request=request.user)
+
+    return render(request, 'stokka/pages/gestion_usuarios.html', {
+        'membresias': membresias_empresa,  
+        'form': form,
+        'empresa': empresa,
+        'membresia_activa': membresia_activa,
+    })
+
+
+# ==============================================================================
+# EDITAR USUARIO (desde gestión de usuarios)
+# ==============================================================================
+
+@login_required
+@admin_required
+def editar_usuario_admin(request, user_id):
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
+
+    membresia_editada = get_object_or_404(Membresia, usuario_id=user_id, empresa=empresa)
+    usuario_a_editar  = membresia_editada.usuario
+    es_ajax           = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+
+    # ── REGLAS DE ACCESO ──────────────────────────────────────────────────────
+    # El dueño solo puede editarse a sí mismo desde esta sección.
+    # Un admin solo puede editar empleados.
+    # Nadie puede editar al fundador excepto él mismo.
+
+    if membresia_editada.es_fundador and request.user != usuario_a_editar:
+        messages.error(request, "El fundador de la empresa solo puede editarse a sí mismo.")
+        return redirect('gestion_usuarios')
+
+    if membresia_editada.rol == 'dueño' and request.user != usuario_a_editar:
+        messages.error(request, "No tienes permisos para editar al Dueño.")
+        return redirect('gestion_usuarios')
+
+    if not request.user.es_dueño_en(empresa) and membresia_editada.rol != 'empleado':
+        messages.error(request, "Los administradores solo pueden editar empleados.")
+        return redirect('gestion_usuarios')
+
+    # ── PROCESAMIENTO 
+    if request.method == 'POST':
+        form = EditarUsuarioAdminForm(
+            request.POST,
+            instance=usuario_a_editar,
+            user_request=request.user,
+            empresa_activa=empresa
+        )
+
+        if form.is_valid():
+            usuario     = form.save(commit=False)
+            nueva_clave = form.cleaned_data.get('password')
+
+            if nueva_clave:
+                usuario.set_password(nueva_clave)
+                if usuario.pk == request.user.pk:
+                    update_session_auth_hash(request, usuario)
+
+            usuario.save()
+
+            # El rol se guarda en Membresia, nunca en Usuario
+            nuevo_rol = form.cleaned_data.get('rol')
+            if nuevo_rol and not membresia_editada.es_fundador:
+                membresia_editada.rol = nuevo_rol
+                membresia_editada.save()
+
+            messages.success(request, f"Usuario {usuario.first_name} actualizado con éxito.")
+            return redirect('gestion_usuarios')
+
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(
+                        request, error,
+                        extra_tags=f'open_admin_edit_modal_{usuario_a_editar.id}'
+                    )
+            return redirect('gestion_usuarios')
+
+    else:
+        form = EditarUsuarioAdminForm(
+            instance=usuario_a_editar,
+            user_request=request.user,
+            empresa_activa=empresa
+        )
+
+    return render(request, 'stokka/modales/editar_usuario_admin.html', {
+        'form':              form,
+        'usuario_editado':   usuario_a_editar,
+        'membresia_editada': membresia_editada,
+    })
+
+
+# ==============================================================================
+# ELIMINAR USUARIO
+# Elimina la membresía, no el usuario global.
+# Si el usuario no tiene más membresías, se elimina también el usuario.
+# ==============================================================================
+
+@login_required
+@admin_required
+def eliminar_usuario(request, user_id):
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
+
+    membresia = get_object_or_404(Membresia, usuario_id=user_id, empresa=empresa)
+    usuario_a_eliminar = membresia.usuario
+
+    # El fundador es inmortal en su empresa
+    if membresia.es_fundador:
+        messages.error(request, "El Fundador de la empresa no puede ser eliminado.")
+        return redirect('gestion_usuarios')
+
+    # No auto-eliminación
+    if request.user.pk == usuario_a_eliminar.pk:
+        messages.error(request, "No puedes eliminarte a ti mismo.")
+        return redirect('gestion_usuarios')
+
+    # Solo el fundador puede eliminar a otros dueños
+    if membresia.rol == 'dueño' and not request.user.es_fundador_de(empresa):
+        messages.error(request, "Solo el Fundador puede eliminar a otros Dueños.")
+        return redirect('gestion_usuarios')
+
+    # Solo un dueño puede eliminar admins
+    if membresia.rol == 'admin' and not request.user.es_dueño_en(empresa):
+        messages.error(request, "Permisos insuficientes para eliminar administradores.")
+        return redirect('gestion_usuarios')
+
+    # Eliminamos la membresía
+    membresia.delete()
+
+    # Si el usuario ya no pertenece a ninguna empresa, eliminamos también su cuenta
+    if not usuario_a_eliminar.membresias.exists():
+        usuario_a_eliminar.delete()
+        messages.success(request, "Usuario eliminado completamente.")
+    else:
+        messages.success(request, "Usuario eliminado de esta empresa.")
+
+    return redirect('gestion_usuarios')
+
+# ==============================================================================
+# EMPRESA
+# ==============================================================================
+
+def dueño_required(view_func):
+    """Solo el dueño/fundador de la empresa activa puede acceder."""
+    def _wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            raise PermissionDenied
+        empresa = get_empresa_activa(request)
+        if empresa and request.user.es_dueño_en(empresa):
+            return view_func(request, *args, **kwargs)
+        raise PermissionDenied
+    return _wrapped
+
+
+@login_required
+@dueño_required
+def empresa_view(request):
+    empresa   = get_empresa_activa(request)
+    membresia = get_membresia_activa(request, empresa)
+
+    total_usuarios    = Membresia.objects.filter(empresa=empresa).count()
+    total_productos   = Producto.objects.filter(empresa=empresa).count()
+    total_movimientos = HistorialMovimiento.objects.filter(empresa=empresa).count()
+    otras_membresias  = request.user.membresias.select_related('empresa').exclude(empresa=empresa)
+    tema, _           = TemaEmpresa.objects.get_or_create(empresa=empresa)
+
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+
+        if accion == 'guardar_datos':
+            form = EditarEmpresaForm(request.POST, instance=empresa)
+            if form.is_valid():
+                e      = form.save(commit=False)
+                e.slug = slugify(e.nombre)
+                e.save()
+                messages.success(request, "Datos de la empresa actualizados.")
+                return redirect('empresa')
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, error)
+
+        elif accion == 'guardar_tema':
+            tema.verde_stokka     = request.POST.get('verde_stokka', tema.verde_stokka)
+            tema.verde_secundario = request.POST.get('verde_secundario', tema.verde_secundario)
+            tema.rojo_alerta      = request.POST.get('rojo_alerta', tema.rojo_alerta)
+            tema.amarillo_alerta  = request.POST.get('amarillo_alerta', tema.amarillo_alerta)
+            tema.save()
+            messages.success(request, "Colores actualizados.")
+            return redirect('empresa')
+
+        elif accion == 'restablecer_tema':
+            tema.verde_stokka     = '#003D00'
+            tema.verde_secundario = '#1CA300'
+            tema.rojo_alerta      = '#C10D00'
+            tema.amarillo_alerta  = '#F5C907'
+            tema.save()
+            messages.success(request, "Colores restablecidos.")
+            return redirect('empresa')
+
+        elif accion == 'toggle_renovacion':
+            empresa.renovacion_automatica = not empresa.renovacion_automatica
+            empresa.save(update_fields=['renovacion_automatica'])
+            estado = "activada" if empresa.renovacion_automatica else "desactivada"
+            messages.success(request, f"Renovación automática {estado}.")
+            return redirect('empresa')
+
+        else:
+            form = EditarEmpresaForm(instance=empresa)
+    else:
+        form = EditarEmpresaForm(instance=empresa)
+
+    # Calcular días restantes si hay fecha de vencimiento
+    dias_restantes = None
+    if empresa.fecha_vencimiento:
+        delta = empresa.fecha_vencimiento - date.today()
+        dias_restantes = max(delta.days, 0)
+
+    return render(request, 'stokka/pages/empresa.html', {
+        'form':              form,
+        'empresa':           empresa,
+        'membresia':         membresia,
+        'total_usuarios':    total_usuarios,
+        'total_productos':   total_productos,
+        'total_movimientos': total_movimientos,
+        'otras_membresias':  otras_membresias,
+        'tema':              tema,
+        'dias_restantes':    dias_restantes,
+        'hoy':               date.today(),
+    })
+
+@login_required
+@dueño_required
+def desactivar_empresa_ahora(request):
+    """Desactiva la empresa inmediatamente."""
+    if request.method == 'POST':
+        empresa = get_empresa_activa(request)
+        empresa.plan_activo   = False
+        empresa.renovacion_automatica = False
+        empresa.fecha_desactivacion_programada = None
+        empresa.save(update_fields=['plan_activo', 'renovacion_automatica', 'fecha_desactivacion_programada'])
+
+        # Limpiamos la sesión — el usuario tendrá que "pagar" de nuevo para entrar
+        request.session.pop('empresa_activa_id', None)
+        messages.warning(request, f"La empresa '{empresa.nombre}' ha sido desactivada.")
+
+        # Si tiene más empresas activas, al selector; si no, al registro
+        otras = request.user.membresias.exclude(empresa=empresa).filter(empresa__plan_activo=True)
+        if otras.exists():
+            return redirect('seleccionar_empresa')
+        return redirect('registro_empresa')
+
+    return redirect('empresa')
+
+
+@login_required
+@dueño_required
+def desactivar_empresa_fecha(request):
+    """Programa la desactivación para una fecha concreta."""
+    if request.method == 'POST':
+        empresa = get_empresa_activa(request)
+        fecha_str = request.POST.get('fecha_desactivacion', '')
 
         try:
-            user_obj = User.objects.get(email=email_ingresado)
-            user = authenticate(request, username=user_obj.username, password=password_ingresado)
+            fecha = date.fromisoformat(fecha_str)
+            if fecha <= date.today():
+                messages.error(request, "La fecha debe ser posterior a hoy.")
+                return redirect('empresa')
 
-            if user is not None:
-                login(request, user)
-                
-                # Usamos el nombre si existe, si no, el nombre de usuario
-                nombre_mostrar = user.first_name if user.first_name else user.username
-                messages.success(request, f"¡Hola de nuevo, {nombre_mostrar}! Bienvenida/o a Stokka.")
-                
-                return redirect('index')
-            else:
-                messages.error(request, "La contraseña introducida es incorrecta.")
+            empresa.fecha_desactivacion_programada = fecha
+            empresa.renovacion_automatica = False
+            empresa.save(update_fields=['fecha_desactivacion_programada', 'renovacion_automatica'])
+            messages.success(request, f"La empresa se desactivará el {fecha.strftime('%d/%m/%Y')}.")
+
+        except ValueError:
+            messages.error(request, "Fecha inválida.")
+
+    return redirect('empresa')
+
+
+@login_required
+@dueño_required
+def cancelar_desactivacion(request):
+    """Cancela una desactivación programada y reactiva la renovación automática."""
+    if request.method == 'POST':
+        empresa = get_empresa_activa(request)
+        empresa.fecha_desactivacion_programada = None
+        empresa.renovacion_automatica = True
+        empresa.save(update_fields=['fecha_desactivacion_programada', 'renovacion_automatica'])
+        messages.success(request, "Desactivación programada cancelada. Renovación automática reactivada.")
+    return redirect('empresa')
+
+
+@login_required
+@dueño_required  
+def reactivar_empresa(request):
+    """Redirige a la pasarela de pago para reactivar una empresa inactiva."""
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        # Si venimos desde el selector sin empresa activa en sesión,
+        # necesitamos poner la empresa en sesión antes de pagar
+        empresa_id = request.POST.get('empresa_id')
+        if empresa_id:
+            request.session['empresa_activa_id'] = int(empresa_id)
+    return redirect('pasarela_pago')
+
+@login_required
+@dueño_required
+def eliminar_empresa(request):
+    empresa = get_empresa_activa(request)
+    
+    if request.method == 'POST':
+        confirmacion = request.POST.get('confirmacion', '').strip()
+
+        # Validación de seguridad extra en el servidor
+        if confirmacion != empresa.nombre:
+            messages.error(request, "El nombre introducido no coincide.")
+            return redirect('empresa')
+
+        nombre_borrado = empresa.nombre
         
-        except User.DoesNotExist:
-            messages.error(request, "Este correo electrónico no está registrado en el sistema.")
+        # 1. Quitamos la empresa de la sesión antes de borrarla
+        request.session.pop('empresa_activa_id', None)
         
-        return redirect('login')
+        # 2. Borramos la empresa
+        empresa.delete()
 
-    return render(request, 'registration/login.html')
+        messages.success(request, f"La empresa '{nombre_borrado}' ha sido eliminada.")
 
-def logout_view(request):
-    logout(request)
-    # Al borrar la sesión, redirigimos al login
-    return redirect('login')
+        # 3. Comprobamos si al usuario le quedan otras membresías en otras empresas
+        if request.user.membresias.exists():
+            return redirect('seleccionar_empresa')
+        
+        return redirect('registro_empresa')
 
-def registro_view(request):
-    if request.method == 'POST':    # 1. Recoger datos
-        nombre = request.POST.get('nombre')
-        usuario = request.POST.get('usuario')
-        email = request.POST.get('email')
-        password = request.POST.get('password')
-        apellido = request.POST.get('apellido', '')
-        telefono = request.POST.get('telefono', '')
+    return redirect('empresa')
 
-        # 2. Validación de campos obligatorios (doble seguridad)
-        if not all([nombre, usuario, email, password]):
-            return render(request, 'registration/registro.html', {
-                'error': 'Faltan campos obligatorios.',
-                'datos': request.POST
-            })
+# ==============================================================================
+# PERFIL
+# ==============================================================================
 
-        # 3. COMPROBACIÓN de si existe ya el nombre de usuario
-        if User.objects.filter(username=usuario).exists():
-            return render(request, 'registration/registro.html', {
-                'error': 'Ese nombre de usuario ya está cogido. Prueba otro.',
-                'datos': request.POST
-            })
-
-        # 4. COMPROBACIÓN de si existe ya el email
-        if User.objects.filter(email=email).exists():
-            return render(request, 'registration/registro.html', {
-                'error': 'Este correo electrónico ya está registrado. Ingresa otro correo para registrarte o inicia sesión',
-                'datos': request.POST
-            })
-
-        # 5. Si todo está correcto, creamos el usuario
-        try:
-            nuevo_usuario = User.objects.create_user(
-                username=usuario,
-                email=email, 
-                password=password,
-                first_name=nombre,
-                last_name=apellido
-            )
-            
-            # Asignar rol de dueño si es el primero
-            if User.objects.count() == 1:
-                nuevo_usuario.rol = 'dueño'
-                nuevo_usuario.is_staff = True
-                nuevo_usuario.is_superuser = True
-            
-            nuevo_usuario.save()
-
-            # 6. Crear el Perfil asociado
-            Perfil.objects.create(user=nuevo_usuario, telefono=telefono)
-
-            login(request, nuevo_usuario)
-            return redirect('index')
-
-        except Exception as e:
-            # Captura cualquier otro error inesperado para que no se rompa la web
-            return render(request, 'registration/registro.html', {
-                'error': f'Ocurrió un error inesperado: {e}'
-            })
-            
-    return render(request, 'registration/registro.html')
-
-
-# LÓGICA DEL PERFIL
-# LÓGICA DE LA VISTA DEL PERFIL
 @login_required
 def perfil_view(request):
-    # Aseguramos que el objeto perfil exista para pasárselo al template
-    perfil, created = Perfil.objects.get_or_create(user=request.user)
-    return render(request, 'stokka/pages/perfil.html', {'perfil': perfil})
+    perfil, _ = Perfil.objects.get_or_create(user=request.user)
+    empresa   = get_empresa_activa(request)
+    membresia = get_membresia_activa(request, empresa)
+    return render(request, 'stokka/pages/perfil.html', {
+        'perfil': perfil,
+        'empresa': empresa,
+        'membresia': membresia,
+    })
 
-# LÓGICA DE EDITAR PERFIL
+
 @login_required
 def editar_perfil_view(request):
     perfil = request.user.perfil
     if request.method == 'POST':
-        nombre = request.POST.get('nombre')
-        apellido = request.POST.get('apellido')
-        email = request.POST.get('email')
-        telefono = request.POST.get('telefono')
-        password = request.POST.get('password')
+        nombre          = request.POST.get('nombre')
+        apellido        = request.POST.get('apellido')
+        email           = request.POST.get('email')
+        telefono        = request.POST.get('telefono')
+        fecha_nacimiento        = request.POST.get('fecha_nacimiento')
+        password        = request.POST.get('password')
         confirm_password = request.POST.get('confirm_password')
-        
+
+        if not nombre:
+            messages.error(request, "El nombre es obligatorio.", extra_tags='open_edit_modal')
+            return redirect('perfil')
+
+        if not email:
+            messages.error(request, "El correo electrónico es obligatorio.", extra_tags='open_edit_modal')
+            return redirect('perfil')
+
+        if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
+            messages.error(request, "Este email ya está en uso.", extra_tags='open_edit_modal')
+            return redirect('perfil')
+
         if password:
             if check_password(password, request.user.password):
-                messages.error(request, "La nueva contraseña debe ser diferente a la actual.", extra_tags='open_edit_modal')
+                messages.error(request, "La nueva contraseña debe ser diferente.", extra_tags='open_edit_modal')
                 return redirect('perfil')
-            
             if password != confirm_password:
-                messages.error(request, "Las nuevas contraseñas no coinciden.", extra_tags='open_edit_modal')
+                messages.error(request, "Las contraseñas no coinciden.", extra_tags='open_edit_modal')
                 return redirect('perfil')
-            
-            # Si pasa las validaciones, la preparamos
             request.user.set_password(password)
-            # No guardamos aún, lo haremos al final con el resto de datos
-
-        # Actualizamos el resto de campos
-        request.user.first_name = nombre
-        request.user.last_name = apellido
-        request.user.email = email
-        perfil.telefono = telefono
         
+        if fecha_nacimiento and fecha_nacimiento.strip():
+            try:
+                fecha_obj = datetime.strptime(fecha_nacimiento, '%Y-%m-%d').date()
+                
+                if fecha_obj.year < 1900 or fecha_obj > date.today():
+                    messages.error(request, "Por favor, introduce una fecha coherente.", extra_tags='open_edit_modal')
+                    return redirect('perfil')
+                    
+                perfil.fecha_nacimiento = fecha_obj 
+                
+            except ValueError:
+                messages.error(request, "Formato de fecha incorrecto.", extra_tags='open_edit_modal')
+                return redirect('perfil')
+        else:
+            perfil.fecha_nacimiento = None
+
+
+        request.user.first_name = nombre
+        request.user.last_name  = apellido
+        request.user.email      = email
+        request.user.username   = email
+        perfil.telefono = telefono
+        if fecha_nacimiento and fecha_nacimiento.strip():
+            perfil.fecha_nacimiento = fecha_nacimiento
+        else:
+            perfil.fecha_nacimiento = None
+
         request.user.save()
         perfil.save()
 
-        # Si hubo cambio de contraseña, actualizamos sesión
         if password:
             update_session_auth_hash(request, request.user)
 
         messages.success(request, "Perfil actualizado con éxito.")
         return redirect('perfil')
-    
+
     return render(request, 'stokka/modales/editar_perfil.html', {'perfil': perfil})
 
+@login_required
+def guardar_preferencia_daltonismo(request):
+    if request.method == 'POST':
+        try:
+            import json
+            data = json.loads(request.body)
+            tipo = data.get('tipo', 'normal')
+            
+            # Actualizamos el perfil del usuario autenticado
+            perfil = request.user.perfil 
+            perfil.daltonismo = tipo
+            perfil.save()
+            
+            return JsonResponse({'ok': True})
+        except Exception as e:
+            return JsonResponse({'ok': False, 'error': str(e)}, status=400)
+    return JsonResponse({'ok': False}, status=405)
 
-# LÓGICA DEL CAMBIO DE FOTO
+
+@login_required
+def guardar_preferencia_iconos(request):
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        visibles = data.get('visibles', True)
+        perfil, _ = Perfil.objects.get_or_create(user=request.user)
+        perfil.iconos_info = bool(visibles)
+        perfil.save(update_fields=['iconos_info'])
+        return JsonResponse({'ok': True})
+    return JsonResponse({'ok': False}, status=400)
+
 @login_required
 def cambiar_foto(request):
     if request.method == 'POST' and request.FILES.get('foto'):
-        perfil, created = Perfil.objects.get_or_create(user=request.user)
+        perfil, _ = Perfil.objects.get_or_create(user=request.user)
         perfil.foto = request.FILES['foto']
-        
         try:
-            perfil.full_clean() # Esto dispara el validador de los 2MB
+            perfil.full_clean()
             perfil.save()
             messages.success(request, "Foto de perfil actualizada.")
-        except ValidationError as e:
-            # e.message_dict['foto'][0] suele traer el texto del error
-            messages.error(request, "Error: La imagen es demasiado pesada (máximo 2MB).")
-            
+        except ValidationError:
+            messages.error(request, "La imagen es demasiado pesada (máximo 2MB).")
     return redirect('perfil')
 
-# LÓGICA DE LA ELIMINACIÓN DE LA FOTO
+
 @login_required
 def eliminar_foto(request):
     if request.method == 'POST':
-        perfil = request.user.perfil 
+        perfil = request.user.perfil
         perfil.foto.delete()
-        perfil.save()   
+        perfil.save()
     return redirect('perfil')
 
-# LÓGICA DEL INVENTARIO
+
+# ==============================================================================
+# INVENTARIO
+# ==============================================================================
+
 @login_required
 def inventario_view(request):
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
+
     filtro = request.GET.get('filtro')
-    query = request.GET.get('q')
-    producto = Producto.objects.all().order_by('-fecha_registro')
-    max_stock_real = producto.aggregate(Max('stock_actual'))['stock_actual__max'] or 0
+    query  = request.GET.get('q')
+    productos_qs = Producto.objects.filter(empresa=empresa).order_by('-fecha_registro')
+    max_stock_real = productos_qs.aggregate(Max('stock_actual'))['stock_actual__max'] or 0
+
+    copia, _ = CopiaSeguridad.objects.get_or_create(
+    empresa=empresa,
+    defaults={'datos_json': []}
+    )
 
     if query:
-        producto = producto.filter(
-            models.Q(nombre__icontains=query) | 
-            models.Q(referencia__icontains=query)
+        productos_qs = productos_qs.filter(
+            Q(nombre__icontains=query) | Q(referencia__icontains=query)
         )
 
     if filtro == 'critico':
-        producto = [p for p in producto if p.semaforo == "critico"]
+        productos_final = [p for p in productos_qs if p.semaforo == "critico"]
     elif filtro == 'aviso':
-        producto = [p for p in producto if p.semaforo == "aviso"]
-
-    # formulario vacio que usará el modal de "Añadir"
-    form_añadir = ProductoForm()
+        productos_final = [p for p in productos_qs if p.semaforo == "aviso"]
+    else:
+        productos_final = productos_qs
 
     return render(request, 'stokka/pages/inventario.html', {
-        'productos': producto,
+        'productos':      productos_final,
         'max_stock_real': max_stock_real,
-        'filtro_actual': filtro,
-        'query_actual': query,
-        'form_añadir': form_añadir
+        'filtro_actual':  filtro,
+        'query_actual':   query,
+        'form_añadir':    ProductoForm(),
+        'empresa':        empresa,
+        'copia': copia,
     })
 
+
+@login_required
 def actualizar_stocks_ajax(request):
-    productos = Producto.objects.all()
-    # Enviamos un diccionario con el stock y el estado del semáforo
-    data = {
-        p.id: {
-            'stock': p.stock_actual,
-            'color': p.semaforo  # Esto devuelve 'critico', 'aviso' o 'ok'
-        } for p in productos
-    }
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return JsonResponse({})
+    productos = Producto.objects.filter(empresa=empresa)
+    data = {p.id: {'stock': p.stock_actual, 'color': p.semaforo} for p in productos}
     return JsonResponse(data)
+
 
 @login_required
 def añadir_producto(request):
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
+
     if request.method == 'POST':
         form = ProductoForm(request.POST, request.FILES)
         if form.is_valid():
-            nuevo_p = form.save()
+            nuevo_p = form.save(commit=False)
+            nuevo_p.empresa = empresa
+            nuevo_p.save()
             HistorialMovimiento.objects.create(
                 producto_nombre=nuevo_p.nombre,
                 producto_id=nuevo_p.id,
+                producto_orden=nuevo_p.orden_empresa,
                 usuario=request.user,
+                empresa=empresa,
                 tipo_accion='CREACION',
                 cambio=nuevo_p.stock_actual,
                 stock_resultante=nuevo_p.stock_actual
             )
-            messages.success(request, "Producto añadido correctamente")
+            messages.success(request, "Producto añadido correctamente.")
             return redirect('inventario')
         else:
-            # SI HAY ERROR DE UMBRALES:
-            # Volvemos al inventario pasándole el formulario con los errores
-            productos = Producto.objects.all()
             return render(request, 'stokka/pages/inventario.html', {
-                'productos': productos,
-                'form_añadir': form, # Pasamos el form con errores
-                'titulo': 'Inventario'
+                'productos':   Producto.objects.filter(empresa=empresa),
+                'form_añadir': form,
             })
     return redirect('inventario')
 
+
 @login_required
 def eliminar_producto(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
+    empresa  = get_empresa_activa(request)
+    producto = get_object_or_404(Producto, pk=pk, empresa=empresa)
     if request.method == 'POST':
-        # REGISTRO EN HISTORIAL ANTES DE BORRAR
         HistorialMovimiento.objects.create(
             producto_nombre=producto.nombre,
             producto_id=producto.id,
+            producto_orden=producto.orden_empresa,
             usuario=request.user,
+            empresa=empresa,
             tipo_accion='ELIMINACION',
             cambio=0,
             stock_resultante=0,
@@ -507,146 +1365,237 @@ def eliminar_producto(request, pk):
         return redirect('inventario')
     return render(request, 'stokka/pages/comfirmar_eliminar.html', {'producto': producto})
 
+
 @login_required
 def eliminar_masivo(request):
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
+
     if request.method == 'POST':
-        ids_raw = request.POST.get('ids', '')
-        if ids_raw:
-            ids_list = ids_raw.split(',')
-            productos_a_borrar = Producto.objects.filter(id__in=ids_list)
-            
-            cantidad = productos_a_borrar.count()
-            
-            # Registramos cada uno en el historial
-            for p in productos_a_borrar:
-                HistorialMovimiento.objects.create(
-                    producto_nombre=p.nombre,
-                    producto_id=p.id,
-                    usuario=request.user,
-                    tipo_accion='ELIMINACION',
-                    cambio=0,
-                    stock_resultante=0,
-                    detalles="Eliminación masiva"
-                )
-            
-            # Ahora sí, borramos todos de golpe
-            productos_a_borrar.delete()
-            messages.success(request, f"Se han eliminado {cantidad} productos correctamente.")
+        ids_list = request.POST.get('ids', '').split(',')
+        productos = Producto.objects.filter(id__in=ids_list, empresa=empresa)
+        cantidad  = productos.count()
+        for p in productos:
+            HistorialMovimiento.objects.create(
+                producto_nombre=p.nombre,
+                producto_id=p.id,
+                producto_orden=p.orden_empresa,
+                usuario=request.user,
+                empresa=empresa,
+                tipo_accion='ELIMINACION',
+                cambio=0,
+                stock_resultante=0,
+                detalles="Eliminación masiva"
+            )
+        productos.delete()
+        messages.success(request, f"Se han eliminado {cantidad} productos correctamente.")
     return redirect('inventario')
+
 
 @login_required
 def editar_producto(request, pk):
-    producto = get_object_or_404(Producto, pk=pk)
-    
+    empresa  = get_empresa_activa(request)
+    producto = get_object_or_404(Producto, pk=pk, empresa=empresa)
+
     if request.method == 'POST':
-        # 1. Capturamos el estado REAL antes de cualquier cambio del formulario
-        stock_inicial = producto.stock_actual
+        stock_inicial  = producto.stock_actual
         nombre_inicial = producto.nombre
-        ref_inicial = producto.referencia or "Sin referencia"
-        aviso_inicial = producto.umbrales_amarillo
+        ref_inicial    = producto.referencia or "Sin referencia"
+        aviso_inicial  = producto.umbrales_amarillo
         critico_inicial = producto.umbrales_rojo
 
         form = ProductoForm(request.POST, request.FILES, instance=producto)
-        
         if form.is_valid():
             producto_editado = form.save()
-            
-            # 2. Calcular diferencia de stock real
             diferencia = producto_editado.stock_actual - stock_inicial
-            
-            # 3. Detectar cambios para los detalles
+
             cambios = []
             if nombre_inicial != producto_editado.nombre:
                 cambios.append(f"Nombre: {nombre_inicial} → {producto_editado.nombre}")
-            
             if ref_inicial != (producto_editado.referencia or "Sin referencia"):
                 cambios.append(f"Ref: {ref_inicial} → {producto_editado.referencia}")
-            
             if aviso_inicial != producto_editado.umbrales_amarillo or critico_inicial != producto_editado.umbrales_rojo:
-                cambios.append(f"Umbrales ajustados (Aviso: {producto_editado.umbrales_amarillo}, Crítico: {producto_editado.umbrales_rojo})")
+                cambios.append(f"Umbrales: Aviso {aviso_inicial}→{producto_editado.umbrales_amarillo}, Crítico {critico_inicial}→{producto_editado.umbrales_rojo}")
 
-            detalles_final = "\n".join(cambios) if cambios else "Información general actualizada"
-
-            # 4. REGISTRO EN HISTORIAL
             HistorialMovimiento.objects.create(
                 producto_nombre=producto_editado.nombre,
                 producto_id=producto_editado.id,
+                producto_orden=producto_editado.orden_empresa,
                 usuario=request.user,
+                empresa=empresa,
                 tipo_accion='MODAL_EDITAR',
                 cambio=diferencia,
-                stock_anterior=stock_inicial,  # <--- VALOR ANTES DE EDITAR
-                stock_resultante=producto_editado.stock_actual, # <--- VALOR DESPUÉS DE EDITAR
-                detalles=detalles_final
+                stock_anterior=stock_inicial,
+                stock_resultante=producto_editado.stock_actual,
+                detalles="\n".join(cambios) if cambios else "Información general actualizada"
             )
-
-            messages.success(request, f"Producto {producto.nombre} actualizado.")
+            messages.success(request, f"Producto '{producto_editado.nombre}' actualizado.")
             return redirect('inventario')
+        else:
+            messages.error(request, "Error al actualizar el producto. Revisa los datos introducidos.")
+            if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return render(request, 'stokka/modales/form_editar_parcial.html', {'form': form, 'producto': producto})
     else:
         form = ProductoForm(instance=producto)
-    
+
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-        return render(request, 'stokka/modales/form_editar_parcial.html', {
-            'form': form,
-            'producto': producto
-        })
-    
-    return render(request, 'stokka/pages/form_producto.html', {'form': form, 'titulo': 'Editar'})
+        return render(request, 'stokka/modales/form_editar_parcial.html', {'form': form, 'producto': producto})
+
+    return render(request, 'stokka/pages/inventario.html', {
+        'form': form, 
+        'titulo': 'Editar',
+        'productos': Producto.objects.filter(empresa=empresa)
+    })
+
 
 @login_required
 def aumentar_stock(request, pk):
+    empresa  = get_empresa_activa(request)
+    producto = get_object_or_404(Producto, pk=pk, empresa=empresa)
     if request.method == 'POST':
-        producto = get_object_or_404(Producto, pk=pk)
         producto.stock_actual += 1
         producto.save()
-        
-        # Respuesta AJAX para evitar recarga
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'stock_actual': producto.stock_actual, 'semaforo': producto.semaforo})
-            
     return redirect('inventario')
+
 
 @login_required
 def disminuir_stock(request, pk):
+    empresa  = get_empresa_activa(request)
+    producto = get_object_or_404(Producto, pk=pk, empresa=empresa)
     if request.method == 'POST':
-        producto = get_object_or_404(Producto, pk=pk)
         if producto.stock_actual > 0:
             producto.stock_actual -= 1
             producto.save()
-            
-        # Respuesta AJAX para evitar recarga
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({'stock_actual': producto.stock_actual, 'semaforo': producto.semaforo})
-            
     return redirect('inventario')
 
+
+# ==============================================================================
 # HISTORIAL
-# HISTORIAL FUNCIONES RÁPIDAS
+# ==============================================================================
+
 @login_required
 def registrar_historial_rapido(request, pk):
+    empresa  = get_empresa_activa(request)
+    producto = get_object_or_404(Producto, pk=pk, empresa=empresa)
     if request.method == 'POST':
-        producto = get_object_or_404(Producto, pk=pk)
-        delta = int(request.POST.get('delta', 0)) # Si delta es -3, se guarda como -3
-        
+        delta = int(request.POST.get('delta', 0))
         if delta != 0:
             HistorialMovimiento.objects.create(
                 producto_nombre=producto.nombre,
                 producto_id=producto.id,
+                producto_orden=producto.orden_empresa,
                 usuario=request.user,
+                empresa=empresa,
                 tipo_accion='AJUSTE_RAPIDO',
-                cambio=delta, # Aquí se guarda el signo
+                cambio=delta,
                 stock_resultante=producto.stock_actual
             )
         return JsonResponse({'status': 'ok'})
-            
-    return JsonResponse({'status': 'error', 'message': 'No se pudo registrar'}, status=400)
+    return JsonResponse({'status': 'error'}, status=400)
 
-#HISTORIAL GENERAL
+
 @login_required
 def historial_movimientos(request):
-    # Traemos los movimientos (el ordenamiento por fecha es vital)
-    movimientos = HistorialMovimiento.objects.all().select_related('usuario').order_by('-fecha')
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
+
+    movimientos = HistorialMovimiento.objects.filter(empresa=empresa).select_related('usuario').order_by('-fecha')
     for mov in movimientos:
         mov.stock_anterior = mov.stock_resultante - mov.cambio
+
     return render(request, 'stokka/pages/historial.html', {
         'movimientos': movimientos,
+        'empresa': empresa,
     })
+
+@login_required
+@admin_required
+def copia_seguridad_view(request):
+    empresa  = get_empresa_activa(request)
+    membresia = get_membresia_activa(request, empresa)
+    copia, _ = CopiaSeguridad.objects.get_or_create(
+        empresa=empresa,
+        defaults={'datos_json': []}
+    )
+
+    if request.method == 'POST':
+        accion = request.POST.get('accion')
+
+        def _serializar():
+            return [
+                {
+                    'id':          p.id_formateado,
+                    'nombre':      p.nombre,
+                    'referencia':  p.referencia or '',
+                    'descripcion': p.descripcion or '',
+                    'stock':       p.stock_actual,
+                    'aviso':       p.umbrales_amarillo,
+                    'critico':     p.umbrales_rojo,
+                }
+                for p in Producto.objects.filter(empresa=empresa)
+            ]
+
+        if accion == 'crear_copia':
+            copia.datos_json = _serializar()
+            copia.save()
+            messages.success(request, "Copia de seguridad creada correctamente.")
+
+        elif accion == 'enviar_ultima':
+            if not copia.datos_json:
+                messages.warning(request, "No hay ninguna copia disponible. Crea una primero.")
+            else:
+                _enviar_copia_por_correo(request, empresa, copia, membresia)
+                messages.success(
+                    request,
+                    f"Copia del {copia.fecha.strftime('%d/%m/%Y %H:%M:%S')} enviada por correo."
+                )
+
+        elif accion == 'crear_y_enviar':
+            copia.datos_json = _serializar()
+            copia.save()
+            _enviar_copia_por_correo(request, empresa, copia, membresia)
+            messages.success(request, "Copia creada y enviada por correo.")
+
+        return redirect('inventario')
+
+    return redirect('inventario')
+
+def _enviar_copia_por_correo(request, empresa, copia, membresia):
+    import csv, io
+    from django.core.mail import EmailMessage
+
+    output = io.StringIO()
+    writer = csv.DictWriter(
+        output,
+        fieldnames=['id', 'nombre', 'referencia', 'descripcion', 'stock', 'aviso', 'critico']
+    )
+    writer.writeheader()
+    writer.writerows(copia.datos_json)
+    csv_content = output.getvalue()
+
+    # Destinatarios: siempre el dueño/fundador, y también el admin si es quien lo pide
+    destinatarios = set()
+    dueño = Membresia.objects.filter(empresa=empresa, es_fundador=True).select_related('usuario').first()
+    if dueño:
+        destinatarios.add(dueño.usuario.email)
+    if membresia and membresia.rol == 'admin':
+        destinatarios.add(request.user.email)
+
+    email = EmailMessage(
+        subject=f"Copia de seguridad — {empresa.nombre}",
+        body=(
+            f"Adjuntamos la copia de seguridad del inventario de {empresa.nombre}.\n"
+            f"Fecha de la copia: {copia.fecha.strftime('%d/%m/%Y %H:%M:%S')}\n\n"
+            f"— Stokka"
+        ),
+        from_email=django_settings.DEFAULT_FROM_EMAIL,
+        to=list(destinatarios),
+    )
+    email.attach(f'inventario_{empresa.slug}.csv', csv_content, 'text/csv')
+    email.send()

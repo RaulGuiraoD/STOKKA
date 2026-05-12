@@ -6,8 +6,18 @@
 {% block content %}
 <div class="container-fluid py-4">
     <!-- CABECERA -->
-     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
-        <h1 class="fw-bold text-dark m-0">Panel Principal</h1>
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
+        <div class="section-header d-flex align-items-end gap-2 mb-2">
+            <h1 class="fw-bold text-dark m-0">Panel Principal</h1>
+            <span class="text-dark pb-1 d-none d-md-inline" style="font-size: 1.4rem; font-weight: 300;">
+                | {{ empresa.nombre }}
+            </span>
+            <div class="info-wrapper d-inline-block ms-2 mb-2">
+                <i class="fa-solid fa-circle-info info-icon-2"
+                    data-info="Estadisticas de los productos del tu inventario en tiempo real. Vistazo general de tu negocio."></i>
+            </div>
+        </div>
+
         <a href="{% url 'inventario' %}" class="btn btn-stokka shadow-sm rounded-3 px-4">
             <i class="fa-solid fa-list me-2"></i>Ir al Inventario
         </a>
@@ -102,31 +112,34 @@
 
     <!-- FILA 3: PANEL ADMINISTRADOR (Ancho completo debajo) -->
     {% if es_jefe %}
-    <div class="row mt-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-stokka rounded-4 p-4 bg-white border-top border-4 shadow-sm" style="border-top-color: var(--verde-stokka) !important;">
-                <div class="row align-items-center">
-                    <div class="col-md-8">
-                        <h6 class="text-dark small text-uppercase fw-bold mb-4" style="color: var(--verde-stokka) !important;">
-                            <i class="fa-solid fa-user-shield me-2"></i>Rendimiento del Equipo ({{ user.get_rol_display }})
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-stokka rounded-4 p-4 bg-white border-top border-4 shadow-sm" style="border-top-color: var(--verde-stokka) !important;">
+                    
+                    <!-- Cabecera del Gráfico con Botón -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h6 class="text-dark small text-uppercase fw-bold mb-0" style="color: var(--verde-stokka) !important;">
+                            <i class="fa-solid fa-user-shield me-2"></i>Rendimiento del Equipo
                         </h6>
-                        <div style="height: 200px;">
-                            <canvas id="chartAdmin"></canvas>
+                        <a href="{% url 'historial_movimientos' %}" class="btn btn-stokka btn-sm shadow-sm rounded-3 px-3">
+                            <i class="fa-solid fa-calendar-days me-2"></i>Ver Historial
+                        </a>
+                    </div>
+
+                    <!-- Contenedor del Gráfico (Ocupa el 100%) -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div style="height: 250px; width: 100%;">
+                                <canvas id="chartAdmin"
+                                    data-labels='{{ labels_grafico_json|safe }}'
+                                    data-valores='{{ datos_grafico_json|safe }}'></canvas>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4 text-center border-start d-none d-md-block">
-                        <div class="p-3">
-                            <i class="fa-solid fa-users text-dark mb-2 fs-3" style="color: var(--verde-stokka) !important;"></i>
-                            <h2 class="fw-bold text-dark mb-0">{{ total_empleados }}</h2>
-                            <p class="text-dark small mb-0 text-uppercase" style="letter-spacing: 1px;">Operarios Activos</p>
-                            <hr class="w-25 mx-auto my-3">
-                            <p class="extra-small text-dark mb-0" style="font-size: 12px;">Monitoreo de actividad de stock.</p>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </div>
-    </div>
     {% endif %}
 </div>
 
