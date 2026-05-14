@@ -34,7 +34,7 @@
                 <i class="fa-solid fa-floppy-disk me-2"></i> Copia de seguridad
             </button>
             <button type="button" class="btn btn-stokka" data-bs-toggle="modal" data-bs-target="#modalFacturas">
-                <i class="fa-solid fa-file-invoice me-2"></i> Facturas
+                <i class="fa-solid fa-file-invoice me-2"></i> Albaranes
             </button>
             <button class="btn btn-inventario-stokka shadow-stokka" data-bs-toggle="modal" data-bs-target="#modalAñadir"
                 style="background-color: var(--verde-secundario) !important;">
@@ -129,7 +129,7 @@
                                     </div>
                                 </th>
                                 <th class="py-3 border-0 text-dark small uppercase sortable">ID</th>
-                                <th class="border-0 text-dark small uppercase sortable">FACTURA / REF</th>
+                                <th class="border-0 text-dark small uppercase sortable">REFERENCIA</th>
                                 <th class="border-0 text-dark small uppercase sortable">PRODUCTO</th>
                                 <th class="border-0 text-dark small uppercase sortable">REGISTRO</th>
                                 <th class="border-0 text-dark small uppercase text-center sortable">STOCK</th>
@@ -152,7 +152,7 @@
 
                                 <td data-label="REFERENCIA">
                                     <span class="badge bg-white text-dark border fw-normal px-2 py-1 rounded-2">
-                                        {{ p.referencia|default:"S-REF-01" }}
+                                        {{ p.referencia|default:"S-RR" }}
                                     </span>
                                 </td>
 
@@ -282,19 +282,39 @@
                 <div class="modal-body p-4">
                     <div class="row g-3">
                         {% for field in form_añadir %}
-                        <div
-                            class="col-{% if field.name == 'descripcion' or field.name == 'nombre' or field.name == 'factura' %}12{% else %}6{% endif %}">
-                            <label class="small text-dark fw-bold">{{ field.label }}
-                                {% if field.field.required %}
-                                <span class="text-danger">*</span>
+                            {% if field.name != 'factura' %}
+                            <div class="col-{% if field.name == 'descripcion' or field.name == 'nombre' %}12{% else %}6{% endif %}">
+                                <label class="small text-dark fw-bold">{{ field.label }}
+                                    {% if field.field.required %}
+                                    <span class="text-danger">*</span>
+                                    {% endif %}
+                                </label>
+                                {{ field }}
+                                {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors.0 }}</div>
                                 {% endif %}
-                            </label>
-                            {{ field }}
-                            {% if field.errors %}
-                            <div class="text-danger small">{{ field.errors.0 }}</div>
+                            </div>
                             {% endif %}
-                        </div>
                         {% endfor %}
+
+                        <div class="col-12 mt-4">
+                            <div class="p-3 border rounded-3 bg-light shadow-sm">
+                                <label class="small text-muted fw-bold mb-2 d-block">
+                                    Albarán (Opcional)
+                                </label>
+                                <div class="mt-2">
+                                    <label class="small text-muted d-block mb-1" style="font-size: 0.75rem;">
+                                        Subir documento:
+                                    </label>
+                                    <input type="file" name="factura" class="form-control form-control-sm shadow-sm" id="id_factura">
+                                </div>
+                                {% for field in form_añadir %}
+                                    {% if field.name == 'factura' and field.errors %}
+                                    <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-0 p-4 pt-0">
@@ -340,14 +360,14 @@
             <div class="modal-header border-0 px-4 pt-4 pb-2">
                 <h5 class="fw-bold">
                     <i class="fa-solid fa-file-invoice me-2" style="color: var(--verde-stokka);"></i>
-                    Facturas adjuntas
+                    Albaranes adjuntos
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body px-4 pb-4">
                 {% with productos_con_factura=productos|dictsort:"nombre" %}
                     {% if productos|length == 0 %}
-                        <p class="text-muted text-center py-4">No hay facturas adjuntas en este inventario.</p>
+                        <p class="text-muted text-center py-4">No hay albaranes adjuntas en este inventario.</p>
                     {% else %}
                         <div class="list-group list-group-flush">
                             {% for p in productos %}
