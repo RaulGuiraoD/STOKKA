@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Lora:ital,wght@0,400;0,500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body style="margin: 0; padding: 0; background-color: #F2F4F6; font-family: 'Merriweather', serif; color: #333333;">
+
+    <table width="100%" border="0" cellspacing="0" cellpadding="0"
+        style="background-color: #F2F4F6; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden;
+                              box-shadow: 0 10px 30px rgba(0, 61, 0, 0.08);">
+
+                    <tr>
+                        <td style="background-color: #003D00; padding: 35px 40px; text-align: center;">
+                            <p style="margin: 0 0 6px 0; font-family: 'Merriweather', serif;
+                                      font-size: 32px; font-weight: 700; color: #ffffff;
+                                      letter-spacing: 5px; text-transform: uppercase;">
+                                STOKKA
+                            </p>
+                            <p style="margin: 0; font-family: 'Lora', serif;
+                                      font-size: 13px; color: #cacaca;">
+                                Control de inventario
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color: #a3cfbb; height: 4px; font-size: 0; line-height: 0;">&nbsp;</td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 45px 40px 30px 40px;">
+
+                            <h2 style="font-family: 'Merriweather', serif; color: #003D00;
+                                       margin: 0 0 20px 0; font-size: 20px; font-weight: 700;">
+                                ¡Hola, {{ nombre }}!
+                            </h2>
+
+                            <p style="font-family: 'Lora', serif; font-size: 15px; line-height: 1.8;
+                                      color: #444444; margin: 0 0 14px 0;">
+                                Gracias por registrarte en <strong style="color: #003D00;">Stokka</strong>.
+                                Ya casi tienes acceso completo a tu panel de gestión de inventario.
+                            </p>
+
+                            <p style="font-family: 'Lora', serif; font-size: 15px; line-height: 1.8;
+                                      color: #444444; margin: 0 0 32px 0;">
+                                Para activar tu cuenta, confirma tu dirección de correo electrónico:
+                            </p>
+
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td align="center" style="padding: 10px 0 32px 0;">
+                                        <a href="{{ enlace }}" style="background-color: #1CA300; color: #ffffff;
+                                                  padding: 16px 44px; text-decoration: none;
+                                                  border-radius: 10px; font-weight: 700;
+                                                  font-family: 'Merriweather', serif;
+                                                  font-size: 14px; letter-spacing: 1.5px;
+                                                  text-transform: uppercase; display: inline-block;">
+                                            ✓ &nbsp; Confirmar mi cuenta
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <hr style="border: none; border-top: 1px solid #cce0cc; margin: 0 0 24px 0;">
+
+                            <p style="font-family: 'Lora', serif; font-size: 12px; color: #888888;
+                                      margin: 0 0 8px 0; text-align: center;">
+                                Si el botón no funciona, copia este enlace en tu navegador:
+                            </p>
+                            <p style="font-family: 'Lora', serif; font-size: 11px; color: #1CA300;
+                                      text-align: center; word-break: break-all; margin: 0 0 28px 0;">
+                                {{ enlace }}
+                            </p>
+
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="background-color: #e6f0e6; border-left: 4px solid #1CA300;
+                                               border-radius: 6px; padding: 14px 18px;">
+                                        <p style="margin: 0; font-family: 'Lora', serif;
+                                                  font-size: 13px; color: #003D00; line-height: 1.6;">
+                                            ⏱ &nbsp;Este enlace <strong>caduca en 24 horas</strong>.
+                                            Si no has creado una cuenta en Stokka, puedes ignorar
+                                            este mensaje con seguridad.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color: #003D00; padding: 26px 40px; text-align: center;">
+                            <p style="margin: 0 0 8px 0; font-family: 'Merriweather', serif;
+                                      font-size: 14px; font-weight: 700; color: #ffffff;
+                                      letter-spacing: 4px; text-transform: uppercase;">
+                                STOKKA
+                            </p>
+                            <p style="margin: 0; font-family: 'Merriweather', serif;
+                                      font-size: 12px; color: #888888;">
+                                &copy; {% now "Y" %} Stokka. Todos los derechos reservados.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+</body>
+
+</html>
