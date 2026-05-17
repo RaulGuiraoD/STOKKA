@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Lora:ital,wght@0,400;0,500&display=swap" rel="stylesheet">
+</head>
+<body style="margin: 0; padding: 0; background-color: #F2F4F6; font-family: 'Merriweather', serif; color: #333333;">
+
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #F2F4F6; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" border="0" cellspacing="0" cellpadding="0"
+                       style="background-color: #ffffff; border-radius: 12px; overflow: hidden;
+                              box-shadow: 0 10px 30px rgba(0, 61, 0, 0.08);">
+
+                    <tr>
+                        <td style="background-color: #003D00; padding: 35px 40px; text-align: center;">
+                            <p style="margin: 0 0 6px 0; font-family: 'Merriweather', serif;
+                                      font-size: 32px; font-weight: 700; color: #ffffff;
+                                      letter-spacing: 5px; text-transform: uppercase;">STOKKA</p>
+                            <p style="margin: 0; font-family: 'Lora', serif; font-size: 13px; color: #cacaca;">
+                                Control de inventario
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color: #F5C907; height: 4px; font-size: 0; line-height: 0;">&nbsp;</td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 45px 40px 30px 40px;">
+                            <h2 style="font-family: 'Merriweather', serif; color: #003D00;
+                                       margin: 0 0 20px 0; font-size: 20px; font-weight: 700;">
+                                Copia de seguridad — {{ empresa }}
+                            </h2>
+                            <p style="font-family: 'Lora', serif; font-size: 15px; line-height: 1.8;
+                                      color: #444444; margin: 0 0 14px 0;">
+                                Adjuntamos la copia de seguridad del inventario de
+                                <strong style="color: #003D00;">{{ empresa }}</strong>.
+                            </p>
+
+                            <!-- INFO COPIA -->
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 24px 0;">
+                                <tr>
+                                    <td style="background-color: #fffdf0; border-left: 4px solid #F5C907;
+                                               border-radius: 6px; padding: 16px 18px;">
+                                        <p style="margin: 0 0 8px 0; font-family: 'Merriweather', serif;
+                                                  font-size: 13px; font-weight: 700; color: #856404;">
+                                            📋 &nbsp; Detalles de la copia
+                                        </p>
+                                        <p style="margin: 0; font-family: 'Lora', serif;
+                                                  font-size: 13px; color: #444444; line-height: 1.7;">
+                                            Empresa: <strong>{{ empresa }}</strong><br>
+                                            Fecha: <strong>{{ fecha }}</strong><br>
+                                            Productos incluidos: <strong>{{ total_productos }}</strong>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="font-family: 'Lora', serif; font-size: 14px; line-height: 1.8;
+                                      color: #444444; margin: 0 0 28px 0;">
+                                El archivo CSV adjunto contiene el inventario completo con referencias,
+                                stock actual y umbrales configurados.
+                            </p>
+
+                            <hr style="border: none; border-top: 1px solid #cce0cc; margin: 0 0 24px 0;">
+
+                            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                                <tr>
+                                    <td style="background-color: #e6f0e6; border-left: 4px solid #1CA300;
+                                               border-radius: 6px; padding: 14px 18px;">
+                                        <p style="margin: 0; font-family: 'Lora', serif;
+                                                  font-size: 13px; color: #003D00; line-height: 1.6;">
+                                            💾 &nbsp;Guarda este archivo en un lugar seguro.
+                                            Puedes importarlo para recuperar tu inventario en caso de necesidad.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="background-color: #003D00; padding: 26px 40px; text-align: center;">
+                            <p style="margin: 0 0 8px 0; font-family: 'Merriweather', serif;
+                                      font-size: 14px; font-weight: 700; color: #ffffff;
+                                      letter-spacing: 4px; text-transform: uppercase;">STOKKA</p>
+                            <p style="margin: 0; font-family: 'Merriweather', serif;
+                                      font-size: 12px; color: #888888;">
+                                &copy; {% now "Y" %} Stokka. Todos los derechos reservados.
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

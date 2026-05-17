@@ -2,6 +2,7 @@
 import json
 import csv
 import io
+import logging
 
 # 2. Django Core & Imports Comunes
 from django.contrib import messages
@@ -18,7 +19,8 @@ from django.http import HttpResponse
 from django.contrib.auth import authenticate, get_user_model, login, update_session_auth_hash, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
+from django.utils.html import strip_tags
 from django.template.loader import render_to_string
 from django.contrib.sites.shortcuts import get_current_site
 
@@ -277,26 +279,25 @@ def _enviar_email_verificacion(request, usuario, token_obj):
     protocolo = 'https' if request.is_secure() else 'http'
     enlace    = f"{protocolo}://{dominio}/verificar-email/{token_obj.token}/"
 
+    context = {
+        'nombre': usuario.first_name,
+        'enlace': enlace,
+    }
+    html_content = render_to_string('emails/verificacion_registro.html', context)
+    
+    text_content = strip_tags(html_content)
+
     try:
-        send_mail(
-            subject        = "Confirma tu cuenta en Stokka",
-            message        = (
-                f"Hola {usuario.first_name},\n\n"
-                f"Gracias por registrarte en Stokka.\n\n"
-                f"Confirma tu cuenta haciendo clic en este enlace:\n"
-                f"{enlace}\n\n"
-                f"El enlace caduca en 24 horas.\n\n"
-                f"Si no fuiste tú, ignora este mensaje.\n\n"
-                f"— El equipo de Stokka"
-            ),
-            from_email     = django_settings.DEFAULT_FROM_EMAIL,
-            recipient_list = [usuario.email],
-            fail_silently  = False,
-        )
+        subject = "Confirma tu cuenta en Stokka"
+        from_email = django_settings.DEFAULT_FROM_EMAIL
+        to = usuario.email
+
+        email = EmailMultiAlternatives(subject, text_content, from_email, [to])
+        email.attach_alternative(html_content, "text/html")
+        email.send()
+
         return True
     except Exception as e:
-        # Loguea el error en consola para el desarrollador
-        import logging
         logging.getLogger(__name__).error(f"Error enviando email de verificación a {usuario.email}: {e}")
         return False
 
@@ -311,7 +312,7 @@ def verificar_email_view(request, token):
         return render(request, 'registration/verificar_email_resultado.html', {'exito': False})
 
     if token_obj.usado:
-        messages.info(request, "Este enlace ya fue usado. Inicia sesión normalmente.")
+        messages.error(request, "Este enlace ya fue usado. Inicia sesión normalmente.")
         return render(request, 'registration/verificar_email_resultado.html', {'exito': True, 'ya_usado': True})
 
     if token_obj.ha_expirado():
@@ -366,22 +367,22 @@ def olvide_password_view(request):
             protocolo = 'https' if request.is_secure() else 'http'
             enlace    = f"{protocolo}://{dominio}/recuperar-password/{token_obj.token}/"
 
+            context = {
+                'nombre': usuario.first_name,
+                'enlace': enlace,
+            }
+            html_content = render_to_string('emails/recuperar_password.html', context)
+            text_content = strip_tags(html_content)
+
             try:
-                send_mail(
-                    subject        = "Restablecer contraseña — Stokka",
-                    message        = (
-                        f"Hola {usuario.first_name},\n\n"
-                        f"Recibimos una solicitud para restablecer tu contraseña de Stokka.\n\n"
-                        f"Haz clic en el siguiente enlace (válido durante 2 horas):\n"
-                        f"{enlace}\n\n"
-                        f"Si no lo solicitaste, ignora este mensaje. "
-                        f"Tu contraseña no cambiará.\n\n"
-                        f"— El equipo de Stokka"
-                    ),
-                    from_email     = django_settings.DEFAULT_FROM_EMAIL,
-                    recipient_list = [usuario.email],
-                    fail_silently  = False,
+                msg = EmailMultiAlternatives(
+                    subject="Restablecer contraseña — Stokka",
+                    body=text_content,
+                    from_email=django_settings.DEFAULT_FROM_EMAIL,
+                    to=[usuario.email],
                 )
+                msg.attach_alternative(html_content, "text/html")
+                msg.send()
                 enviado = True
             except Exception as smtp_error:
                 import logging
@@ -390,18 +391,15 @@ def olvide_password_view(request):
                 )
 
         except User.DoesNotExist:
-            pass  # no revelamos si el email existe
+            pass
 
-        # Siempre el mismo mensaje al usuario (seguridad)
         if enviado:
-            messages.success(
-                request,
+            messages.success(request,
                 f"Hemos enviado las instrucciones a {email}. "
                 f"Revisa también la carpeta de spam. El enlace caduca en 2 horas."
             )
         else:
-            messages.warning(
-                request,
+            messages.warning(request,
                 "No pudimos enviar el correo en este momento. "
                 "Comprueba que el email es correcto o inténtalo más tarde."
             )
@@ -409,7 +407,6 @@ def olvide_password_view(request):
         return redirect('olvide_password')
 
     return render(request, 'registration/olvide_password.html')
-
 
 # ==============================================================================
 # OLVIDÉ MI CONTRASEÑA — paso 2: formulario nueva contraseña
@@ -1567,9 +1564,6 @@ def copia_seguridad_view(request):
     return redirect('inventario')
 
 def _enviar_copia_por_correo(request, empresa, copia, membresia):
-    import csv, io
-    from django.core.mail import EmailMessage
-
     output = io.StringIO()
     writer = csv.DictWriter(
         output,
@@ -1579,7 +1573,6 @@ def _enviar_copia_por_correo(request, empresa, copia, membresia):
     writer.writerows(copia.datos_json)
     csv_content = output.getvalue()
 
-    # Destinatarios: siempre el dueño/fundador, y también el admin si es quien lo pide
     destinatarios = set()
     dueño = Membresia.objects.filter(empresa=empresa, es_fundador=True).select_related('usuario').first()
     if dueño:
@@ -1587,15 +1580,20 @@ def _enviar_copia_por_correo(request, empresa, copia, membresia):
     if membresia and membresia.rol == 'admin':
         destinatarios.add(request.user.email)
 
-    email = EmailMessage(
+    context = {
+        'empresa':          empresa.nombre,
+        'fecha':            copia.fecha.strftime('%d/%m/%Y %H:%M:%S'),
+        'total_productos':  len(copia.datos_json),
+    }
+    html_content = render_to_string('emails/copia_seguridad.html', context)
+    text_content = strip_tags(html_content)
+
+    msg = EmailMultiAlternatives(
         subject=f"Copia de seguridad — {empresa.nombre}",
-        body=(
-            f"Adjuntamos la copia de seguridad del inventario de {empresa.nombre}.\n"
-            f"Fecha de la copia: {copia.fecha.strftime('%d/%m/%Y %H:%M:%S')}\n\n"
-            f"— Stokka"
-        ),
+        body=text_content,
         from_email=django_settings.DEFAULT_FROM_EMAIL,
         to=list(destinatarios),
     )
-    email.attach(f'inventario_{empresa.slug}.csv', csv_content, 'text/csv')
-    email.send()
+    msg.attach_alternative(html_content, "text/html")
+    msg.attach(f'inventario_{empresa.slug}.csv', csv_content, 'text/csv')
+    msg.send()
