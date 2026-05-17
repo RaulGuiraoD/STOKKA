@@ -4,3 +4,4 @@ crispy-bootstrap5==2026.3
 Pillow==12.1.1
 python-decouple==3.8
 django_environ==0.13.0
+psycopg2-binary==2.9.9
