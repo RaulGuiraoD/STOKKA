@@ -103,6 +103,5 @@ STOKKA utiliza una paleta de colores técnica diseñada para la toma de decision
 ---
 
 ## 👥 Creadores (TFG)
-Proyecto diseñado con redes sociales y perfiles de LinkedIn reales para simular un entorno profesional.
-* **Creador 1** - [www.linkedin.com/in/raulguirao]
-* **Creador 2** - [https://www.linkedin.com/in/pedro-sanchezgonzalez/]
+* **Raúl Guirao Diaz** - [www.linkedin.com/in/raulguirao]
+* **Pedro Luis Sanchez** - [https://www.linkedin.com/in/pedro-sanchezgonzalez/]
