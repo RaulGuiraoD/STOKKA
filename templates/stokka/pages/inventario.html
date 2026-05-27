@@ -224,7 +224,7 @@
 </div>
 
 <!-- ============================================================
-     MODALES EXISTENTES (sin cambios)
+     MODALES EXISTENTES 
      ============================================================ -->
 
 <!-- MODAL ÚNICO DE ELIMINACIÓN -->
@@ -453,8 +453,7 @@
 </div>
 
 <!-- ============================================================
-     NUEVO MODAL — IMPORTAR CSV
-     Mismo estilo que el resto de modales del inventario
+     NUEVO IMPORTAR CSV
      ============================================================ -->
 <div class="modal fade" id="modalImportarCSV" tabindex="-1" aria-labelledby="modalImportarCSVLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered shadow-stokka">
@@ -647,10 +646,6 @@ document.getElementById('formImportarCSV').addEventListener('submit', function (
     });
     modalCargando.show();
 
-    // Avisamos si el usuario intenta cerrar/recargar mientras carga
-    window.onbeforeunload = function () {
-        return "La importación está en curso. ¿Seguro que quieres salir?";
-    };
 });
 </script>
 

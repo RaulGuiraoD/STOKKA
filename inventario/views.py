@@ -1495,10 +1495,7 @@ def importar_csv(request):
         messages.error(request, "El archivo CSV no puede superar los 2MB.")
         return redirect('inventario')
 
-    # ── PROCESAMIENTO DEL CSV ─────────────────────────────────────────────────
-
     try:
-        # Decodificamos el archivo — probamos UTF-8 y luego latin-1 por si acaso
         try:
             contenido = archivo.read().decode('utf-8')
         except UnicodeDecodeError:
@@ -1507,14 +1504,12 @@ def importar_csv(request):
 
         reader = csv.DictReader(io.StringIO(contenido))
 
-        # Normalizamos los nombres de columna (quitamos espacios y ponemos minúsculas)
         if reader.fieldnames is None:
             messages.error(request, "El archivo CSV está vacío o no tiene cabecera.")
             return redirect('inventario')
 
         reader.fieldnames = [f.strip().lower() for f in reader.fieldnames]
 
-        # Comprobamos que existen las columnas obligatorias
         columnas_obligatorias = {'nombre', 'stock', 'umbral_aviso', 'umbral_critico'}
         columnas_csv = set(reader.fieldnames)
 
@@ -1531,13 +1526,12 @@ def importar_csv(request):
 
         creados   = 0
         errores   = []
-        fila_num  = 1  # empezamos en 1 porque la fila 0 es la cabecera
+        fila_num  = 1  
 
         with transaction.atomic():
             for fila in reader:
                 fila_num += 1
 
-                # Limpiamos los valores
                 nombre          = fila.get('nombre', '').strip()
                 stock_str       = fila.get('stock', '').strip()
                 aviso_str       = fila.get('umbral_aviso', '').strip()
@@ -1610,23 +1604,27 @@ def importar_csv(request):
                     errores.append(f"Fila {fila_num} ({nombre}): error al guardar — {e}")
                     continue
 
-        # ── RESUMEN FINAL ─────────────────────────────────────────────────────
+        # ── RESUMEN FINAL (OPCIÓN 2 APLICADA) ─────────────────────────────────
 
         if creados > 0:
             messages.success(
                 request,
-                f"✓ Se han importado {creados} producto{'s' if creados != 1 else ''} correctamente."
+                f"Se han importado {creados} producto{'s' if creados != 1 else ''} correctamente."
             )
 
         if errores:
-            # Mostramos máximo 5 errores para no saturar la pantalla
-            for error in errores[:5]:
-                messages.warning(request, error)
+            # Agrupamos los primeros 5 errores con saltos de línea HTML
+            lista_errores = "<br>• " + "<br>• ".join(errores[:5])
+            
+            # Si hay más de 5, añadimos el indicador de cuántos faltan
             if len(errores) > 5:
-                messages.warning(
-                    request,
-                    f"... y {len(errores) - 5} error(es) más. Revisa el CSV y vuelve a importar las filas fallidas."
-                )
+                lista_errores += f"<br>• ... y {len(errores) - 5} error(es) más. Revisa el CSV."
+
+            # Enviamos un único mensaje de error conteniendo el bloque estructurado
+            messages.error(
+                request, 
+                f"Se detectaron problemas en el archivo:{lista_errores}"
+            )
 
         if creados == 0 and not errores:
             messages.warning(request, "El CSV no contenía ninguna fila de datos.")
@@ -1635,7 +1633,6 @@ def importar_csv(request):
         messages.error(request, f"Error al procesar el archivo: {e}")
 
     return redirect('inventario')
-
 # ==============================================================================
 # HISTORIAL
 # ==============================================================================
