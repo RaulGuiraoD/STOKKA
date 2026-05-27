@@ -1470,6 +1470,171 @@ def disminuir_stock(request, pk):
             return JsonResponse({'stock_actual': producto.stock_actual, 'semaforo': producto.semaforo})
     return redirect('inventario')
 
+@login_required
+def importar_csv(request):
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
+
+    if request.method != 'POST':
+        return redirect('inventario')
+
+    archivo = request.FILES.get('archivo_csv')
+
+    # ── VALIDACIONES PREVIAS ──────────────────────────────────────────────────
+
+    if not archivo:
+        messages.error(request, "No se ha seleccionado ningún archivo.")
+        return redirect('inventario')
+
+    if not archivo.name.endswith('.csv'):
+        messages.error(request, "El archivo debe tener extensión .csv")
+        return redirect('inventario')
+
+    if archivo.size > 2 * 1024 * 1024:  # 2MB máximo
+        messages.error(request, "El archivo CSV no puede superar los 2MB.")
+        return redirect('inventario')
+
+    # ── PROCESAMIENTO DEL CSV ─────────────────────────────────────────────────
+
+    try:
+        # Decodificamos el archivo — probamos UTF-8 y luego latin-1 por si acaso
+        try:
+            contenido = archivo.read().decode('utf-8')
+        except UnicodeDecodeError:
+            archivo.seek(0)
+            contenido = archivo.read().decode('latin-1')
+
+        reader = csv.DictReader(io.StringIO(contenido))
+
+        # Normalizamos los nombres de columna (quitamos espacios y ponemos minúsculas)
+        if reader.fieldnames is None:
+            messages.error(request, "El archivo CSV está vacío o no tiene cabecera.")
+            return redirect('inventario')
+
+        reader.fieldnames = [f.strip().lower() for f in reader.fieldnames]
+
+        # Comprobamos que existen las columnas obligatorias
+        columnas_obligatorias = {'nombre', 'stock', 'umbral_aviso', 'umbral_critico'}
+        columnas_csv = set(reader.fieldnames)
+
+        if not columnas_obligatorias.issubset(columnas_csv):
+            faltantes = columnas_obligatorias - columnas_csv
+            messages.error(
+                request,
+                f"Faltan columnas obligatorias en el CSV: {', '.join(faltantes)}. "
+                f"Las columnas necesarias son: nombre, stock, umbral_aviso, umbral_critico."
+            )
+            return redirect('inventario')
+
+        # ── IMPORTACIÓN FILA A FILA ───────────────────────────────────────────
+
+        creados   = 0
+        errores   = []
+        fila_num  = 1  # empezamos en 1 porque la fila 0 es la cabecera
+
+        with transaction.atomic():
+            for fila in reader:
+                fila_num += 1
+
+                # Limpiamos los valores
+                nombre          = fila.get('nombre', '').strip()
+                stock_str       = fila.get('stock', '').strip()
+                aviso_str       = fila.get('umbral_aviso', '').strip()
+                critico_str     = fila.get('umbral_critico', '').strip()
+                referencia      = fila.get('referencia', '').strip() or None
+                descripcion     = fila.get('descripcion', '').strip() or ''
+
+                # Validamos nombre
+                if not nombre:
+                    errores.append(f"Fila {fila_num}: el nombre es obligatorio.")
+                    continue
+
+                if len(nombre) > 100:
+                    errores.append(f"Fila {fila_num} ({nombre}): el nombre no puede superar 100 caracteres.")
+                    continue
+
+                # Validamos que los números son válidos
+                try:
+                    stock   = int(stock_str)
+                    aviso   = int(aviso_str)
+                    critico = int(critico_str)
+                except ValueError:
+                    errores.append(
+                        f"Fila {fila_num} ({nombre}): stock, umbral_aviso y umbral_critico "
+                        f"deben ser números enteros."
+                    )
+                    continue
+
+                # Validamos valores negativos
+                if stock < 0 or aviso < 0 or critico < 0:
+                    errores.append(f"Fila {fila_num} ({nombre}): los valores no pueden ser negativos.")
+                    continue
+
+                # Validamos lógica de umbrales
+                if aviso <= critico:
+                    errores.append(
+                        f"Fila {fila_num} ({nombre}): umbral_aviso ({aviso}) debe ser "
+                        f"mayor que umbral_critico ({critico})."
+                    )
+                    continue
+
+                # Creamos el producto
+                try:
+                    nuevo_p = Producto(
+                        nombre=nombre,
+                        referencia=referencia,
+                        descripcion=descripcion,
+                        stock_actual=stock,
+                        umbrales_amarillo=aviso,
+                        umbrales_rojo=critico,
+                        empresa=empresa,
+                    )
+                    nuevo_p.save()  # save() asigna orden_empresa automáticamente
+
+                    # Registramos en el historial
+                    HistorialMovimiento.objects.create(
+                        producto_nombre=nuevo_p.nombre,
+                        producto_id=nuevo_p.id,
+                        producto_orden=nuevo_p.orden_empresa,
+                        usuario=request.user,
+                        empresa=empresa,
+                        tipo_accion='CREACION',
+                        cambio=nuevo_p.stock_actual,
+                        stock_resultante=nuevo_p.stock_actual,
+                        detalles="Importado desde CSV"
+                    )
+                    creados += 1
+
+                except Exception as e:
+                    errores.append(f"Fila {fila_num} ({nombre}): error al guardar — {e}")
+                    continue
+
+        # ── RESUMEN FINAL ─────────────────────────────────────────────────────
+
+        if creados > 0:
+            messages.success(
+                request,
+                f"✓ Se han importado {creados} producto{'s' if creados != 1 else ''} correctamente."
+            )
+
+        if errores:
+            # Mostramos máximo 5 errores para no saturar la pantalla
+            for error in errores[:5]:
+                messages.warning(request, error)
+            if len(errores) > 5:
+                messages.warning(
+                    request,
+                    f"... y {len(errores) - 5} error(es) más. Revisa el CSV y vuelve a importar las filas fallidas."
+                )
+
+        if creados == 0 and not errores:
+            messages.warning(request, "El CSV no contenía ninguna fila de datos.")
+
+    except Exception as e:
+        messages.error(request, f"Error al procesar el archivo: {e}")
+
+    return redirect('inventario')
 
 # ==============================================================================
 # HISTORIAL

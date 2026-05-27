@@ -81,6 +81,7 @@ urlpatterns = [
     path('actualizar-stocks/', views.actualizar_stocks_ajax, name='actualizar_stocks_ajax'),
     path('inventario/registrar-historial-rapido/<int:pk>/', views.registrar_historial_rapido, name='registrar_historial_rapido'),
     path('inventario/copia_seguridad/', views.copia_seguridad_view, name='copia_seguridad'),
+    path('inventario/importar-csv/', views.importar_csv, name='importar_csv'),
 
     # --- BARRA BUSQUEDA HEADER ---
     path('buscar/', views.buscador_global, name='buscador_global'),
