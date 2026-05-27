@@ -23,6 +23,7 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.utils.html import strip_tags
 from django.template.loader import render_to_string
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.paginator import Paginator
 
 # 4.  Imports Locales
 from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm, EditarEmpresaForm
@@ -1664,13 +1665,47 @@ def historial_movimientos(request):
     if not empresa:
         return redirect('seleccionar_empresa')
 
-    movimientos = HistorialMovimiento.objects.filter(empresa=empresa).select_related('usuario').order_by('-fecha')
-    for mov in movimientos:
+    # 1. Base del QuerySet (Con el select_related que ya teníamos)
+    movimientos_lista = HistorialMovimiento.objects.filter(
+        empresa=empresa
+    ).select_related('usuario').order_by('-fecha')
+
+    # 2. CAPTURAR FILTROS DESDE LA URL
+    filtro_tipo = request.GET.get('tipo', '')
+    buscar_texto = request.GET.get('q', '')
+    filtro_fecha = request.GET.get('fecha', '')
+
+    # 3. APLICAR FILTROS EN LA BASE DE DATOS (Si existen)
+    if filtro_tipo:
+        movimientos_lista = movimientos_lista.filter(tipo_accion=filtro_tipo)
+        
+    if buscar_texto:
+        # Busca por coincidencia parcial (icontains) en nombre de producto o nombre de usuario
+        movimientos_lista = movimientos_lista.filter(
+            models.Q(producto_nombre__icontains=buscar_texto) | 
+            models.Q(usuario__first_name__icontains=buscar_texto)
+        )
+        
+    if filtro_fecha:
+        # Filtra exactamente por el día seleccionado
+        movimientos_lista = movimientos_lista.filter(fecha__date=filtro_fecha)
+
+    # 4. PAGINAR EL RESULTADO YA FILTRADO
+    paginator = Paginator(movimientos_lista, 25) 
+    page_number = request.GET.get('page')
+    movimientos_paginados = paginator.get_page(page_number)
+
+    # 5. Calcular el stock anterior solo para los 25 de esta página
+    for mov in movimientos_paginados:
         mov.stock_anterior = mov.stock_resultante - mov.cambio
 
     return render(request, 'stokka/pages/historial.html', {
-        'movimientos': movimientos,
+        'movimientos': movimientos_paginados,
         'empresa': empresa,
+        # Devolvemos los valores actuales para que los inputs no se vacíen al recargar
+        'filtro_tipo': filtro_tipo,
+        'buscar_texto': buscar_texto,
+        'filtro_fecha': filtro_fecha,
     })
 
 @login_required

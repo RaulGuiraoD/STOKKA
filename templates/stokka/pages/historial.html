@@ -3,7 +3,6 @@
 
 {% block title %}Historial - STOKKA{% endblock %}
 
-
 {% block content %}
 
 <main class="flex-grow-1 p-3 p-md-4 bg-gris-fondo">
@@ -11,30 +10,31 @@
         <div class="row mb-4 gy-3 align-items-center">
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
                 <div class="section-header d-flex align-items-end gap-3 mb-2">
-            <h1 class="fw-bold text-dark m-0">Historial Movimientos</h1>
-            <span class="text-dark pb-1 d-none d-md-inline" style="font-size: 1.4rem; font-weight: 300;">
-                | {{ empresa.nombre }}
-            </span>
-            <div class="info-wrapper d-inline-block ms-2 mb-2">
-                <i class="fa-solid fa-circle-info info-icon-2"
-                    data-info="El historial guarda toda la información de los movimientos de tu inventario. Usa los filtros para buscar más rápidamente los productos o movimientos especificos que deseas."></i>
-            </div>
-        </div>
+                    <h1 class="fw-bold text-dark m-0">Historial Movimientos</h1>
+                    <span class="text-dark pb-1 d-none d-md-inline" style="font-size: 1.4rem; font-weight: 300;">
+                        | {{ empresa.nombre }}
+                    </span>
+                    <div class="info-wrapper d-inline-block ms-2 mb-2">
+                        <i class="fa-solid fa-circle-info info-icon-2"
+                            data-info="El historial guarda toda la información de los movimientos de tu inventario. Usa los filtros para buscar más rápidamente los productos o movimientos específicos que deseas."></i>
+                    </div>
+                </div>
             </div>
             <div class="col-12 col-md-8">
                 <div class="filtros-historial mb-4">
                     <select id="filtro-tipo" class="form-select stokka-input shadow-focus-stokka">
                         <option value="">Todos los tipos</option>
-                        <option value="AJUSTE_RAPIDO">Ajuste rápido</option>
-                        <option value="MODAL_EDITAR">Edición</option>
-                        <option value="CREACION">Creación</option>
-                        <option value="ELIMINACION">Eliminación</option>
+                        <option value="AJUSTE_RAPIDO" {% if filtro_tipo == 'AJUSTE_RAPIDO' %}selected{% endif %}>Ajuste rápido</option>
+                        <option value="MODAL_EDITAR" {% if filtro_tipo == 'MODAL_EDITAR' %}selected{% endif %}>Edición</option>
+                        <option value="CREACION" {% if filtro_tipo == 'CREACION' %}selected{% endif %}>Creación</option>
+                        <option value="ELIMINACION" {% if filtro_tipo == 'ELIMINACION' %}selected{% endif %}>Eliminación</option>
                     </select>
 
                     <input type="text" id="filtro-historial" class="form-control stokka-input shadow-focus-stokka"
-                        placeholder="Buscar producto o usuario...">
+                        placeholder="Buscar producto o usuario..." value="{{ buscar_texto }}">
 
-                    <input type="date" id="busqueda-fecha" class="form-control stokka-input shadow-focus-stokka w-auto">
+                    <input type="date" id="busqueda-fecha" class="form-control stokka-input shadow-focus-stokka w-auto" 
+                        value="{{ filtro_fecha }}">
 
                     <button type="button" id="btn-limpiar-filtros" class="btn border-0 rounded-circle"
                         style="background-color: var(--verde-stokka); color: white;" title="Limpiar filtros">
@@ -57,7 +57,7 @@
                     </button>
                 </h2>
                 <div id="collapse-anio-{{ anio.grouper }}"
-                    class="accordion-collapse collapse {% if anio.grouper|slugify == now|date:'Y' %}show{% endif %}"
+                    class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
                     data-bs-parent="#accordionHistorial">
                     <div class="accordion-body p-0 bg-gris-fondo">
 
@@ -79,25 +79,25 @@
                                     data-bs-parent="#accordionMeses-{{ anio.grouper }}">
                                     <div class="accordion-body p-0">
                                         {% regroup mes.list by fecha|date:"d \d\e F, Y" as movimientos_por_dia %}
+                                        
                                         {% for dia in movimientos_por_dia %}
                                         <div class="accordion-item level-day border-0 border-bottom">
                                             <h2 class="accordion-header">
                                                 <button 
-                                                    class="accordion-button collapsed bg-light px-4 py-2 shadow-none" 
+                                                    class="accordion-button {% if not forloop.parentloop.parentloop.first or not forloop.parentloop.first or not forloop.first %}collapsed{% endif %} bg-light px-4 py-2 shadow-none" 
                                                     type="button" 
                                                     data-bs-toggle="collapse" 
                                                     data-bs-target="#collapse-dia-{{ anio.grouper }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-                                                    aria-expanded="false">
-                                                    <span class="small fw-bold text-darktext-uppercase">
-                                                        <i class="fa-solid fa-calendar-day me-1 text-stokka"></i> {{ dia.grouper }} {% if forloop.first %}<span class="badge bg-stokka ms-2 small">Hoy</span>{% endif %}
+                                                    aria-expanded="{% if forloop.parentloop.parentloop.first and forloop.parentloop.first and forloop.first %}true{% else %}false{% endif %}">
+                                                    <span class="small fw-bold text-dark text-uppercase">
+                                                        <i class="fa-solid fa-calendar-day me-1 text-stokka"></i> {{ dia.grouper }}
                                                     </span>
                                                 </button>
                                             </h2>
 
-                                            <div 
-                                                id="collapse-dia-{{ anio.grouper }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
-                                                class="accordion-collapse collapse"
-                                                data-bs-parent="#collapse-mes-{{ anio.grouper }}-{{ forloop.parentloop.counter }}">
+                                            <div id="collapse-dia-{{ anio.grouper }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
+                                                class="accordion-collapse collapse {% if forloop.parentloop.parentloop.first and forloop.parentloop.first and forloop.first %}show{% endif %}"
+                                                data-bs-parent="#accordionMeses-{{ anio.grouper }}-{{ forloop.parentloop.counter }}">
                                                 
                                                 <div class="accordion-body p-0 bg-white">
                                                     <div class="table-responsive">
@@ -152,7 +152,7 @@
                                                                     </td>
 
                                                                     <td class="text-start" data-label="TRAYECTORIA">
-                                                                        {% if mov.tipo_accion != 'eliminacion' %}
+                                                                        {% if mov.tipo_accion != 'ELIMINACION' and mov.tipo_accion != 'eliminacion' %}
                                                                         <div class="d-flex flex-column align-items-start">
                                                                             {% if mov.cambio == 0 %}
                                                                             <span class="no-stock-change">Sin cambios</span>
@@ -201,7 +201,6 @@
                                             </div>
                                         </div>
                                         {% endfor %}
-
                                     </div>
                                 </div>
                             </div>
@@ -213,6 +212,67 @@
             {% empty %}
             {% endfor %}
         </div>
+
+        {% if movimientos.has_other_pages %}
+        <nav aria-label="Navegación del historial" class="mt-4">
+            <ul class="pagination justify-content-center align-items-center gap-1">
+                
+                {% if movimientos.number > 1 %}
+                    <li class="page-item">
+                        <a class="page-link text-dark shadow-none border rounded px-3" 
+                           href="?page=1{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if buscar_texto %}&q={{ buscar_texto }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}"
+                           title="Primera página">
+                           <i class="fa-solid fa-angles-left small"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link opacity-25 border rounded px-3"><i class="fa-solid fa-angles-left small"></i></span></li>
+                {% endif %}
+
+                {% if movimientos.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link text-dark shadow-none border rounded" 
+                        href="?page={{ movimientos.previous_page_number }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if buscar_texto %}&q={{ buscar_texto }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}">
+                        Anterior
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link opacity-50 border rounded">Anterior</span></li>
+                {% endif %}
+
+                <li class="page-item active mx-1">
+                    <span class="page-link bg-dark border-dark text-white fw-bold rounded px-3">
+                        {{ movimientos.number }} / {{ movimientos.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {% if movimientos.has_next %}
+                    <li class="page-item">
+                        <a class="page-link text-dark shadow-none border rounded" 
+                        href="?page={{ movimientos.next_page_number }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if buscar_texto %}&q={{ buscar_texto }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}">
+                        Siguiente
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link opacity-50 border rounded">Siguiente</span></li>
+                {% endif %}
+
+                {% if movimientos.number < movimientos.paginator.num_pages %}
+                    <li class="page-item">
+                        <a class="page-link text-dark shadow-none border rounded px-3" 
+                           href="?page={{ movimientos.paginator.num_pages }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if buscar_texto %}&q={{ buscar_texto }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}"
+                           title="Última página">
+                           <i class="fa-solid fa-angles-right small"></i>
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link opacity-25 border rounded px-3"><i class="fa-solid fa-angles-right small"></i></span></li>
+                {% endif %}
+                
+            </ul>
+        </nav>
+        {% endif %}
+
         <div id="sin-resultados" class="text-center py-5 d-none">
             <div class="mb-3">
                 <i class="fa-solid fa-magnifying-glass shadow-sm bg-white p-4 rounded-circle" 
@@ -225,6 +285,7 @@
                 Limpiar búsqueda
             </button>
         </div>
+    </div>
 </main>
 
 <script src="{% static 'js/historial.js' %}"></script>

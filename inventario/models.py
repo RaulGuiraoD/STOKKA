@@ -224,6 +224,9 @@ class HistorialMovimiento(models.Model):
         ordering = ['-fecha']
         verbose_name = "Historial de Movimiento"
         verbose_name_plural = "Historial de Movimientos"
+        indexes = [
+            models.Index(fields=['empresa', '-fecha']),
+        ]
 
     @property
     def id_producto_formateado(self):
