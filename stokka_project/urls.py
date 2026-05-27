@@ -20,6 +20,7 @@ from inventario import views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.shortcuts import render
 
 
 urlpatterns = [
@@ -92,4 +93,15 @@ urlpatterns = [
 
 # Esto es para que se vean el Logo y las Facturas en desarrollo
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+def handler404(request, exception):
+    return render(request, '404.html', status=404)
+
+def handler403(request, exception):
+    return render(request, '403.html', status=403)
+
+def handler500(request):
+    return render(request, '500.html', status=500)
