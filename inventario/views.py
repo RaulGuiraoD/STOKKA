@@ -1664,48 +1664,109 @@ def historial_movimientos(request):
     empresa = get_empresa_activa(request)
     if not empresa:
         return redirect('seleccionar_empresa')
-
-    # 1. Base del QuerySet (Con el select_related que ya teníamos)
-    movimientos_lista = HistorialMovimiento.objects.filter(
+ 
+    # Base del QuerySet
+    movimientos_qs = HistorialMovimiento.objects.filter(
         empresa=empresa
     ).select_related('usuario').order_by('-fecha')
-
-    # 2. CAPTURAR FILTROS DESDE LA URL
-    filtro_tipo = request.GET.get('tipo', '')
+ 
+    # Capturar filtros
+    filtro_tipo  = request.GET.get('tipo', '')
     buscar_texto = request.GET.get('q', '')
     filtro_fecha = request.GET.get('fecha', '')
-
-    # 3. APLICAR FILTROS EN LA BASE DE DATOS (Si existen)
+ 
+    # Aplicar filtros en base de datos
     if filtro_tipo:
-        movimientos_lista = movimientos_lista.filter(tipo_accion=filtro_tipo)
-        
+        movimientos_qs = movimientos_qs.filter(tipo_accion=filtro_tipo)
+ 
     if buscar_texto:
-        # Busca por coincidencia parcial (icontains) en nombre de producto o nombre de usuario
-        movimientos_lista = movimientos_lista.filter(
-            models.Q(producto_nombre__icontains=buscar_texto) | 
+        movimientos_qs = movimientos_qs.filter(
+            models.Q(producto_nombre__icontains=buscar_texto) |
             models.Q(usuario__first_name__icontains=buscar_texto)
         )
-        
+ 
     if filtro_fecha:
-        # Filtra exactamente por el día seleccionado
-        movimientos_lista = movimientos_lista.filter(fecha__date=filtro_fecha)
-
-    # 4. PAGINAR EL RESULTADO YA FILTRADO
-    paginator = Paginator(movimientos_lista, 25) 
-    page_number = request.GET.get('page')
-    movimientos_paginados = paginator.get_page(page_number)
-
-    # 5. Calcular el stock anterior solo para los 25 de esta página
-    for mov in movimientos_paginados:
-        mov.stock_anterior = mov.stock_resultante - mov.cambio
-
+        movimientos_qs = movimientos_qs.filter(fecha__date=filtro_fecha)
+ 
+    # Obtener los días únicos con su contador de movimientos (para el acordeón)
+    from django.db.models.functions import TruncDate
+    from django.db.models import Count
+ 
+    dias_con_movimientos = (
+        movimientos_qs
+        .annotate(dia=TruncDate('fecha'))
+        .values('dia')
+        .annotate(total=Count('id'))
+        .order_by('-dia')
+    )
+ 
     return render(request, 'stokka/pages/historial.html', {
-        'movimientos': movimientos_paginados,
-        'empresa': empresa,
-        # Devolvemos los valores actuales para que los inputs no se vacíen al recargar
-        'filtro_tipo': filtro_tipo,
+        'dias':         dias_con_movimientos,
+        'empresa':      empresa,
+        'filtro_tipo':  filtro_tipo,
         'buscar_texto': buscar_texto,
         'filtro_fecha': filtro_fecha,
+    })
+ 
+ 
+@login_required
+def historial_dia_ajax(request):
+    """
+    Devuelve el HTML con los movimientos de UN día concreto, paginados.
+    Llamado via AJAX desde historial.js cuando el usuario abre un día.
+ 
+    GET params:
+        fecha  — YYYY-MM-DD (obligatorio)
+        page   — número de página (default 1)
+        tipo   — filtro tipo acción (opcional)
+        q      — filtro texto (opcional)
+    """
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return HttpResponse(status=403)
+ 
+    fecha_str    = request.GET.get('fecha', '')
+    page_number  = request.GET.get('page', 1)
+    filtro_tipo  = request.GET.get('tipo', '')
+    buscar_texto = request.GET.get('q', '')
+ 
+    if not fecha_str:
+        return HttpResponse('<p class="text-muted small p-3">Fecha no especificada.</p>')
+ 
+    try:
+        from datetime import date as date_type
+        fecha_obj = date_type.fromisoformat(fecha_str)
+    except ValueError:
+        return HttpResponse('<p class="text-danger small p-3">Fecha inválida.</p>')
+ 
+    movimientos_dia = HistorialMovimiento.objects.filter(
+        empresa=empresa,
+        fecha__date=fecha_obj
+    ).select_related('usuario').order_by('-fecha')
+ 
+    if filtro_tipo:
+        movimientos_dia = movimientos_dia.filter(tipo_accion=filtro_tipo)
+ 
+    if buscar_texto:
+        movimientos_dia = movimientos_dia.filter(
+            models.Q(producto_nombre__icontains=buscar_texto) |
+            models.Q(usuario__first_name__icontains=buscar_texto)
+        )
+ 
+    # 15 movimientos por página dentro de cada día
+    from django.core.paginator import Paginator
+    paginator = Paginator(movimientos_dia, 15)
+    page_obj  = paginator.get_page(page_number)
+ 
+    for mov in page_obj:
+        mov.stock_anterior = mov.stock_resultante - mov.cambio
+ 
+    # El parcial ahora está en modales/
+    return render(request, 'stokka/modales/historial_dia_parcial.html', {
+        'movimientos':  page_obj,
+        'fecha':        fecha_str,
+        'filtro_tipo':  filtro_tipo,
+        'buscar_texto': buscar_texto,
     })
 
 @login_required

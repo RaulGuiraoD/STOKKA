@@ -88,6 +88,7 @@ urlpatterns = [
 
     # --- HISTORIAL ---
     path('historial_movimientos/', views.historial_movimientos, name='historial_movimientos'),
+    path('historial/dia/', views.historial_dia_ajax, name='historial_dia_ajax')
 ]
 
 # Esto es para que se vean el Logo y las Facturas en desarrollo

@@ -16,7 +16,7 @@
                     </span>
                     <div class="info-wrapper d-inline-block ms-2 mb-2">
                         <i class="fa-solid fa-circle-info info-icon-2"
-                            data-info="El historial guarda toda la información de los movimientos de tu inventario. Usa los filtros para buscar más rápidamente los productos o movimientos específicos que deseas."></i>
+                            data-info="El historial guarda toda la información de los movimientos de tu inventario. Despliega un día para ver sus movimientos con paginación independiente. Usa los filtros para buscar más rápidamente."></i>
                     </div>
                 </div>
             </div>
@@ -25,15 +25,15 @@
                     <select id="filtro-tipo" class="form-select stokka-input shadow-focus-stokka">
                         <option value="">Todos los tipos</option>
                         <option value="AJUSTE_RAPIDO" {% if filtro_tipo == 'AJUSTE_RAPIDO' %}selected{% endif %}>Ajuste rápido</option>
-                        <option value="MODAL_EDITAR" {% if filtro_tipo == 'MODAL_EDITAR' %}selected{% endif %}>Edición</option>
-                        <option value="CREACION" {% if filtro_tipo == 'CREACION' %}selected{% endif %}>Creación</option>
-                        <option value="ELIMINACION" {% if filtro_tipo == 'ELIMINACION' %}selected{% endif %}>Eliminación</option>
+                        <option value="MODAL_EDITAR"  {% if filtro_tipo == 'MODAL_EDITAR'  %}selected{% endif %}>Edición</option>
+                        <option value="CREACION"      {% if filtro_tipo == 'CREACION'      %}selected{% endif %}>Creación</option>
+                        <option value="ELIMINACION"   {% if filtro_tipo == 'ELIMINACION'   %}selected{% endif %}>Eliminación</option>
                     </select>
 
                     <input type="text" id="filtro-historial" class="form-control stokka-input shadow-focus-stokka"
                         placeholder="Buscar producto o usuario..." value="{{ buscar_texto }}">
 
-                    <input type="date" id="busqueda-fecha" class="form-control stokka-input shadow-focus-stokka w-auto" 
+                    <input type="date" id="busqueda-fecha" class="form-control stokka-input shadow-focus-stokka w-auto"
                         value="{{ filtro_fecha }}">
 
                     <button type="button" id="btn-limpiar-filtros" class="btn border-0 rounded-circle"
@@ -44,247 +44,132 @@
             </div>
         </div>
 
+        {% if dias %}
         <div class="accordion accordion-flush shadow-stokka rounded-4 overflow-hidden" id="accordionHistorial">
-            {% regroup movimientos by fecha|date:"Y" as movimientos_por_anio %}
 
-            {% for anio in movimientos_por_anio %}
+            {% regroup dias by dia|date:"Y" as dias_por_anio %}
+
+            {% for anio in dias_por_anio %}
             <div class="accordion-item border-bottom level-year">
                 <h2 class="accordion-header">
                     <button
-                        class="accordion-button {% if not forloop.first %}collapsed{% endif %} fw-bold bg-stokka text-white shadow-none"
-                        type="button" data-bs-toggle="collapse" data-bs-target="#collapse-anio-{{ anio.grouper }}">
-                        <i class="fa-solid fa-calendar me-2"></i> {{ anio.grouper }} 
+                        class="accordion-button collapsed fw-bold bg-stokka text-white shadow-none"
+                        type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapse-anio-{{ anio.grouper }}"
+                        aria-expanded="false">
+                        <i class="fa-solid fa-calendar me-2"></i> {{ anio.grouper }}
                     </button>
                 </h2>
                 <div id="collapse-anio-{{ anio.grouper }}"
-                    class="accordion-collapse collapse {% if forloop.first %}show{% endif %}"
-                    data-bs-parent="#accordionHistorial">
+                    class="accordion-collapse collapse"
+                    data-anio="{{ anio.grouper }}">
                     <div class="accordion-body p-0 bg-gris-fondo">
 
-                        {% regroup anio.list by fecha|date:"F" as movimientos_por_mes %}
+                        {% regroup anio.list by dia|date:"F" as dias_por_mes %}
                         <div class="accordion accordion-flush" id="accordionMeses-{{ anio.grouper }}">
 
-                            {% for mes in movimientos_por_mes %}
+                            {% for mes in dias_por_mes %}
                             <div class="accordion-item level-month">
                                 <h2 class="accordion-header">
                                     <button
-                                        class="accordion-button {% if not forloop.parentloop.first or not forloop.first %}collapsed{% endif %} fw-bold text-stokka bg-white border-bottom"
+                                        class="accordion-button collapsed fw-bold text-stokka bg-white border-bottom"
                                         type="button" data-bs-toggle="collapse"
-                                        data-bs-target="#collapse-mes-{{ anio.grouper }}-{{ forloop.counter }}">
-                                        <i class="fa-regular fa-calendar-minus me-2"></i> {{ mes.grouper|capfirst }}
+                                        data-bs-target="#collapse-mes-{{ anio.grouper }}-{{ forloop.counter }}"
+                                        aria-expanded="false">
+                                        <i class="fa-regular fa-calendar-minus me-2"></i>
+                                        {{ mes.grouper|capfirst }}
+                                        <span class="ms-2 badge rounded-pill bg-light text-dark border fw-normal" style="font-size: 0.7rem;">
+                                            {{ mes.list|length }} día{{ mes.list|length|pluralize:"s" }}
+                                        </span>
                                     </button>
                                 </h2>
                                 <div id="collapse-mes-{{ anio.grouper }}-{{ forloop.counter }}"
-                                    class="accordion-collapse collapse {% if forloop.parentloop.first and forloop.first %}show{% endif %}"
-                                    data-bs-parent="#accordionMeses-{{ anio.grouper }}">
+                                    class="accordion-collapse collapse"
+                                    data-mes="{{ mes.grouper }}">
                                     <div class="accordion-body p-0">
-                                        {% regroup mes.list by fecha|date:"d \d\e F, Y" as movimientos_por_dia %}
-                                        
-                                        {% for dia in movimientos_por_dia %}
-                                        <div class="accordion-item level-day border-0 border-bottom">
-                                            <h2 class="accordion-header">
-                                                <button 
-                                                    class="accordion-button {% if not forloop.parentloop.parentloop.first or not forloop.parentloop.first or not forloop.first %}collapsed{% endif %} bg-light px-4 py-2 shadow-none" 
-                                                    type="button" 
-                                                    data-bs-toggle="collapse" 
-                                                    data-bs-target="#collapse-dia-{{ anio.grouper }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}"
-                                                    aria-expanded="{% if forloop.parentloop.parentloop.first and forloop.parentloop.first and forloop.first %}true{% else %}false{% endif %}">
-                                                    <span class="small fw-bold text-dark text-uppercase">
-                                                        <i class="fa-solid fa-calendar-day me-1 text-stokka"></i> {{ dia.grouper }}
-                                                    </span>
-                                                </button>
-                                            </h2>
 
-                                            <div id="collapse-dia-{{ anio.grouper }}-{{ forloop.parentloop.counter }}-{{ forloop.counter }}" 
-                                                class="accordion-collapse collapse {% if forloop.parentloop.parentloop.first and forloop.parentloop.first and forloop.first %}show{% endif %}"
-                                                data-bs-parent="#accordionMeses-{{ anio.grouper }}-{{ forloop.parentloop.counter }}">
-                                                
-                                                <div class="accordion-body p-0 bg-white">
-                                                    <div class="table-responsive">
-                                                        <table class="table align-middle mb-0 tabla-historial-clase" style="table-layout: fixed; width: 100%;">
-                                                            <thead class="bg-stokka">
-                                                                <tr class="text-uppercase fw-bold border-bottom">
-                                                                    <th style="width: 20%;" class="ps-4 text-stokka text-start">Usuario</th>
-                                                                    <th style="width: 35%;" class="text-stokka text-start">Producto</th>
-                                                                    <th style="width: 20%;" class="d-none d-md-table-cell text-stokka text-start ps-3">Movimiento</th>
-                                                                    <th style="width: 25%;" class="text-stokka text-start">Trayectoria Stock</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {% for mov in dia.list %}
-                                                                <tr class="fila-movimiento tipo-{{ mov.tipo_accion|lower }}"
-                                                                    data-fecha="{{ mov.fecha|date:'Y-m-d' }}"
-                                                                    data-bs-toggle="collapse"
-                                                                    data-bs-target="#detalle-mov-{{ mov.id }}"
-                                                                    style="cursor: pointer;">
-
-                                                                    <td class="ps-4" data-label="USUARIO">
-                                                                        <div class="d-flex align-items-center">
-                                                                            <div class="bg-white border border-1 border-light shadow-sm rounded-circle overflow-hidden d-flex align-items-center justify-content-center flex-shrink-0 me-2"
-                                                                                style="width: 38px; height: 38px;">
-                                                                                {% if mov.usuario.perfil.foto %}
-                                                                                <img src="{{ mov.usuario.perfil.foto.url }}" class="w-100 h-100 object-fit-cover">
-                                                                                {% else %}
-                                                                                <i class="fa-solid fa-circle-user text-secondary fs-5"></i>
-                                                                                {% endif %}
-                                                                            </div>
-                                                                            <div class="lh-1 text-truncate">
-                                                                                <div class="fw-bold text-uppercase {% if mov.usuario.membresias.first.rol == 'dueño' %}text-stokka{% elif mov.usuario.membresias.first.rol == 'admin' %}text-amarillo-historial{% else %}text-verde-secundario{% endif %}"
-                                                                                    style="font-size: 0.75rem;">
-                                                                                    {{ mov.usuario.first_name }}
-                                                                                </div>
-                                                                                <span class="text-muted" style="font-size: 10px;">{{ mov.fecha|date:"H:i" }}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </td>
-
-                                                                    <td class="text-start" data-label="PRODUCTO">
-                                                                        <div class="text-truncate fw-bold text-dark w-100 mb-0" style="font-size: 0.95rem;">
-                                                                            {{ mov.producto_nombre }}
-                                                                        </div>
-                                                                        <div class="text-muted fw-bold extra-small">ID: #{{ mov.id_producto_formateado }}</div>
-                                                                    </td>
-
-                                                                    <td class="text-start ps-3" data-label="MOVIMIENTO">
-                                                                        <span class="badge-stokka-mov mov-{{ mov.tipo_accion|lower }} px-2 py-1">
-                                                                            {{ mov.get_tipo_accion_display }}
-                                                                        </span>
-                                                                    </td>
-
-                                                                    <td class="text-start" data-label="TRAYECTORIA">
-                                                                        {% if mov.tipo_accion != 'ELIMINACION' and mov.tipo_accion != 'eliminacion' %}
-                                                                        <div class="d-flex flex-column align-items-start">
-                                                                            {% if mov.cambio == 0 %}
-                                                                            <span class="no-stock-change">Sin cambios</span>
-                                                                            {% else %}
-                                                                            <div class="fw-bolder {% if mov.cambio > 0 %}text-success{% else %}text-danger{% endif %}">
-                                                                                {% if mov.cambio > 0 %}+{% endif %}{{ mov.cambio }}
-                                                                            </div>
-                                                                            <div class="text-muted" style="font-size: 11px;">
-                                                                                {{ mov.stock_anterior }} <i class="fa-solid fa-arrow-right mx-1 text-stokka"></i>
-                                                                                <strong>{{ mov.stock_resultante }}</strong>
-                                                                            </div>
-                                                                            {% endif %}
-                                                                        </div>
-                                                                        {% else %}
-                                                                        <div class="text-center w-100 opacity-50"><i class="fa-solid fa-trash-can"></i></div>
-                                                                        {% endif %}
-                                                                    </td>
-                                                                </tr>
-
-                                                                <tr class="fila-detalle border-0">
-                                                                    <td colspan="4" class="p-0 border-0">
-                                                                        <div id="detalle-mov-{{ mov.id }}" class="collapse">
-                                                                            <div class="detalle-contenido p-3">
-                                                                                <div class="detalle-card shadow-sm border-start border-4 border-stokka p-2">
-                                                                                    <ul class="lista-cambios mb-0 list-unstyled">
-                                                                                        {% if mov.detalles %}
-                                                                                        <li class="small">
-                                                                                            <i class="fa-solid fa-circle-info me-2 text-stokka"></i>{{ mov.detalles|linebreaksbr }}
-                                                                                        </li>
-                                                                                        {% else %}
-                                                                                        <li class="small opacity-75">
-                                                                                            <i class="fa-solid fa-check-double me-2 text-stokka"></i>Actualización de información general.
-                                                                                        </li>
-                                                                                        {% endif %}
-                                                                                    </ul>
-                                                                                </div>
-                                                                            </div>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                                {% endfor %}
-                                                            </tbody>
-                                                        </table>
+                                        <div class="accordion accordion-flush" id="accordionDias-{{ anio.grouper }}-{{ forloop.counter }}">
+                                            {% for dia_obj in mes.list %}
+                                            <div class="accordion-item level-day border-0 border-bottom">
+                                                <h2 class="accordion-header">
+                                                    <button
+                                                        class="accordion-button collapsed bg-light px-4 py-2 shadow-none btn-abrir-dia"
+                                                        type="button" data-bs-toggle="collapse"
+                                                        data-bs-target="#collapse-dia-{{ dia_obj.dia|date:'Y-m-d'|slugify }}"
+                                                        data-fecha="{{ dia_obj.dia|date:'Y-m-d' }}"
+                                                        aria-expanded="false">
+                                                        <span class="small fw-bold text-dark text-uppercase">
+                                                            <i class="fa-solid fa-calendar-day me-1 text-stokka"></i>
+                                                            {{ dia_obj.dia|date:"d \d\e F, Y" }}
+                                                        </span>
+                                                        <span class="ms-3 badge rounded-pill border fw-normal text-dark bg-white" style="font-size: 0.7rem;">
+                                                            {{ dia_obj.total }} mov.
+                                                        </span>
+                                                    </button>
+                                                </h2>
+                                                <div id="collapse-dia-{{ dia_obj.dia|date:'Y-m-d'|slugify }}"
+                                                    class="accordion-collapse collapse"
+                                                    data-fecha="{{ dia_obj.dia|date:'Y-m-d' }}">
+                                                    <div class="accordion-body p-0 bg-white contenedor-movimientos-dia">
+                                                        {# Los movimientos se cargan aquí via AJAX al abrir el día #}
+                                                        <div class="text-center py-4 spinner-inicial">
+                                                            <div class="spinner-border spinner-border-sm"
+                                                                 style="color: var(--verde-stokka);" role="status">
+                                                                <span class="visually-hidden">Cargando...</span>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
+                                            {% endfor %}
                                         </div>
-                                        {% endfor %}
+
                                     </div>
                                 </div>
                             </div>
                             {% endfor %}
+
                         </div>
                     </div>
                 </div>
             </div>
-            {% empty %}
             {% endfor %}
+
         </div>
 
-        {% if movimientos.has_other_pages %}
-        <nav aria-label="Navegación del historial" class="mt-4">
-            <ul class="pagination justify-content-center align-items-center gap-1">
-                
-                {% if movimientos.number > 1 %}
-                    <li class="page-item">
-                        <a class="page-link text-dark shadow-none border rounded px-3" 
-                           href="?page=1{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if buscar_texto %}&q={{ buscar_texto }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}"
-                           title="Primera página">
-                           <i class="fa-solid fa-angles-left small"></i>
-                        </a>
-                    </li>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fa-solid fa-box-open d-block fs-1 mb-3 opacity-25"></i>
+            <h5 class="fw-bold text-dark">No hay movimientos</h5>
+            <p class="text-muted small">
+                {% if filtro_tipo or buscar_texto or filtro_fecha %}
+                    Prueba ajustando los filtros.
                 {% else %}
-                    <li class="page-item disabled"><span class="page-link opacity-25 border rounded px-3"><i class="fa-solid fa-angles-left small"></i></span></li>
+                    Aún no hay movimientos registrados en esta empresa.
                 {% endif %}
-
-                {% if movimientos.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link text-dark shadow-none border rounded" 
-                        href="?page={{ movimientos.previous_page_number }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if buscar_texto %}&q={{ buscar_texto }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}">
-                        Anterior
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled"><span class="page-link opacity-50 border rounded">Anterior</span></li>
-                {% endif %}
-
-                <li class="page-item active mx-1">
-                    <span class="page-link bg-dark border-dark text-white fw-bold rounded px-3">
-                        {{ movimientos.number }} / {{ movimientos.paginator.num_pages }}
-                    </span>
-                </li>
-
-                {% if movimientos.has_next %}
-                    <li class="page-item">
-                        <a class="page-link text-dark shadow-none border rounded" 
-                        href="?page={{ movimientos.next_page_number }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if buscar_texto %}&q={{ buscar_texto }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}">
-                        Siguiente
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled"><span class="page-link opacity-50 border rounded">Siguiente</span></li>
-                {% endif %}
-
-                {% if movimientos.number < movimientos.paginator.num_pages %}
-                    <li class="page-item">
-                        <a class="page-link text-dark shadow-none border rounded px-3" 
-                           href="?page={{ movimientos.paginator.num_pages }}{% if filtro_tipo %}&tipo={{ filtro_tipo }}{% endif %}{% if buscar_texto %}&q={{ buscar_texto }}{% endif %}{% if filtro_fecha %}&fecha={{ filtro_fecha }}{% endif %}"
-                           title="Última página">
-                           <i class="fa-solid fa-angles-right small"></i>
-                        </a>
-                    </li>
-                {% else %}
-                    <li class="page-item disabled"><span class="page-link opacity-25 border rounded px-3"><i class="fa-solid fa-angles-right small"></i></span></li>
-                {% endif %}
-                
-            </ul>
-        </nav>
+            </p>
+            {% if filtro_tipo or buscar_texto or filtro_fecha %}
+            <button type="button" class="btn btn-stokka rounded-pill mt-2"
+                    onclick="document.getElementById('btn-limpiar-filtros').click()">
+                Limpiar filtros
+            </button>
+            {% endif %}
+        </div>
         {% endif %}
 
         <div id="sin-resultados" class="text-center py-5 d-none">
             <div class="mb-3">
-                <i class="fa-solid fa-magnifying-glass shadow-sm bg-white p-4 rounded-circle" 
+                <i class="fa-solid fa-magnifying-glass shadow-sm bg-white p-4 rounded-circle"
                    style="font-size: 2rem; color: var(--verde-stokka);"></i>
             </div>
             <h5 class="fw-bold text-dark">No hay coincidencias</h5>
             <p class="text-muted small">Prueba ajustando los filtros o el término de búsqueda.</p>
-            <button type="button" class="btn btn-stokka btn-outline-success rounded-pill mt-2" 
+            <button type="button" class="btn btn-stokka btn-outline-success rounded-pill mt-2"
                     onclick="document.getElementById('btn-limpiar-filtros').click()">
                 Limpiar búsqueda
             </button>
         </div>
+
     </div>
 </main>
 
