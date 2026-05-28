@@ -5,8 +5,8 @@
             <tr class="text-uppercase fw-bold border-bottom">
                 <th style="width: 20%;" class="ps-4 text-stokka text-start">Usuario</th>
                 <th style="width: 35%;" class="text-stokka text-start">Producto</th>
-                <th style="width: 20%;" class="d-none d-md-table-cell text-stokka text-start ps-3">Movimiento</th>
-                <th style="width: 25%;" class="text-stokka text-start">Trayectoria Stock</th>
+                <th style="width: 20%;" class="d-none d-md-table-cell text-stokka text-center ps-3">Movimiento</th>
+                <th style="width: 25%;" class="text-stokka text-center">Trayectoria Stock</th>
             </tr>
         </thead>
         <tbody>
@@ -44,15 +44,15 @@
                     <div class="text-muted fw-bold extra-small">ID: #{{ mov.id_producto_formateado }}</div>
                 </td>
 
-                <td class="text-start ps-3 d-none d-md-table-cell" data-label="MOVIMIENTO">
+                <td class="text-center ps-3 d-none d-md-table-cell" data-label="MOVIMIENTO">
                     <span class="badge-stokka-mov mov-{{ mov.tipo_accion|lower }} px-2 py-1">
                         {{ mov.get_tipo_accion_display }}
                     </span>
                 </td>
 
-                <td class="text-start" data-label="TRAYECTORIA">
+                <td class="text-center" data-label="TRAYECTORIA">
                     {% if mov.tipo_accion != 'ELIMINACION' and mov.tipo_accion != 'eliminacion' %}
-                    <div class="d-flex flex-column align-items-start">
+                    <div class="d-flex flex-column align-items-center">
                         {% if mov.cambio == 0 %}
                         <span class="no-stock-change">Sin cambios</span>
                         {% else %}

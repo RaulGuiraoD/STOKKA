@@ -186,10 +186,30 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ── CHEVRON + PANEL MÓVIL (idéntico al JS original) ──────────────────────
+    // ── CHEVRON + PANEL MÓVIL + REFUERZO DE FILTRO DEL CLIENTE ────────────────
 
     function inyectarChevronYPanelMovil(scope) {
+        const term = inputSearch?.value.toLowerCase().trim() || '';
+        let filasVisiblesEnScope = 0;
+
         scope.querySelectorAll('.tabla-historial-clase tbody tr.fila-movimiento').forEach(row => {
+            // --- AQUÍ ESTÁ EL ARREGLO PARA USUARIOS Y PRODUCTOS ---
+            const textProducto = row.querySelector('td[data-label="PRODUCTO"]')?.textContent.toLowerCase() || '';
+            const textUsuario  = row.querySelector('td[data-label="USUARIO"]')?.textContent.toLowerCase() || '';
+            
+            // Si hay un término de búsqueda, validamos que esté en producto O en usuario
+            if (term !== '' && !textProducto.includes(term) && !textUsuario.includes(term)) {
+                row.style.setProperty('display', 'none', 'important');
+                const nextRow = row.nextElementSibling;
+                if (nextRow && nextRow.classList.contains('fila-detalle')) {
+                    nextRow.style.setProperty('display', 'none', 'important');
+                }
+                return; // Saltamos este registro ya que no coincide
+            } else {
+                filasVisiblesEnScope++;
+            }
+            // -----------------------------------------------------
+
             if (!row.querySelector('.chevron-mobile')) {
                 const tdProducto = row.querySelector('td[data-label="PRODUCTO"]');
                 if (tdProducto) {
@@ -229,6 +249,18 @@ document.addEventListener("DOMContentLoaded", function () {
                 row.appendChild(panel);
             }
         });
+
+        // Si después de limpiar las filas no quedó ninguna válida en la vista actual, actualizamos los paneles informativos
+        if (term !== '' && filasVisiblesEnScope === 0) {
+            const tabla = scope.querySelector('.tabla-historial-clase');
+            if (tabla && !scope.querySelector('.no-rows-msg')) {
+                tabla.style.display = 'none';
+                const msg = document.createElement('div');
+                msg.className = 'no-rows-msg text-center text-muted py-3 small';
+                msg.innerHTML = '<i class="fa-solid fa-ban me-1"></i> Sin movimientos coincidentes en esta página.';
+                scope.appendChild(msg);
+            }
+        }
     }
 
     // ── TOGGLE FILA DETALLE ───────────────────────────────────────────────────
