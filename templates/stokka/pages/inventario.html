@@ -219,8 +219,26 @@
                 {% if productos.has_other_pages %}
                 <div class="card-footer bg-white border-0 d-flex justify-content-center py-3 border-top">
                     <nav aria-label="Navegación de inventario">
-                        <ul class="pagination mb-0 gap-1">
+                        <ul class="pagination mb-0 gap-1 flex-wrap justify-content-center">
                             
+                            {% if productos.number > 1 %}
+                            <li class="page-item">
+                                <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
+                                   href="?page=1{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" title="Primera Página">
+                                    <i class="fa-solid fa-angles-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if productos.number > 5 %}
+                            <li class="page-item d-none d-sm-inline">
+                                <a class="page-link border-0 rounded-3 text-secondary shadow-sm bg-white small" 
+                                   href="?page={{ productos.number|add:'-5' }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" title="Retroceder 5 páginas">
+                                    -5
+                                </a>
+                            </li>
+                            {% endif %}
+
                             {% if productos.has_previous %}
                             <li class="page-item">
                                 <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
@@ -260,11 +278,28 @@
                             </li>
                             {% endif %}
 
+                            {% if productos.paginator.num_pages|add:'-5' >= productos.number %}
+                            <li class="page-item d-none d-sm-inline">
+                                <a class="page-link border-0 rounded-3 text-secondary shadow-sm bg-white small" 
+                                   href="?page={{ productos.number|add:'5' }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" title="Avanzar 5 páginas">
+                                    +5
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if productos.number < productos.paginator.num_pages %}
+                            <li class="page-item">
+                                <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
+                                   href="?page={{ productos.paginator.num_pages }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" title="Última Página ({{ productos.paginator.num_pages }})">
+                                    <i class="fa-solid fa-angles-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+
                         </ul>
                     </nav>
                 </div>
                 {% endif %}
-
             </div>
         </main>
     </div>
