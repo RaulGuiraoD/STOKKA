@@ -268,7 +268,11 @@ main, .container-fluid, .card {
     background: var(--verde-stokka-light); 
     color: black; padding: 10px; border-radius: 10px;
     border: 1px solid var(--selector-borde); font-size: 0.75rem; line-height: 1.3;
-    z-index: 100; opacity: 0; visibility: hidden; transition: 0.3s;
+    
+    /* ÚNICO CAMBIO: Subimos el z-index al máximo para que flote por encima de todo */
+    z-index: 99999 !important; 
+    
+    opacity: 0; visibility: hidden; transition: 0.3s;
     text-align: left; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
 }
 
