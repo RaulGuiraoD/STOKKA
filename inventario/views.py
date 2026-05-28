@@ -1305,7 +1305,6 @@ def inventario_view(request):
     else:
         productos_final = productos_qs
 
-    # 4. LÓGICA DE PAGINACIÓN (Máximo 50)
     paginator = Paginator(productos_final, 50)
 
     try:
@@ -1313,17 +1312,46 @@ def inventario_view(request):
     except Exception:
         productos_paginados = paginator.page(1)
 
-    # 5. CONTEXTO ENVIADO AL TEMPLATE
+    # Extraemos todos los productos que tengan factura adjunta 
+    query_albaranes = request.GET.get('q_albaranes', '')
+
+    # 2. Extraemos los productos con factura
+    all_productos_con_factura = [p for p in productos_final if p.factura]
+    
+    # 3. Si hay búsqueda, filtramos en memoria por el nombre del producto
+    if query_albaranes:
+        all_productos_con_factura = [
+            p for p in all_productos_con_factura 
+            if query_albaranes.lower() in p.nombre.lower() or query_albaranes.lower() in (p.referencia or '').lower()
+        ]
+
+    # 4. Ordenamos alfabéticamente
+    all_productos_con_factura.sort(key=lambda x: x.nombre.lower())
+
+    # 5. Paginamos de 8 en 8
+    page_albaranes_number = request.GET.get('page_albaranes', 1)
+    paginator_albaranes = Paginator(all_productos_con_factura, 6)
+    
+    try:
+        albaranes_paginados = paginator_albaranes.page(page_albaranes_number)
+    except Exception:
+        albaranes_paginados = paginator_albaranes.page(1)
+    # ==========================================
+
+    # 5. CONTEXTO ENVIADO AL TEMPLATE (Añadimos 'query_albaranes_actual')
     return render(request, 'stokka/pages/inventario.html', {
-        'productos':      productos_paginados, 
-        'max_stock_real': max_stock_real,
-        'filtro_actual':  filtro,
-        'query_actual':   query,
-        'stock_min_actual': stock_min or 0,
-        'stock_max_actual': stock_max or max_stock_real,
-        'form_añadir':    ProductoForm(),
-        'empresa':        empresa,
-        'copia':          copia,
+        'productos':          productos_paginados, 
+        'albaranes_adjuntos': albaranes_paginados,
+        'total_albaranes':    len(all_productos_con_factura),
+        'query_albaranes_actual': query_albaranes, # <--- IMPORTANTE: Para mantener el texto en la barra
+        'max_stock_real':     max_stock_real,
+        'filtro_actual':      filtro,
+        'query_actual':       query,
+        'stock_min_actual':   stock_min or 0,
+        'stock_max_actual':   stock_max or max_stock_real,
+        'form_añadir':        ProductoForm(),
+        'empresa':            empresa,
+        'copia':              copia,
     })
 
 @login_required
@@ -1630,8 +1658,6 @@ def importar_csv(request):
                 except Exception as e:
                     errores.append(f"Fila {fila_num} ({nombre}): error al guardar — {e}")
                     continue
-
-        # ── RESUMEN FINAL (OPCIÓN 2 APLICADA) ─────────────────────────────────
 
         if creados > 0:
             messages.success(
