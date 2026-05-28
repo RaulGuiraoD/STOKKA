@@ -20,7 +20,6 @@
         </div>
     </div>
 
-    <!-- CABECERA DE ACCIONES -->
     <div class="d-flex justify-content-between align-items-center mb-4 px-2">
         <button class="btn btn-inventario-stokka shadow-stokka px-4 fw-bold" type="button" onclick="toggleFiltros()">
             <i class="fa-solid fa-filter me-2"></i> FILTROS
@@ -37,7 +36,6 @@
                 <i class="fa-solid fa-file-invoice me-2"></i> Albaranes
             </button>
 
-            <!-- NUEVO BOTÓN IMPORTAR CSV — mismo estilo que los demás btn-stokka -->
             <button type="button" class="btn btn-stokka" data-bs-toggle="modal" data-bs-target="#modalImportarCSV"
                 title="Importar varios productos a la vez desde un archivo CSV">
                 <i class="fa-solid fa-file-arrow-up me-2"></i>
@@ -53,14 +51,16 @@
     </div>
 
     <div class="d-flex position-relative">
-        <!-- SIDEBAR DE FILTROS -->
         <aside id="sidebar-filtros"
-            class="{% if filtro_actual or query_actual %}active{% endif %} shadow-stokka rounded-4 bg-white border-0">
+            class="{% if filtro_actual or query_actual or stock_min_actual > 0 or stock_max_actual < max_stock_real %}active{% endif %} shadow-stokka rounded-4 bg-white border-0">
             <div class="p-4" style="min-width:280px;">
                 <h5 class="fw-bold mb-4" style="color: var(--verde-stokka);">Buscador Avanzado</h5>
 
                 <form method="GET" action="{% url 'inventario' %}" id="form-filtros">
-                    <!-- Búsqueda por Texto -->
+                    {% if filtro_actual %}
+                        <input type="hidden" name="filtro" value="{{ filtro_actual }}">
+                    {% endif %}
+
                     <div class="mb-4">
                         <label class="small text-dark fw-bold text-uppercase">Nombre o Referencia</label>
                         <div class="d-flex mt-1 gap-2">
@@ -69,42 +69,40 @@
                         </div>
                     </div>
 
-                    <!-- Filtros Rápidos -->
                     <div class="mb-4">
                         <label class="small text-dark fw-bold text-uppercase d-block mb-2">Estado del Stock</label>
                         <div class="d-grid gap-2">
                             <a href="{% url 'inventario' %}"
                                 class="btn btn-inventario-stokka fw-bold rounded-3 {% if not filtro_actual %}btn-inventario-stokka{% else %}btn-outline-secondary{% endif %}">VER TODO</a>
-                            <a href="{% url 'inventario' %}?filtro=critico"
+                            <a href="{% url 'inventario' %}?filtro=critico{% if query_actual %}&q={{ query_actual }}{% endif %}{% if stock_min_actual %}&stock_min={{ stock_min_actual }}{% endif %}{% if stock_max_actual %}&stock_max={{ stock_max_actual }}{% endif %}"
                                 class="btn btn-inventario-cancelar-stokka fw-bold btn-outline-danger rounded-3 {% if filtro_actual == 'critico' %}active-critico{% endif %}">CRÍTICOS</a>
-                            <a href="{% url 'inventario' %}?filtro=aviso"
+                            <a href="{% url 'inventario' %}?filtro=aviso{% if query_actual %}&q={{ query_actual }}{% endif %}{% if stock_min_actual %}&stock_min={{ stock_min_actual }}{% endif %}{% if stock_max_actual %}&stock_max={{ stock_max_actual }}{% endif %}"
                                 class="btn btn-inventario-editar-stokka fw-bold btn-outline-warning rounded-3 {% if filtro_actual == 'aviso' %}active-aviso{% endif %}">CUIDADO</a>
                         </div>
                     </div>
 
-                    <!-- Rango de Stock -->
                     <div class="mt-4">
                         <label class="small text-dark fw-bold text-uppercase d-block mb-2">Rango de Stock</label>
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="extra-small text-dark">Desde:</label>
-                                <input type="number" id="numMin" class="form-control form-control-sm w-50" min="0"
-                                    max="{{ max_stock_real }}" value="0">
+                                <input type="number" id="numMin" name="stock_min" class="form-control form-control-sm w-50" min="0"
+                                    max="{{ max_stock_real }}" value="{{ stock_min_actual }}">
                             </div>
-                            <input type="range" id="stockMin" min="0" max="{{ max_stock_real }}" value="0"
+                            <input type="range" id="stockMin" min="0" max="{{ max_stock_real }}" value="{{ stock_min_actual }}"
                                 class="form-range">
                         </div>
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="extra-small text-dark">Hasta:</label>
-                                <input type="number" id="numMax" class="form-control form-control-sm w-50" min="0"
-                                    max="{{ max_stock_real }}" value="{{ max_stock_real }}">
+                                <input type="number" id="numMax" name="stock_max" class="form-control form-control-sm w-50" min="0"
+                                    max="{{ max_stock_real }}" value="{{ stock_max_actual }}">
                             </div>
                             <input type="range" id="stockMax" min="0" max="{{ max_stock_real }}"
-                                value="{{ max_stock_real }}" class="form-range">
+                                value="{{ stock_max_actual }}" class="form-range">
                         </div>
                         <div class="alert alert-light border-0 small p-2 mt-2">
-                            <i class="fa-solid fa-info-circle me-1"></i> Mostrando entre <span id="rangoTexto">0 y {{ max_stock_real }}</span>.
+                            <i class="fa-solid fa-info-circle me-1"></i> Mostrando entre <span id="rangoTexto">{{ stock_min_actual }} y {{ stock_max_actual }}</span>.
                         </div>
                     </div>
 
@@ -117,7 +115,6 @@
             </div>
         </aside>
 
-        <!-- CONTENIDO PRINCIPAL (TABLA) -->
         <main id="main-content" class="flex-grow-1 transition-all">
             <div class="card shadow-stokka border-0 rounded-4 overflow-hidden bg-white">
                 <div class="table-responsive">
@@ -218,6 +215,56 @@
                         </tbody>
                     </table>
                 </div>
+
+                {% if productos.has_other_pages %}
+                <div class="card-footer bg-white border-0 d-flex justify-content-center py-3 border-top">
+                    <nav aria-label="Navegación de inventario">
+                        <ul class="pagination mb-0 gap-1">
+                            
+                            {% if productos.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
+                                   href="?page={{ productos.previous_page_number }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" aria-label="Anterior">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled opacity-50">
+                                <span class="page-link border-0 rounded-3 bg-light text-muted"><i class="fa-solid fa-chevron-left"></i></span>
+                            </li>
+                            {% endif %}
+
+                            {% for num in productos.paginator.page_range %}
+                                {% if productos.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link border-0 rounded-3 fw-bold shadow-sm text-white" style="background-color: var(--verde-stokka) !important;">{{ num }}</span>
+                                </li>
+                                {% elif num > productos.number|add:'-3' and num < productos.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
+                                       href="?page={{ num }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if productos.has_next %}
+                            <li class="page-item">
+                                <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
+                                   href="?page={{ productos.next_page_number }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" aria-label="Siguiente">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled opacity-50">
+                                <span class="page-link border-0 rounded-3 bg-light text-muted"><i class="fa-solid fa-chevron-right"></i></span>
+                            </li>
+                            {% endif %}
+
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+
             </div>
         </main>
     </div>
@@ -453,7 +500,7 @@
 </div>
 
 <!-- ============================================================
-     NUEVO IMPORTAR CSV
+     MODAL IMPORTAR CSV
      ============================================================ -->
 <div class="modal fade" id="modalImportarCSV" tabindex="-1" aria-labelledby="modalImportarCSVLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered shadow-stokka">

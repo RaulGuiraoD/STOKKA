@@ -140,8 +140,6 @@ document.addEventListener("DOMContentLoaded", function () {
     // Resetear visualmente al hacer clic en limpiar
     if (btnLimpiar) {
         btnLimpiar.addEventListener("click", (e) => {
-            // e.preventDefault(); // Si es un enlace <a> para que no recargue
-
             // Obtenemos el valor máximo real desde el atributo max del input
             const valorMaximoReal = stockMax.getAttribute('max');
 
@@ -158,50 +156,37 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // --- FUNCIÓN FILTRAR (Cero dependencias externas) ---
-    function aplicarFiltros() {
+    // --- FUNCIÓN FILTRAR MODIFICADA (CON TIEMPO AMPLIADO PARA EVITAR CORTES) ---
+    let filtroSubmitTimer;
+
+    function aplicarFiltros(tiempoEspera = 900) { // Aumentamos por defecto a 900ms
         if (!searchInput) return;
 
-        const term = searchInput.value.toLowerCase().trim();
-        const minLimit = parseInt(stockMin.value) || 0;
-        const maxLimit = parseInt(stockMax.value) || 0;
+        // Limpiamos el temporizador previo para reiniciar la cuenta si el usuario sigue escribiendo
+        clearTimeout(filtroSubmitTimer);
 
-        rows.forEach(row => {
-            const stockElement = row.querySelector(".stock-number");
-            let stock = 0;
-
-            if (stockElement) {
-                stock = parseInt(stockElement.innerText);
-            } else {
-                const cells = row.getElementsByTagName("td");
-                if (cells.length > 0) stock = parseInt(cells[cells.length - 2].innerText) || 0;
+        // Esperamos a que el usuario se detenga antes de enviar la petición al servidor
+        filtroSubmitTimer = setTimeout(() => {
+            const form = document.getElementById("form-filtros");
+            if (form) {
+                form.submit(); // Realiza la petición GET limpia y recarga la tabla
             }
-
-            const contenidoFila = row.textContent.toLowerCase();
-            const coincideTexto = term === "" || contenidoFila.includes(term);
-            const coincideStock = (stock >= minLimit && stock <= maxLimit);
-
-            // Uso de !important para asegurar la visibilidad
-            if (coincideTexto && coincideStock) {
-                row.style.setProperty("display", "", "important");
-            } else {
-                row.style.setProperty("display", "none", "important");
-            }
-        });
+        }, tiempoEspera);
     }
 
-    // --- LÓGICA DE BÚSUEDA UNIFICADA (ENTER = LUPA) ---
-
+    // --- LÓGICA DE BÚSQUEDA UNIFICADA (SÓLO CUANDO DEJA DE ESCRIBIR) ---
     if (searchInput) {
-        // 1. Filtrado en tiempo real mientras escribes
+        // 1. Al escribir, usamos el margen de 900ms para que no corte la palabra a la mitad
         searchInput.addEventListener("input", function () {
-            aplicarFiltros();
+            aplicarFiltros(900);
         });
 
-        // 2. Función interna para ejecutar la acción completa
-        // Así nos aseguramos de que el Enter y la Lupa hagan exactamente lo mismo
+        // 2. Función interna para ejecutar la acción completa inmediatamente (Enter o Lupa)
         const ejecutarBusquedaYCierre = () => {
-            aplicarFiltros(); // Primero filtramos la tabla
+            clearTimeout(filtroSubmitTimer); // Cancelamos cualquier espera
+
+            const form = document.getElementById("form-filtros");
+            if (form) form.submit(); // Forzamos envío instantáneo
 
             // Si el sidebar está abierto, lo cerramos
             if (sidebar.classList.contains('active')) {
@@ -212,7 +197,7 @@ document.addEventListener("DOMContentLoaded", function () {
             searchInput.blur();
         };
 
-        // Evento para el ENTER
+        // Evento para el ENTER (Envío inmediato)
         searchInput.addEventListener("keydown", function (e) {
             if (e.key === "Enter") {
                 e.preventDefault();
@@ -220,20 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 ejecutarBusquedaYCierre();
             }
         });
-
-        // Evento para la LUPA
-        /* const btnLupa = sidebar.querySelector("button.btn-success") ||
-             sidebar.querySelector(".input-group button");
- 
-         if (btnLupa) {
-             btnLupa.addEventListener("click", function (e) {
-                 e.preventDefault();
-                 e.stopPropagation();
-                 ejecutarBusquedaYCierre();
-             });
-         }*/
     }
-
 
     // --- ORDENACIÓN VISUAL MEJORADA ---
     document.querySelectorAll(".sortable").forEach((header) => {
@@ -393,7 +365,6 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // Solo ejecutamos la lógica de inicialización
     validarUmbrales('modalAñadir');
 
     const observer = new MutationObserver(() => validarUmbrales('modalEditar'));
@@ -421,28 +392,21 @@ document.addEventListener("DOMContentLoaded", function () {
             const row = e.target.closest("tr");
             if (!row) return;
 
-            // Detectamos si hay elementos seleccionados en este momento
             const haySeleccionados = document.querySelectorAll('.checkbox-producto:checked').length > 0;
             const isAction = e.target.closest("button") || e.target.closest("a");
             const isCheckbox = e.target.closest(".form-check-input");
 
-            // 1. Si clicamos directamente en el checkbox, dejamos que funcione normal (actualizarBotón se encarga)
             if (isCheckbox) return;
 
-            // 2. Si clicamos en la fila (pero no en un botón)
             if (!isAction) {
                 const isMobile = window.innerWidth <= 992;
 
                 if (haySeleccionados) {
-                    // MODO SELECCIÓN ACTIVO: Cualquier clic en la fila selecciona/deselecciona
                     e.preventDefault();
                     toggleSeleccionManual(row);
                 } else if (isMobile) {
-                    // MODO MÓVIL LECTURA: Si no hay selección, el clic abre el acordeón
                     row.classList.toggle("is-open");
                 }
-                // En Escritorio, si no hay seleccionados, el clic normal en la fila no hace nada 
-                // (así permitimos que el usuario use el checkbox para empezar).
             }
         });
 
@@ -455,7 +419,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (row && !isAction) {
                     longPressTimer = setTimeout(() => {
                         const cb = row.querySelector('.checkbox-producto');
-                        // Si mantenemos pulsado y no estaba seleccionado, activamos el modo selección
                         if (cb && !cb.checked) {
                             toggleSeleccionManual(row);
                         }
@@ -470,7 +433,7 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 function autoActualizarStocks() {
-    fetch('/actualizar-stocks/') 
+    fetch('/actualizar-stocks/')
         .then(response => response.json())
         .then(data => {
             Object.keys(data).forEach(id => {
@@ -479,16 +442,12 @@ function autoActualizarStocks() {
                 const span = document.getElementById(`stock-val-${id}`);
                 const fila = document.getElementById(`producto-row-${id}`);
 
-                // 1. Actualizar el número de stock
                 if (span && span.innerText != info.stock) {
                     span.innerText = info.stock;
                 }
 
-                // 2. Actualizar el color del semáforo en la fila
                 if (fila) {
-                    // Eliminamos las clases antiguas
                     fila.classList.remove('stokka-critico', 'stokka-aviso', 'stokka-ok');
-                    // Añadimos la nueva clase según el servidor
                     fila.classList.add(`stokka-${info.color}`);
                 }
             });
@@ -496,15 +455,12 @@ function autoActualizarStocks() {
         .catch(error => console.error('Error en actualización visual:', error));
 }
 
-// Ejecutar cada 7 segundos para probar 
-setInterval(autoActualizarStocks, 7000);    
+setInterval(autoActualizarStocks, 7000);
 
 function acumularHistorialRapido(productId, esAumento) {
-    // 1. Acumular el cambio
     if (!cambiosAcumulados[productId]) cambiosAcumulados[productId] = 0;
     cambiosAcumulados[productId] += esAumento ? 1 : -1;
 
-    // 2. Resetear el temporizador de 5 segundos
     if (debounceTimers[productId]) clearTimeout(debounceTimers[productId]);
 
     debounceTimers[productId] = setTimeout(() => {
@@ -514,7 +470,7 @@ function acumularHistorialRapido(productId, esAumento) {
 
 function enviarHistorialAlServidor(productId) {
     const deltaFinal = cambiosAcumulados[productId];
-    if (!deltaFinal) return; 
+    if (!deltaFinal) return;
 
     const formData = new FormData();
     formData.append('delta', deltaFinal);
@@ -522,28 +478,21 @@ function enviarHistorialAlServidor(productId) {
     fetch(`/inventario/registrar-historial-rapido/${productId}/`, {
         method: 'POST',
         body: formData,
-        keepalive: true, // <--- ESTO permite que la petición termine aunque cierres la pestaña
-        headers: { 
+        keepalive: true,
+        headers: {
             'X-CSRFToken': getCookie('csrftoken'),
-            'X-Requested-With': 'XMLHttpRequest' 
+            'X-Requested-With': 'XMLHttpRequest'
         }
     });
-    
-    // Limpiamos inmediatamente para evitar duplicados
+
     delete cambiosAcumulados[productId];
     if (debounceTimers[productId]) clearTimeout(debounceTimers[productId]);
 }
 
-
-// Detectar cuando el usuario intenta salir de la página
 window.addEventListener('beforeunload', function (e) {
-    // Revisamos si hay cambios que aún no se han enviado
     const idsPendientes = Object.keys(cambiosAcumulados);
-    
     if (idsPendientes.length > 0) {
         idsPendientes.forEach(productId => {
-            // Usamos sendBeacon si está disponible (es más fiable para salidas)
-            // o forzamos el envío inmediato
             enviarHistorialAlServidor(productId);
         });
     }

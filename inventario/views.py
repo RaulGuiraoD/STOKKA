@@ -1267,21 +1267,37 @@ def inventario_view(request):
     if not empresa:
         return redirect('seleccionar_empresa')
 
+    # 1. CAPTURA DE PARÁMETROS GET (Filtros y Paginación)
     filtro = request.GET.get('filtro')
     query  = request.GET.get('q')
+    stock_min = request.GET.get('stock_min')
+    stock_max = request.GET.get('stock_max')
+    page_number = request.GET.get('page', 1)
+
+    # Base de QuerySet (Eficiente y perezosa)
     productos_qs = Producto.objects.filter(empresa=empresa).order_by('-fecha_registro')
+    
+    # Calculamos el máximo stock real de la empresa antes de filtrar para los Sliders
     max_stock_real = productos_qs.aggregate(Max('stock_actual'))['stock_actual__max'] or 0
 
     copia, _ = CopiaSeguridad.objects.get_or_create(
-    empresa=empresa,
-    defaults={'datos_json': []}
+        empresa=empresa,
+        defaults={'datos_json': []}
     )
 
+    # 2. APLICACIÓN DE FILTROS EN BASE DE DATOS (SQL)
     if query:
         productos_qs = productos_qs.filter(
             Q(nombre__icontains=query) | Q(referencia__icontains=query)
         )
 
+    if stock_min:
+        productos_qs = productos_qs.filter(stock_actual__gte=int(stock_min))
+    
+    if stock_max:
+        productos_qs = productos_qs.filter(stock_actual__lte=int(stock_max))
+
+    # 3. FILTRO DE SEMÁFORO (Evaluación en memoria)
     if filtro == 'critico':
         productos_final = [p for p in productos_qs if p.semaforo == "critico"]
     elif filtro == 'aviso':
@@ -1289,16 +1305,26 @@ def inventario_view(request):
     else:
         productos_final = productos_qs
 
+    # 4. LÓGICA DE PAGINACIÓN (Máximo 50)
+    paginator = Paginator(productos_final, 50)
+
+    try:
+        productos_paginados = paginator.page(page_number)
+    except Exception:
+        productos_paginados = paginator.page(1)
+
+    # 5. CONTEXTO ENVIADO AL TEMPLATE
     return render(request, 'stokka/pages/inventario.html', {
-        'productos':      productos_final,
+        'productos':      productos_paginados, 
         'max_stock_real': max_stock_real,
         'filtro_actual':  filtro,
         'query_actual':   query,
+        'stock_min_actual': stock_min or 0,
+        'stock_max_actual': stock_max or max_stock_real,
         'form_añadir':    ProductoForm(),
         'empresa':        empresa,
-        'copia': copia,
+        'copia':          copia,
     })
-
 
 @login_required
 def actualizar_stocks_ajax(request):
