@@ -6,7 +6,7 @@
 {% block content %}
 <div class="container-fluid py-4">
     <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mb-4 pb-3 border-bottom gap-3">
-        <div class="section-header d-flex align-items-end gap-3 mb-2">
+        <div class="section-header d-flex align-items-end gap-3 mb-2 position-relative" style="z-index: 999;">
             <h1 class="fw-bold text-dark m-0">Gestión de Plantilla</h1>
             <span class="text-dark pb-1 d-none d-md-inline" style="font-size: 1.4rem; font-weight: 300;">
                 | {{ empresa.nombre }}
@@ -17,7 +17,7 @@
                     data-info="Crea, edita, asigna roles o elimina trabajadores. Crear un usuario nuevo permitirá la entrada a {{ empresa.nombre }}. Entregale el email y contraseña correspondientes. "></i>
             </div>
             {% elif membresia_activa.rol == 'admin' %}
-             <div class="info-wrapper d-inline-block ms-2 mb-2">
+            <div class="info-wrapper d-inline-block ms-2 mb-2">
                 <i class="fa-solid fa-circle-info info-icon-2"
                     data-info="Crea o elimina a operarios. Crear un usuario nuevo permitirá la entrada a {{ empresa.nombre }}. Entregale el email y contraseña correspondientes. "></i>
             </div>

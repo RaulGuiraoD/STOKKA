@@ -20,6 +20,7 @@ from inventario import views
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+from django.shortcuts import render
 
 
 urlpatterns = [
@@ -81,14 +82,27 @@ urlpatterns = [
     path('actualizar-stocks/', views.actualizar_stocks_ajax, name='actualizar_stocks_ajax'),
     path('inventario/registrar-historial-rapido/<int:pk>/', views.registrar_historial_rapido, name='registrar_historial_rapido'),
     path('inventario/copia_seguridad/', views.copia_seguridad_view, name='copia_seguridad'),
+    path('inventario/importar-csv/', views.importar_csv, name='importar_csv'),
 
     # --- BARRA BUSQUEDA HEADER ---
     path('buscar/', views.buscador_global, name='buscador_global'),
 
     # --- HISTORIAL ---
     path('historial_movimientos/', views.historial_movimientos, name='historial_movimientos'),
+    path('historial/dia/', views.historial_dia_ajax, name='historial_dia_ajax')
 ]
 
 # Esto es para que se vean el Logo y las Facturas en desarrollo
 if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+def handler404(request, exception):
+    return render(request, '404.html', status=404)
+
+def handler403(request, exception):
+    return render(request, '403.html', status=403)
+
+def handler500(request):
+    return render(request, '500.html', status=500)

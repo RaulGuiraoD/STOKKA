@@ -15,12 +15,11 @@
             </span>
             <div class="info-wrapper d-inline-block ms-2 mt-2">
                 <i class="fa-solid fa-circle-info info-icon-2"
-                    data-info="Registra tus productos de manera sencilla. Asignar umbrales te permitirán saber de manera rápida y fácil los productos que necesitas con urgencia. Se generan copias de seguridad cada 30 minutos de manera automática."></i>
+                    data-info="Registra tus productos de manera sencilla. Asignar umbrales te permitirán saber de manera rápida y fácil los productos que necesitas con urgencia."></i>
             </div>
         </div>
     </div>
 
-    <!-- CABECERA DE ACCIONES -->
     <div class="d-flex justify-content-between align-items-center mb-4 px-2">
         <button class="btn btn-inventario-stokka shadow-stokka px-4 fw-bold" type="button" onclick="toggleFiltros()">
             <i class="fa-solid fa-filter me-2"></i> FILTROS
@@ -36,74 +35,74 @@
             <button type="button" class="btn btn-stokka" data-bs-toggle="modal" data-bs-target="#modalFacturas">
                 <i class="fa-solid fa-file-invoice me-2"></i> Albaranes
             </button>
+
+            <button type="button" class="btn btn-stokka" data-bs-toggle="modal" data-bs-target="#modalImportarCSV"
+                title="Importar varios productos a la vez desde un archivo CSV">
+                <i class="fa-solid fa-file-arrow-up me-2"></i>
+                <span class="d-none d-md-inline">Importar CSV</span>
+                <span class="d-inline d-md-none">CSV</span>
+            </button>
+
             <button class="btn btn-inventario-stokka shadow-stokka" data-bs-toggle="modal" data-bs-target="#modalAñadir"
                 style="background-color: var(--verde-secundario) !important;">
                 <i class="fa-solid fa-plus me-2"></i> NUEVO PRODUCTO
-            </button>  
+            </button>
         </div>
     </div>
 
     <div class="d-flex position-relative">
-        <!-- SIDEBAR DE FILTROS -->
         <aside id="sidebar-filtros"
-            class="{% if filtro_actual or query_actual %}active{% endif %} shadow-stokka rounded-4 bg-white border-0">
+            class="{% if filtro_actual or query_actual or stock_min_actual > 0 or stock_max_actual < max_stock_real %}active{% endif %} shadow-stokka rounded-4 bg-white border-0">
             <div class="p-4" style="min-width:280px;">
                 <h5 class="fw-bold mb-4" style="color: var(--verde-stokka);">Buscador Avanzado</h5>
 
                 <form method="GET" action="{% url 'inventario' %}" id="form-filtros">
-                    <!-- Búsqueda por Texto -->
+                    {% if filtro_actual %}
+                        <input type="hidden" name="filtro" value="{{ filtro_actual }}">
+                    {% endif %}
+
                     <div class="mb-4">
                         <label class="small text-dark fw-bold text-uppercase">Nombre o Referencia</label>
                         <div class="d-flex mt-1 gap-2">
                             <input type="text" name="q" id="inputSearch" class="form-control shadow-focus-stokka"
                                 placeholder="Buscar..." value="{{ query_actual|default:'' }}">
-                            <!--<button class="btn btn-inventario-stokka px-3" type="submit">
-                                <i class="fa-solid fa-magnifying-glass"></i>
-                            </button>-->
                         </div>
                     </div>
 
-                    <!-- Filtros Rápidos -->
                     <div class="mb-4">
                         <label class="small text-dark fw-bold text-uppercase d-block mb-2">Estado del Stock</label>
                         <div class="d-grid gap-2">
                             <a href="{% url 'inventario' %}"
-                                class="btn btn-inventario-stokka fw-bold rounded-3 {% if not filtro_actual %}btn-inventario-stokka{% else %}btn-outline-secondary{% endif %}">VER
-                                TODO</a>
-                            <a href="{% url 'inventario' %}?filtro=critico"
+                                class="btn btn-inventario-stokka fw-bold rounded-3 {% if not filtro_actual %}btn-inventario-stokka{% else %}btn-outline-secondary{% endif %}">VER TODO</a>
+                            <a href="{% url 'inventario' %}?filtro=critico{% if query_actual %}&q={{ query_actual }}{% endif %}{% if stock_min_actual %}&stock_min={{ stock_min_actual }}{% endif %}{% if stock_max_actual %}&stock_max={{ stock_max_actual }}{% endif %}"
                                 class="btn btn-inventario-cancelar-stokka fw-bold btn-outline-danger rounded-3 {% if filtro_actual == 'critico' %}active-critico{% endif %}">CRÍTICOS</a>
-                            <a href="{% url 'inventario' %}?filtro=aviso"
+                            <a href="{% url 'inventario' %}?filtro=aviso{% if query_actual %}&q={{ query_actual }}{% endif %}{% if stock_min_actual %}&stock_min={{ stock_min_actual }}{% endif %}{% if stock_max_actual %}&stock_max={{ stock_max_actual }}{% endif %}"
                                 class="btn btn-inventario-editar-stokka fw-bold btn-outline-warning rounded-3 {% if filtro_actual == 'aviso' %}active-aviso{% endif %}">CUIDADO</a>
                         </div>
                     </div>
 
-                    <!-- Rango de Stock con Inputs Numéricos -->
                     <div class="mt-4">
                         <label class="small text-dark fw-bold text-uppercase d-block mb-2">Rango de Stock</label>
-
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="extra-small text-dark">Desde:</label>
-                                <input type="number" id="numMin" class="form-control form-control-sm w-50" min="0"
-                                    max="{{ max_stock_real }}" value="0">
+                                <input type="number" id="numMin" name="stock_min" class="form-control form-control-sm w-50" min="0"
+                                    max="{{ max_stock_real }}" value="{{ stock_min_actual }}">
                             </div>
-                            <input type="range" id="stockMin" min="0" max="{{ max_stock_real }}" value="0"
+                            <input type="range" id="stockMin" min="0" max="{{ max_stock_real }}" value="{{ stock_min_actual }}"
                                 class="form-range">
                         </div>
-
                         <div class="mb-3">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <label class="extra-small text-dark">Hasta:</label>
-                                <input type="number" id="numMax" class="form-control form-control-sm w-50" min="0"
-                                    max="{{ max_stock_real }}" value="{{ max_stock_real }}">
+                                <input type="number" id="numMax" name="stock_max" class="form-control form-control-sm w-50" min="0"
+                                    max="{{ max_stock_real }}" value="{{ stock_max_actual }}">
                             </div>
                             <input type="range" id="stockMax" min="0" max="{{ max_stock_real }}"
-                                value="{{ max_stock_real }}" class="form-range">
+                                value="{{ stock_max_actual }}" class="form-range">
                         </div>
-
                         <div class="alert alert-light border-0 small p-2 mt-2">
-                            <i class="fa-solid fa-info-circle me-1"></i> Mostrando entre <span id="rangoTexto">0 y
-                                {{max_stock_real }}</span>.
+                            <i class="fa-solid fa-info-circle me-1"></i> Mostrando entre <span id="rangoTexto">{{ stock_min_actual }} y {{ stock_max_actual }}</span>.
                         </div>
                     </div>
 
@@ -116,7 +115,6 @@
             </div>
         </aside>
 
-        <!-- CONTENIDO PRINCIPAL (TABLA) -->
         <main id="main-content" class="flex-grow-1 transition-all">
             <div class="card shadow-stokka border-0 rounded-4 overflow-hidden bg-white">
                 <div class="table-responsive">
@@ -175,18 +173,18 @@
                                 <td style="width: 160px;" data-label="STOCK ACTUAL">
                                     <div class="d-flex align-items-center justify-content-center gap-2">
                                         <a href="javascript:void(0);" data-url="{% url 'disminuir_stock' p.pk %}"
-                                            data-pk="{{ p.pk }}" class="btn-adjust-stock shadow-sm"><i
-                                                class="fa-solid fa-minus"></i></a>
-
+                                            data-pk="{{ p.pk }}" class="btn-adjust-stock shadow-sm">
+                                            <i class="fa-solid fa-minus"></i>
+                                        </a>
                                         <span id="stock-val-{{ p.pk }}"
                                             class="stock-number d-inline-block text-center mx-2"
                                             style="min-width: 45px; font-weight: bold;">
-                                            {{p.stock_actual}}
+                                            {{ p.stock_actual }}
                                         </span>
-
                                         <a href="javascript:void(0);" data-url="{% url 'aumentar_stock' p.pk %}"
-                                            data-pk="{{ p.pk }}" class="btn-adjust-stock shadow-sm"><i
-                                                class="fa-solid fa-plus"></i></a>
+                                            data-pk="{{ p.pk }}" class="btn-adjust-stock shadow-sm">
+                                            <i class="fa-solid fa-plus"></i>
+                                        </a>
                                     </div>
                                 </td>
 
@@ -217,27 +215,114 @@
                         </tbody>
                     </table>
                 </div>
+
+                {% if productos.has_other_pages %}
+                <div class="card-footer bg-white border-0 d-flex justify-content-center py-3 border-top">
+                    <nav aria-label="Navegación de inventario">
+                        <ul class="pagination mb-0 gap-1 flex-wrap justify-content-center">
+                            
+                            {% if productos.number > 1 %}
+                            <li class="page-item">
+                                <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
+                                   href="?page=1{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" title="Primera Página">
+                                    <i class="fa-solid fa-angles-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if productos.number > 5 %}
+                            <li class="page-item d-none d-sm-inline">
+                                <a class="page-link border-0 rounded-3 text-secondary shadow-sm bg-white small" 
+                                   href="?page={{ productos.number|add:'-5' }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" title="Retroceder 5 páginas">
+                                    -5
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if productos.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
+                                   href="?page={{ productos.previous_page_number }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" aria-label="Anterior">
+                                    <i class="fa-solid fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled opacity-50">
+                                <span class="page-link border-0 rounded-3 bg-light text-muted"><i class="fa-solid fa-chevron-left"></i></span>
+                            </li>
+                            {% endif %}
+
+                            {% for num in productos.paginator.page_range %}
+                                {% if productos.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link border-0 rounded-3 fw-bold shadow-sm text-white" style="background-color: var(--verde-stokka) !important;">{{ num }}</span>
+                                </li>
+                                {% elif num > productos.number|add:'-3' and num < productos.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
+                                       href="?page={{ num }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}">{{ num }}</a>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if productos.has_next %}
+                            <li class="page-item">
+                                <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
+                                   href="?page={{ productos.next_page_number }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" aria-label="Siguiente">
+                                    <i class="fa-solid fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled opacity-50">
+                                <span class="page-link border-0 rounded-3 bg-light text-muted"><i class="fa-solid fa-chevron-right"></i></span>
+                            </li>
+                            {% endif %}
+
+                            {% if productos.paginator.num_pages|add:'-5' >= productos.number %}
+                            <li class="page-item d-none d-sm-inline">
+                                <a class="page-link border-0 rounded-3 text-secondary shadow-sm bg-white small" 
+                                   href="?page={{ productos.number|add:'5' }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" title="Avanzar 5 páginas">
+                                    +5
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% if productos.number < productos.paginator.num_pages %}
+                            <li class="page-item">
+                                <a class="page-link border-0 rounded-3 text-dark shadow-sm bg-white" 
+                                   href="?page={{ productos.paginator.num_pages }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" title="Última Página ({{ productos.paginator.num_pages }})">
+                                    <i class="fa-solid fa-angles-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
             </div>
         </main>
     </div>
 </div>
 
-<!-- MODAL ÚNICO DE ELIMINACIÓN (FUERA DEL BUCLE) -->
+<!-- ============================================================
+     MODALES EXISTENTES 
+     ============================================================ -->
+
+<!-- MODAL ÚNICO DE ELIMINACIÓN -->
 <div class="modal fade" id="modalEliminarUnico" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-stokka rounded-4">
             <div class="modal-body p-4 text-center">
                 <div class="mb-3"><i class="fa-solid fa-trash-can fs-1" style="color: var(--rojo-alerta);"></i></div>
                 <h5 class="fw-bold">¿Eliminar producto?</h5>
-                <p class="text-dark small">Estás a punto de borrar <strong id="modalProductoNombre"></strong>. Esta
-                    acción es irreversible.</p>
+                <p class="text-dark small">Estás a punto de borrar <strong id="modalProductoNombre"></strong>. Esta acción es irreversible.</p>
                 <div class="d-flex justify-content-center gap-2 mt-4">
                     <button type="button" class="btn btn-inventario-cancelar2-stokka rounded-3 px-4 fw-bold"
                         data-bs-dismiss="modal">CANCELAR</button>
                     <form method="POST" action="" id="formEliminar">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-inventario-cancelar-stokka rounded-3 px-4 fw-bold">ELIMINAR
-                            AHORA</button>
+                        <button type="submit" class="btn btn-inventario-cancelar-stokka rounded-3 px-4 fw-bold">ELIMINAR AHORA</button>
                     </form>
                 </div>
             </div>
@@ -245,7 +330,7 @@
     </div>
 </div>
 
-<!-- MODAL DE ELIMINACIÓN MASIVO -->
+<!-- MODAL ELIMINACIÓN MASIVA -->
 <div class="modal fade" id="modalEliminarMasivo" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-stokka rounded-4">
@@ -274,8 +359,7 @@
         <div class="modal-content border-0 rounded-4">
             <div class="modal-header bg-stokka-dueno text-white border-0 py-3 rounded-top-4">
                 <h5 class="modal-title fw-bold"><i class="fa-solid fa-box me-2"></i>Nuevo Producto</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="{% url 'añadir_producto' %}" enctype="multipart/form-data">
                 {% csrf_token %}
@@ -285,9 +369,7 @@
                             {% if field.name != 'factura' %}
                             <div class="col-{% if field.name == 'descripcion' or field.name == 'nombre' %}12{% else %}6{% endif %}">
                                 <label class="small text-dark fw-bold">{{ field.label }}
-                                    {% if field.field.required %}
-                                    <span class="text-danger">*</span>
-                                    {% endif %}
+                                    {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
                                 </label>
                                 {{ field }}
                                 {% if field.errors %}
@@ -296,16 +378,11 @@
                             </div>
                             {% endif %}
                         {% endfor %}
-
                         <div class="col-12 mt-4">
                             <div class="p-3 border rounded-3 bg-light shadow-sm">
-                                <label class="small text-muted fw-bold mb-2 d-block">
-                                    Albarán (Opcional)
-                                </label>
+                                <label class="small text-muted fw-bold mb-2 d-block">Albarán (Opcional)</label>
                                 <div class="mt-2">
-                                    <label class="small text-muted d-block mb-1" style="font-size: 0.75rem;">
-                                        Subir documento:
-                                    </label>
+                                    <label class="small text-muted d-block mb-1" style="font-size: 0.75rem;">Subir documento:</label>
                                     <input type="file" name="factura" class="form-control form-control-sm shadow-sm" id="id_factura">
                                 </div>
                                 {% for field in form_añadir %}
@@ -325,9 +402,7 @@
                         </button>
                         <button type="button"
                             class="btn btn-inventario-cancelar-stokka w-100 w-md-auto px-md-4 py-2 rounded-3 fw-bold text-uppercase small order-2 order-md-1 text-nowrap"
-                            data-bs-dismiss="modal">
-                            CANCELAR
-                        </button>
+                            data-bs-dismiss="modal">CANCELAR</button>
                     </div>
                 </div>
             </form>
@@ -335,7 +410,7 @@
     </div>
 </div>
 
-<!-- MODAL DINÁMICO DE EDICIÓN -->
+<!-- MODAL EDITAR -->
 <div class="modal fade" id="modalEditar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered shadow-stokka">
         <div class="modal-content border-0 rounded-4">
@@ -343,7 +418,6 @@
                 <h5 class="modal-title fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i>Editar Producto</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <!-- El contenido se cargará aquí mediante AJAX -->
             <div id="contenedor-form-editar">
                 <div class="text-center p-5">
                     <div class="spinner-border text-success" role="status"></div>
@@ -353,61 +427,121 @@
     </div>
 </div>
 
-<!-- MODAL DE FACTURAS -->
- <div class="modal fade" id="modalFacturas" tabindex="-1" aria-hidden="true">
+<!-- MODAL ALBARANES -->
+<div class="modal fade" id="modalFacturas" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content border-0 rounded-4 shadow-stokka">
             <div class="modal-header border-0 px-4 pt-4 pb-2">
-                <h5 class="fw-bold">
+                <h5 class="fw-bold m-0">
                     <i class="fa-solid fa-file-invoice me-2" style="color: var(--verde-stokka);"></i>
                     Albaranes adjuntos
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body px-4 pb-4">
-                {% with productos_con_factura=productos|dictsort:"nombre" %}
-                    {% if productos|length == 0 %}
-                        <p class="text-muted text-center py-4">No hay albaranes adjuntas en este inventario.</p>
-                    {% else %}
-                        <div class="list-group list-group-flush">
-                            {% for p in productos %}
-                                {% if p.factura %}
-                                <a href="{{ p.factura.url }}" target="_blank"
-                                   class="list-group-item list-group-item-action d-flex align-items-center gap-3 rounded-3 mb-2 border px-3 py-3"
-                                   style="text-decoration: none;">
-                                    <div class="flex-shrink-0">
-                                        <i class="fa-solid fa-file-pdf fs-4" style="color: var(--rojo-alerta);"></i>
-                                    </div>
-                                    <div class="flex-grow-1" style="min-width: 0;">
-                                        <div class="fw-bold text-dark text-truncate">{{ p.nombre }}</div>
-                                        <div class="small text-muted text-truncate">
-                                            Ref: {{ p.referencia|default:"S/R" }} &nbsp;·&nbsp;
-                                            #{{ p.id_formateado }}
-                                        </div>
-                                    </div>
-                                    <div class="flex-shrink-0">
-                                        <span class="badge rounded-pill px-3 py-2"
-                                              style="background: var(--verde-stokka); color: white; font-size: 0.7rem;">
-                                            <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Abrir
-                                        </span>
-                                    </div>
-                                </a>
-                                {% endif %}
-                            {% empty %}
-                                <p class="text-muted text-center py-4">Ningún producto tiene factura adjunta.</p>
-                            {% endfor %}
-                        </div>
+                
+                <form method="GET" action="" class="mb-4">
+                    <input type="hidden" name="page" value="{{ productos.number }}">
+                    {% if query_actual %}<input type="hidden" name="q" value="{{ query_actual }}">{% endif %}
+                    {% if filtro_actual %}<input type="hidden" name="filtro" value="{{ filtro_actual }}">{% endif %}
+                    <input type="hidden" name="stock_min" value="{{ stock_min_actual }}">
+                    <input type="hidden" name="stock_max" value="{{ stock_max_actual }}">
 
-                        <!-- Contador -->
-                        <div class="text-end mt-3">
-                            <small class="text-muted">
-                                {% with total=productos|length %}
-                                    {{ total }} producto{% if total != 1 %}s{% endif %} en inventario
-                                {% endwith %}
-                            </small>
+                    <div class="position-relative w-100 rounded-pill border" style="background-color: var(--blanco); height: 46px; overflow: hidden;">
+                        
+                        <input type="text" name="q_albaranes" class="form-control shadow-none ps-4 placeholder-sm" 
+                            placeholder="Buscar albarán por producto o referencia..." 
+                            value="{{ query_albaranes_actual }}"
+                            style="height: 100%; width: 100%; border: none !important; background: transparent !important; border-radius: 0 !important; padding-right: 80px;">
+
+                        <div class="position-absolute top-50 translate-middle-y d-flex align-items-center" style="right: 15px; gap: 8px; z-index: 5;">
+                            
+                            {% if query_albaranes_actual %}
+                                <a href="?page={{ productos.number }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}" 
+                                class="p-1  d-flex align-items-center justify-content-center text-decoration-none"
+                                style="background: transparent; border: none; font-size: 0.95rem; color: var(--rojo-alerta)" 
+                                title="Limpiar búsqueda">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </a>
+                            {% endif %}
+
+                            <button class="p-1 text-muted d-flex align-items-center justify-content-center" 
+                                    type="submit" 
+                                    style="background: transparent; border: none; cursor: pointer;">
+                                <i class="fa-solid fa-magnifying-glass" style="color: var(--verde-stokka); font-size: 1.05rem;"></i>
+                            </button>
+                            
                         </div>
+                    </div>
+                </form>
+
+                {% if total_albaranes == 0 %}
+                    <p class="text-muted text-center py-4">
+                        {% if query_albaranes_actual %}
+                            No se encontraron albaranes que coincidan con "{{ query_albaranes_actual }}".
+                        {% else %}
+                            No hay albaranes adjuntos en este inventario.
+                        {% endif %}
+                    </p>
+                {% else %}
+                    <div class="list-group list-group-flush">
+                        {% for p in albaranes_adjuntos %}
+                            <a href="{{ p.factura.url }}" target="_blank"
+                               class="list-group-item list-group-item-action d-flex align-items-center gap-3 rounded-3 mb-2 border px-3 py-3"
+                               style="text-decoration: none;">
+                                <div class="flex-shrink-0">
+                                    <i class="fa-solid fa-file-pdf fs-4" style="color: var(--rojo-alerta);"></i>
+                                </div>
+                                <div class="flex-grow-1" style="min-width: 0;">
+                                    <div class="fw-bold text-dark text-truncate">{{ p.nombre }}</div>
+                                    <div class="small text-muted text-truncate">
+                                        Ref: {{ p.referencia|default:"S/R" }} &nbsp;·&nbsp; #{{ p.id_formateado }}
+                                    </div>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <span class="badge rounded-pill px-3 py-2"
+                                          style="background: var(--verde-stokka); color: white; font-size: 0.7rem;">
+                                        <i class="fa-solid fa-arrow-up-right-from-square me-1"></i> Abrir
+                                    </span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+
+                    {% if albaranes_adjuntos.has_other_pages %}
+                    <nav class="d-flex justify-content-center mt-4">
+                        <ul class="pagination pagination-sm mb-0">
+                            {% if albaranes_adjuntos.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-item btn bg-stokka text-white rounded-3 social-btn-fix me-1" href="?page={{ productos.number }}&page_albaranes={{ albaranes_adjuntos.previous_page_number }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}&q_albaranes={{ query_albaranes_actual }}">
+                                        <i class="fa-solid fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            <li class="page-item disabled">
+                                <span class="page-link border-0 text-dark fw-bold bg-transparent">
+                                    Pág. {{ albaranes_adjuntos.number }} de {{ albaranes_adjuntos.paginator.num_pages }}
+                                </span>
+                            </li>
+
+                            {% if albaranes_adjuntos.has_next %}
+                                <li class="page-item">
+                                    <a class="page-item btn bg-stokka text-white rounded-3 social-btn-fix ms-1" href="?page={{ productos.number }}&page_albaranes={{ albaranes_adjuntos.next_page_number }}{% if query_actual %}&q={{ query_actual }}{% endif %}{% if filtro_actual %}&filtro={{ filtro_actual }}{% endif %}&stock_min={{ stock_min_actual }}&stock_max={{ stock_max_actual }}&q_albaranes={{ query_albaranes_actual }}">
+                                        <i class="fa-solid fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
                     {% endif %}
-                {% endwith %}
+
+                    <div class="text-end mt-3">
+                        <small class="text-muted">
+                            {{ total_albaranes }} albarán{% if total_albaranes != 1 %}es{% endif %} en total
+                        </small>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -425,19 +559,14 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body px-4 py-3 text-center">
-
                 {% if copia and copia.fecha %}
                     <p class="text-muted small mb-4">
-                        Última copia: 
-                        <strong>{{ copia.fecha|date:"d/m/Y H:i:s" }}</strong>
+                        Última copia: <strong>{{ copia.fecha|date:"d/m/Y H:i:s" }}</strong>
                     </p>
                 {% else %}
                     <p class="text-muted small mb-4">Sin copias realizadas aún.</p>
                 {% endif %}
-
                 <div class="d-flex flex-column gap-2">
-
-                    <!-- Hacer copia ahora -->
                     <form method="POST" action="{% url 'copia_seguridad' %}">
                         {% csrf_token %}
                         <input type="hidden" name="accion" value="crear_copia">
@@ -445,8 +574,6 @@
                             <i class="fa-solid fa-rotate me-2"></i> Hacer copia ahora
                         </button>
                     </form>
-
-                    <!-- Enviar última copia -->
                     <form method="POST" action="{% url 'copia_seguridad' %}">
                         {% csrf_token %}
                         <input type="hidden" name="accion" value="enviar_ultima">
@@ -454,8 +581,6 @@
                             <i class="fa-solid fa-envelope me-2"></i> Enviar última copia por correo
                         </button>
                     </form>
-
-                    <!-- Crear y enviar -->
                     <form method="POST" action="{% url 'copia_seguridad' %}">
                         {% csrf_token %}
                         <input type="hidden" name="accion" value="crear_y_enviar">
@@ -463,7 +588,6 @@
                             <i class="fa-solid fa-paper-plane me-2"></i> Crear copia y enviar por correo
                         </button>
                     </form>
-
                 </div>
             </div>
             <div class="modal-footer border-0 px-4 pb-4 pt-0">
@@ -473,8 +597,216 @@
     </div>
 </div>
 
+<!-- ============================================================
+     MODAL IMPORTAR CSV
+     ============================================================ -->
+<div class="modal fade" id="modalImportarCSV" tabindex="-1" aria-labelledby="modalImportarCSVLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered shadow-stokka">
+        <div class="modal-content border-0 rounded-4">
+
+            <!-- Header igual que modalAñadir -->
+            <div class="modal-header bg-stokka-dueno text-white border-0 py-3 rounded-top-4">
+                <h5 class="modal-title fw-bold" id="modalImportarCSVLabel">
+                    <i class="fa-solid fa-file-arrow-up me-2"></i>Importar desde CSV
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body p-4">
+
+                <!-- Instrucciones con el mismo estilo de alerta del modal de facturas -->
+                <div class="p-3 border rounded-3 bg-light shadow-sm mb-4">
+                    <p class="small fw-bold text-dark mb-2">
+                        <i class="fa-solid fa-circle-info me-1" style="color: var(--verde-stokka);"></i>
+                        Columnas <strong>obligatorias</strong> del CSV:
+                    </p>
+                    <code class="d-block mb-2" style="font-size: 0.8rem;">nombre, stock, umbral_aviso, umbral_critico</code>
+                    <p class="small text-muted mb-1">Columnas <strong>opcionales</strong>:</p>
+                    <code style="font-size: 0.8rem;">referencia, descripcion</code>
+                    <hr class="my-2">
+                    <p class="small text-muted mb-0">
+                        El umbral de aviso debe ser mayor que el umbral crítico.<br>
+                        Tamaño máximo del archivo: <strong>2MB</strong>.
+                    </p>
+                </div>
+
+                <!-- Descarga de plantilla -->
+                <button type="button" id="btnDescargarPlantilla"
+                        class="btn btn-stokka w-100 mb-3">
+                    <i class="fa-solid fa-download me-2"></i> Descargar plantilla de ejemplo
+                </button>
+
+                <!-- Formulario de subida -->
+                <form method="post"
+                      action="{% url 'importar_csv' %}"
+                      enctype="multipart/form-data"
+                      id="formImportarCSV">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="archivo_csv" class="small text-dark fw-bold mb-1 d-block">
+                            Selecciona tu archivo CSV <span class="text-danger">*</span>
+                        </label>
+                        <input type="file"
+                               class="form-control shadow-sm"
+                               id="archivo_csv"
+                               name="archivo_csv"
+                               accept=".csv"
+                               required>
+                    </div>
+
+                    <!-- Barra de progreso (oculta hasta envío) -->
+                    <div id="progresoImport" class="d-none mb-3">
+                        <p class="small text-muted mb-2">
+                            <i class="fa-solid fa-spinner fa-spin me-1"></i>
+                            Importando productos, por favor espera...
+                        </p>
+                        <div class="progress rounded-pill" style="height: 6px;">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                 role="progressbar"
+                                 style="width: 100%; background-color: var(--verde-stokka);">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 p-0 pt-3">
+                        <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end w-100">
+                            <button type="submit"
+                                id="btnImportar"
+                                class="btn btn-inventario-stokka w-100 w-md-auto px-md-4 py-2 rounded-3 fw-bold text-uppercase shadow-sm order-1 order-md-2 text-nowrap"
+                                style="background-color: var(--verde-secundario) !important;">
+                                <i class="fa-solid fa-file-arrow-up me-2"></i>IMPORTAR PRODUCTOS
+                            </button>
+                            <button type="button"
+                                class="btn btn-inventario-cancelar-stokka w-100 w-md-auto px-md-4 py-2 rounded-3 fw-bold text-uppercase small order-2 order-md-1 text-nowrap"
+                                data-bs-dismiss="modal">CANCELAR</button>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL SPINNER DE CARGA — se activa al importar el CSV
+     Bloquea toda la UI mientras el servidor procesa el archivo
+     ============================================================ -->
+<div class="modal fade" id="modalCargando" tabindex="-1"
+     data-bs-backdrop="static" data-bs-keyboard="false"
+     aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 rounded-4 shadow-stokka text-center p-4">
+
+            <!-- Logo/icono identificativo de Stokka -->
+            <div class="mb-3">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                     style="width: 72px; height: 72px; background-color: var(--verde-stokka);">
+                    <img src="{% static 'assets/Logo stokka.png' %}"  alt="Logo" style="width: 52px;" class="mini-logo">
+                </div>
+            </div>
+
+            <!-- Spinner con colores Stokka -->
+            <div class="d-flex justify-content-center mb-3">
+                <div class="spinner-border"
+                     style="width: 2.5rem; height: 2.5rem; color: var(--verde-secundario); border-width: 3px;"
+                     role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+
+            <h6 class="fw-bold text-dark mb-1">Importando productos</h6>
+            <p class="text-muted small mb-0">
+                No cierres ni recargues la página.<br>
+                Esto puede tardar unos segundos.
+            </p>
+
+            <!-- Barra animada debajo -->
+            <div class="progress rounded-pill mt-3" style="height: 5px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated w-100"
+                     style="background-color: var(--verde-stokka);">
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
 
 <script src="{% static 'js/inventario.js' %}"></script>
 <link rel="stylesheet" href="{% static 'css/inventario.css' %}">
+
+<!-- Script de importación CSV -->
+<script>
+// ── Descarga de plantilla CSV de ejemplo ─────────────────────────────────────
+document.getElementById('btnDescargarPlantilla').addEventListener('click', function () {
+    const contenido =
+        "nombre,stock,umbral_aviso,umbral_critico,referencia,descripcion\n" +
+        "Lápices HB,100,20,10,LAP-001,Lápices de madera\n" +
+        "Bolígrafos azul,50,10,5,BOL-002,\n" +
+        "Folios A4,200,30,15,,Paquete de 500 hojas\n";
+
+    const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'plantilla_stokka.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+// ── Envío del formulario con modal de carga ───────────────────────────────────
+document.getElementById('formImportarCSV').addEventListener('submit', function (e) {
+    const archivo = document.getElementById('archivo_csv').files[0];
+
+    if (!archivo) return;
+
+    // Validaciones en cliente antes de enviar
+    if (!archivo.name.toLowerCase().endsWith('.csv')) {
+        e.preventDefault();
+        alert('El archivo debe tener extensión .csv');
+        return;
+    }
+
+    if (archivo.size > 2 * 1024 * 1024) {
+        e.preventDefault();
+        alert('El archivo no puede superar los 2MB.');
+        return;
+    }
+
+    // Cerramos el modal del formulario
+    const modalFormEl  = document.getElementById('modalImportarCSV');
+    const modalForm    = bootstrap.Modal.getInstance(modalFormEl);
+    if (modalForm) modalForm.hide();
+
+    // Mostramos la barra de progreso del formulario
+    document.getElementById('progresoImport').classList.remove('d-none');
+    document.getElementById('btnImportar').disabled = true;
+
+    // Abrimos el modal de carga (spinner Stokka) con backdrop estático
+    const modalCargando = new bootstrap.Modal(document.getElementById('modalCargando'), {
+        backdrop: 'static',
+        keyboard: false
+    });
+    modalCargando.show();
+
+});
+
+document.addEventListener("DOMContentLoaded", function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Si la URL contiene paginación de albaranes O una búsqueda de albaranes, abrimos el modal automáticamente
+    if (urlParams.has('page_albaranes') || urlParams.has('q_albaranes')) {
+        const modalElement = document.getElementById('modalFacturas');
+        if (modalElement) {
+            setTimeout(function() {
+                const myModal = new bootstrap.Modal(modalElement);
+                myModal.show();
+            }, 150); 
+        }
+    }
+})
+</script>
 
 {% endblock %}

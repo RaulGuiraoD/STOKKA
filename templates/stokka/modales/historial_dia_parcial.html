@@ -1,0 +1,188 @@
+{% if movimientos %}
+<div class="table-responsive">
+    <table class="table align-middle mb-0 tabla-historial-clase" style="table-layout: fixed; width: 100%;">
+        <thead class="bg-stokka">
+            <tr class="text-uppercase fw-bold border-bottom">
+                <th style="width: 20%;" class="ps-4 text-stokka text-start">Usuario</th>
+                <th style="width: 35%;" class="text-stokka text-start">Producto</th>
+                <th style="width: 20%;" class="d-none d-md-table-cell text-stokka text-center ps-3">Movimiento</th>
+                <th style="width: 25%;" class="text-stokka text-center">Trayectoria Stock</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mov in movimientos %}
+            <tr class="fila-movimiento tipo-{{ mov.tipo_accion|lower }}"
+                data-fecha="{{ mov.fecha|date:'Y-m-d' }}"
+                data-bs-toggle="collapse"
+                data-bs-target="#detalle-mov-{{ mov.id }}"
+                style="cursor: pointer;">
+
+                <td class="ps-4" data-label="USUARIO">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-white border border-1 border-light shadow-sm rounded-circle overflow-hidden d-flex align-items-center justify-content-center flex-shrink-0 me-2"
+                            style="width: 38px; height: 38px;">
+                            {% if mov.usuario.perfil.foto %}
+                            <img src="{{ mov.usuario.perfil.foto.url }}" class="w-100 h-100 object-fit-cover">
+                            {% else %}
+                            <i class="fa-solid fa-circle-user text-secondary fs-5"></i>
+                            {% endif %}
+                        </div>
+                        <div class="lh-1 text-truncate">
+                            <div class="fw-bold text-uppercase {% if mov.usuario.membresias.first.rol == 'dueño' %}text-stokka{% elif mov.usuario.membresias.first.rol == 'admin' %}text-amarillo-historial{% else %}text-verde-secundario{% endif %}"
+                                style="font-size: 0.75rem;">
+                                {{ mov.usuario.first_name }}
+                            </div>
+                            <span class="text-muted" style="font-size: 10px;">{{ mov.fecha|date:"H:i" }}</span>
+                        </div>
+                    </div>
+                </td>
+
+                <td class="text-start" data-label="PRODUCTO">
+                    <div class="text-truncate fw-bold text-dark w-100 mb-0" style="font-size: 0.95rem;">
+                        {{ mov.producto_nombre }}
+                    </div>
+                    <div class="text-muted fw-bold extra-small">ID: #{{ mov.id_producto_formateado }}</div>
+                </td>
+
+                <td class="text-center ps-3 d-none d-md-table-cell" data-label="MOVIMIENTO">
+                    <span class="badge-stokka-mov mov-{{ mov.tipo_accion|lower }} px-2 py-1">
+                        {{ mov.get_tipo_accion_display }}
+                    </span>
+                </td>
+
+                <td class="text-center" data-label="TRAYECTORIA">
+                    {% if mov.tipo_accion != 'ELIMINACION' and mov.tipo_accion != 'eliminacion' %}
+                    <div class="d-flex flex-column align-items-center">
+                        {% if mov.cambio == 0 %}
+                        <span class="no-stock-change">Sin cambios</span>
+                        {% else %}
+                        <div class="fw-bolder {% if mov.cambio > 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if mov.cambio > 0 %}+{% endif %}{{ mov.cambio }}
+                        </div>
+                        <div class="text-muted" style="font-size: 11px;">
+                            {{ mov.stock_anterior }} <i class="fa-solid fa-arrow-right mx-1 text-stokka"></i>
+                            <strong>{{ mov.stock_resultante }}</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="text-center w-100 opacity-50"><i class="fa-solid fa-trash-can" style="color: var(--rojo-alerta)"></i></div>
+                    {% endif %}
+                </td>
+            </tr>
+
+            <tr class="fila-detalle tipo-{{ mov.tipo_accion|lower }} border-0">
+                <td colspan="4" class="p-0 border-0">
+                    <div id="detalle-mov-{{ mov.id }}" class="collapse">
+                        <div class="detalle-contenido p-3">
+                            <div class="detalle-card shadow-sm border-start border-4 border-stokka p-2">
+                                <ul class="lista-cambios mb-0 list-unstyled">
+                                    {% if mov.detalles %}
+                                    <li class="small">
+                                        <i class="fa-solid fa-circle-info me-2 text-stokka"></i>
+                                        {{ mov.detalles|linebreaksbr }}
+                                    </li>
+                                    {% else %}
+                                    <li class="small opacity-75">
+                                        <i class="fa-solid fa-check-double me-2 text-stokka"></i>
+                                        Actualización de información general.
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{# ── PAGINACIÓN INDEPENDIENTE DEL DÍA ──────────────────────────────────────── #}
+{% if movimientos.has_other_pages %}
+<div class="d-flex justify-content-between align-items-center px-3 py-2 border-top" style="background-color: var(--gris-fondo);">
+    <span class="small text-muted">
+        Página {{ movimientos.number }} de {{ movimientos.paginator.num_pages }}
+        &nbsp;·&nbsp;
+        {{ movimientos.paginator.count }} movimiento{{ movimientos.paginator.count|pluralize:"s" }}
+    </span>
+    <nav>
+        <ul class="pagination pagination-sm mb-0 gap-1">
+            {# Anterior #}
+            {% if movimientos.has_previous %}
+            <li class="page-item">
+                <button class="page-link rounded-3 border text-dark shadow-none btn-pagina-dia"
+                        data-fecha="{{ fecha }}"
+                        data-page="{{ movimientos.previous_page_number }}"
+                        data-tipo="{{ filtro_tipo }}"
+                        data-q="{{ buscar_texto }}">
+                    <i class="fa-solid fa-chevron-left small"></i>
+                </button>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link rounded-3 border opacity-25">
+                    <i class="fa-solid fa-chevron-left small"></i>
+                </span>
+            </li>
+            {% endif %}
+
+            {# Números — máximo 5 alrededor de la página actual #}
+            {% for num in movimientos.paginator.page_range %}
+                {% if num == movimientos.number %}
+                <li class="page-item active">
+                    <span class="page-link rounded-3 fw-bold"
+                          style="background-color: var(--verde-stokka); border-color: var(--verde-stokka); min-width: 34px; text-align: center;">
+                        {{ num }}
+                    </span>
+                </li>
+                {% elif num >= movimientos.number|add:"-2" and num <= movimientos.number|add:"2" %}
+                <li class="page-item">
+                    <button class="page-link rounded-3 border text-dark shadow-none btn-pagina-dia"
+                            data-fecha="{{ fecha }}"
+                            data-page="{{ num }}"
+                            data-tipo="{{ filtro_tipo }}"
+                            data-q="{{ buscar_texto }}"
+                            style="min-width: 34px; text-align: center;">
+                        {{ num }}
+                    </button>
+                </li>
+                {% endif %}
+            {% endfor %}
+
+            {# Siguiente #}
+            {% if movimientos.has_next %}
+            <li class="page-item">
+                <button class="page-link rounded-3 border text-dark shadow-none btn-pagina-dia"
+                        data-fecha="{{ fecha }}"
+                        data-page="{{ movimientos.next_page_number }}"
+                        data-tipo="{{ filtro_tipo }}"
+                        data-q="{{ buscar_texto }}">
+                    <i class="fa-solid fa-chevron-right small"></i>
+                </button>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link rounded-3 border opacity-25">
+                    <i class="fa-solid fa-chevron-right small"></i>
+                </span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% else %}
+<div class="px-3 py-2 border-top" style="background-color: var(--gris-fondo);">
+    <span class="small text-muted">
+        {{ movimientos.paginator.count }} movimiento{{ movimientos.paginator.count|pluralize:"s" }}
+    </span>
+</div>
+{% endif %}
+
+{% else %}
+<div class="text-center py-4 text-muted small">
+    <i class="fa-solid fa-magnifying-glass me-1"></i>
+    No hay movimientos que coincidan con los filtros aplicados.
+</div>
+{% endif %}

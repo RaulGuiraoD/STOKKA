@@ -23,6 +23,7 @@ from django.core.mail import send_mail, EmailMultiAlternatives
 from django.utils.html import strip_tags
 from django.template.loader import render_to_string
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.paginator import Paginator
 
 # 4.  Imports Locales
 from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm, RegistroEmpresaForm, RegistroUsuarioNuevoForm, EditarEmpresaForm
@@ -1266,21 +1267,37 @@ def inventario_view(request):
     if not empresa:
         return redirect('seleccionar_empresa')
 
+    # 1. CAPTURA DE PARÁMETROS GET (Filtros y Paginación)
     filtro = request.GET.get('filtro')
     query  = request.GET.get('q')
+    stock_min = request.GET.get('stock_min')
+    stock_max = request.GET.get('stock_max')
+    page_number = request.GET.get('page', 1)
+
+    # Base de QuerySet (Eficiente y perezosa)
     productos_qs = Producto.objects.filter(empresa=empresa).order_by('-fecha_registro')
+    
+    # Calculamos el máximo stock real de la empresa antes de filtrar para los Sliders
     max_stock_real = productos_qs.aggregate(Max('stock_actual'))['stock_actual__max'] or 0
 
     copia, _ = CopiaSeguridad.objects.get_or_create(
-    empresa=empresa,
-    defaults={'datos_json': []}
+        empresa=empresa,
+        defaults={'datos_json': []}
     )
 
+    # 2. APLICACIÓN DE FILTROS EN BASE DE DATOS (SQL)
     if query:
         productos_qs = productos_qs.filter(
             Q(nombre__icontains=query) | Q(referencia__icontains=query)
         )
 
+    if stock_min:
+        productos_qs = productos_qs.filter(stock_actual__gte=int(stock_min))
+    
+    if stock_max:
+        productos_qs = productos_qs.filter(stock_actual__lte=int(stock_max))
+
+    # 3. FILTRO DE SEMÁFORO (Evaluación en memoria)
     if filtro == 'critico':
         productos_final = [p for p in productos_qs if p.semaforo == "critico"]
     elif filtro == 'aviso':
@@ -1288,16 +1305,54 @@ def inventario_view(request):
     else:
         productos_final = productos_qs
 
-    return render(request, 'stokka/pages/inventario.html', {
-        'productos':      productos_final,
-        'max_stock_real': max_stock_real,
-        'filtro_actual':  filtro,
-        'query_actual':   query,
-        'form_añadir':    ProductoForm(),
-        'empresa':        empresa,
-        'copia': copia,
-    })
+    paginator = Paginator(productos_final, 50)
 
+    try:
+        productos_paginados = paginator.page(page_number)
+    except Exception:
+        productos_paginados = paginator.page(1)
+
+    # Extraemos todos los productos que tengan factura adjunta 
+    query_albaranes = request.GET.get('q_albaranes', '')
+
+    # 2. Extraemos los productos con factura
+    all_productos_con_factura = [p for p in productos_final if p.factura]
+    
+    # 3. Si hay búsqueda, filtramos en memoria por el nombre del producto
+    if query_albaranes:
+        all_productos_con_factura = [
+            p for p in all_productos_con_factura 
+            if query_albaranes.lower() in p.nombre.lower() or query_albaranes.lower() in (p.referencia or '').lower()
+        ]
+
+    # 4. Ordenamos alfabéticamente
+    all_productos_con_factura.sort(key=lambda x: x.nombre.lower())
+
+    # 5. Paginamos de 8 en 8
+    page_albaranes_number = request.GET.get('page_albaranes', 1)
+    paginator_albaranes = Paginator(all_productos_con_factura, 6)
+    
+    try:
+        albaranes_paginados = paginator_albaranes.page(page_albaranes_number)
+    except Exception:
+        albaranes_paginados = paginator_albaranes.page(1)
+    # ==========================================
+
+    # 5. CONTEXTO ENVIADO AL TEMPLATE (Añadimos 'query_albaranes_actual')
+    return render(request, 'stokka/pages/inventario.html', {
+        'productos':          productos_paginados, 
+        'albaranes_adjuntos': albaranes_paginados,
+        'total_albaranes':    len(all_productos_con_factura),
+        'query_albaranes_actual': query_albaranes, # <--- IMPORTANTE: Para mantener el texto en la barra
+        'max_stock_real':     max_stock_real,
+        'filtro_actual':      filtro,
+        'query_actual':       query,
+        'stock_min_actual':   stock_min or 0,
+        'stock_max_actual':   stock_max or max_stock_real,
+        'form_añadir':        ProductoForm(),
+        'empresa':            empresa,
+        'copia':              copia,
+    })
 
 @login_required
 def actualizar_stocks_ajax(request):
@@ -1470,7 +1525,167 @@ def disminuir_stock(request, pk):
             return JsonResponse({'stock_actual': producto.stock_actual, 'semaforo': producto.semaforo})
     return redirect('inventario')
 
+@login_required
+def importar_csv(request):
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return redirect('seleccionar_empresa')
 
+    if request.method != 'POST':
+        return redirect('inventario')
+
+    archivo = request.FILES.get('archivo_csv')
+
+    # ── VALIDACIONES PREVIAS ──────────────────────────────────────────────────
+
+    if not archivo:
+        messages.error(request, "No se ha seleccionado ningún archivo.")
+        return redirect('inventario')
+
+    if not archivo.name.endswith('.csv'):
+        messages.error(request, "El archivo debe tener extensión .csv")
+        return redirect('inventario')
+
+    if archivo.size > 2 * 1024 * 1024:  # 2MB máximo
+        messages.error(request, "El archivo CSV no puede superar los 2MB.")
+        return redirect('inventario')
+
+    try:
+        try:
+            contenido = archivo.read().decode('utf-8')
+        except UnicodeDecodeError:
+            archivo.seek(0)
+            contenido = archivo.read().decode('latin-1')
+
+        reader = csv.DictReader(io.StringIO(contenido))
+
+        if reader.fieldnames is None:
+            messages.error(request, "El archivo CSV está vacío o no tiene cabecera.")
+            return redirect('inventario')
+
+        reader.fieldnames = [f.strip().lower() for f in reader.fieldnames]
+
+        columnas_obligatorias = {'nombre', 'stock', 'umbral_aviso', 'umbral_critico'}
+        columnas_csv = set(reader.fieldnames)
+
+        if not columnas_obligatorias.issubset(columnas_csv):
+            faltantes = columnas_obligatorias - columnas_csv
+            messages.error(
+                request,
+                f"Faltan columnas obligatorias en el CSV: {', '.join(faltantes)}. "
+                f"Las columnas necesarias son: nombre, stock, umbral_aviso, umbral_critico."
+            )
+            return redirect('inventario')
+
+        # ── IMPORTACIÓN FILA A FILA ───────────────────────────────────────────
+
+        creados   = 0
+        errores   = []
+        fila_num  = 1  
+
+        with transaction.atomic():
+            for fila in reader:
+                fila_num += 1
+
+                nombre          = fila.get('nombre', '').strip()
+                stock_str       = fila.get('stock', '').strip()
+                aviso_str       = fila.get('umbral_aviso', '').strip()
+                critico_str     = fila.get('umbral_critico', '').strip()
+                referencia      = fila.get('referencia', '').strip() or None
+                descripcion     = fila.get('descripcion', '').strip() or ''
+
+                # Validamos nombre
+                if not nombre:
+                    errores.append(f"Fila {fila_num}: el nombre es obligatorio.")
+                    continue
+
+                if len(nombre) > 100:
+                    errores.append(f"Fila {fila_num} ({nombre}): el nombre no puede superar 100 caracteres.")
+                    continue
+
+                # Validamos que los números son válidos
+                try:
+                    stock   = int(stock_str)
+                    aviso   = int(aviso_str)
+                    critico = int(critico_str)
+                except ValueError:
+                    errores.append(
+                        f"Fila {fila_num} ({nombre}): stock, umbral_aviso y umbral_critico "
+                        f"deben ser números enteros."
+                    )
+                    continue
+
+                # Validamos valores negativos
+                if stock < 0 or aviso < 0 or critico < 0:
+                    errores.append(f"Fila {fila_num} ({nombre}): los valores no pueden ser negativos.")
+                    continue
+
+                # Validamos lógica de umbrales
+                if aviso <= critico:
+                    errores.append(
+                        f"Fila {fila_num} ({nombre}): umbral_aviso ({aviso}) debe ser "
+                        f"mayor que umbral_critico ({critico})."
+                    )
+                    continue
+
+                # Creamos el producto
+                try:
+                    nuevo_p = Producto(
+                        nombre=nombre,
+                        referencia=referencia,
+                        descripcion=descripcion,
+                        stock_actual=stock,
+                        umbrales_amarillo=aviso,
+                        umbrales_rojo=critico,
+                        empresa=empresa,
+                    )
+                    nuevo_p.save()  # save() asigna orden_empresa automáticamente
+
+                    # Registramos en el historial
+                    HistorialMovimiento.objects.create(
+                        producto_nombre=nuevo_p.nombre,
+                        producto_id=nuevo_p.id,
+                        producto_orden=nuevo_p.orden_empresa,
+                        usuario=request.user,
+                        empresa=empresa,
+                        tipo_accion='CREACION',
+                        cambio=nuevo_p.stock_actual,
+                        stock_resultante=nuevo_p.stock_actual,
+                        detalles="Importado desde CSV"
+                    )
+                    creados += 1
+
+                except Exception as e:
+                    errores.append(f"Fila {fila_num} ({nombre}): error al guardar — {e}")
+                    continue
+
+        if creados > 0:
+            messages.success(
+                request,
+                f"Se han importado {creados} producto{'s' if creados != 1 else ''} correctamente."
+            )
+
+        if errores:
+            # Agrupamos los primeros 5 errores con saltos de línea HTML
+            lista_errores = "<br>• " + "<br>• ".join(errores[:5])
+            
+            # Si hay más de 5, añadimos el indicador de cuántos faltan
+            if len(errores) > 5:
+                lista_errores += f"<br>• ... y {len(errores) - 5} error(es) más. Revisa el CSV."
+
+            # Enviamos un único mensaje de error conteniendo el bloque estructurado
+            messages.error(
+                request, 
+                f"Se detectaron problemas en el archivo:{lista_errores}"
+            )
+
+        if creados == 0 and not errores:
+            messages.warning(request, "El CSV no contenía ninguna fila de datos.")
+
+    except Exception as e:
+        messages.error(request, f"Error al procesar el archivo: {e}")
+
+    return redirect('inventario')
 # ==============================================================================
 # HISTORIAL
 # ==============================================================================
@@ -1501,14 +1716,109 @@ def historial_movimientos(request):
     empresa = get_empresa_activa(request)
     if not empresa:
         return redirect('seleccionar_empresa')
-
-    movimientos = HistorialMovimiento.objects.filter(empresa=empresa).select_related('usuario').order_by('-fecha')
-    for mov in movimientos:
-        mov.stock_anterior = mov.stock_resultante - mov.cambio
-
+ 
+    # Base del QuerySet
+    movimientos_qs = HistorialMovimiento.objects.filter(
+        empresa=empresa
+    ).select_related('usuario').order_by('-fecha')
+ 
+    # Capturar filtros
+    filtro_tipo  = request.GET.get('tipo', '')
+    buscar_texto = request.GET.get('q', '')
+    filtro_fecha = request.GET.get('fecha', '')
+ 
+    # Aplicar filtros en base de datos
+    if filtro_tipo:
+        movimientos_qs = movimientos_qs.filter(tipo_accion=filtro_tipo)
+ 
+    if buscar_texto:
+        movimientos_qs = movimientos_qs.filter(
+            models.Q(producto_nombre__icontains=buscar_texto) |
+            models.Q(usuario__first_name__icontains=buscar_texto)
+        )
+ 
+    if filtro_fecha:
+        movimientos_qs = movimientos_qs.filter(fecha__date=filtro_fecha)
+ 
+    # Obtener los días únicos con su contador de movimientos (para el acordeón)
+    from django.db.models.functions import TruncDate
+    from django.db.models import Count
+ 
+    dias_con_movimientos = (
+        movimientos_qs
+        .annotate(dia=TruncDate('fecha'))
+        .values('dia')
+        .annotate(total=Count('id'))
+        .order_by('-dia')
+    )
+ 
     return render(request, 'stokka/pages/historial.html', {
-        'movimientos': movimientos,
-        'empresa': empresa,
+        'dias':         dias_con_movimientos,
+        'empresa':      empresa,
+        'filtro_tipo':  filtro_tipo,
+        'buscar_texto': buscar_texto,
+        'filtro_fecha': filtro_fecha,
+    })
+ 
+ 
+@login_required
+def historial_dia_ajax(request):
+    """
+    Devuelve el HTML con los movimientos de UN día concreto, paginados.
+    Llamado via AJAX desde historial.js cuando el usuario abre un día.
+ 
+    GET params:
+        fecha  — YYYY-MM-DD (obligatorio)
+        page   — número de página (default 1)
+        tipo   — filtro tipo acción (opcional)
+        q      — filtro texto (opcional)
+    """
+    empresa = get_empresa_activa(request)
+    if not empresa:
+        return HttpResponse(status=403)
+ 
+    fecha_str    = request.GET.get('fecha', '')
+    page_number  = request.GET.get('page', 1)
+    filtro_tipo  = request.GET.get('tipo', '')
+    buscar_texto = request.GET.get('q', '')
+ 
+    if not fecha_str:
+        return HttpResponse('<p class="text-muted small p-3">Fecha no especificada.</p>')
+ 
+    try:
+        from datetime import date as date_type
+        fecha_obj = date_type.fromisoformat(fecha_str)
+    except ValueError:
+        return HttpResponse('<p class="text-danger small p-3">Fecha inválida.</p>')
+ 
+    movimientos_dia = HistorialMovimiento.objects.filter(
+        empresa=empresa,
+        fecha__date=fecha_obj
+    ).select_related('usuario').order_by('-fecha')
+ 
+    if filtro_tipo:
+        movimientos_dia = movimientos_dia.filter(tipo_accion=filtro_tipo)
+ 
+    if buscar_texto:
+        movimientos_dia = movimientos_dia.filter(
+            models.Q(producto_nombre__icontains=buscar_texto) |
+            models.Q(usuario__first_name__icontains=buscar_texto)
+        )
+ 
+    # 15 movimientos por página dentro de cada día
+    from django.core.paginator import Paginator
+    paginator = Paginator(movimientos_dia, 15)
+    page_obj  = paginator.get_page(page_number)
+ 
+    for mov in page_obj:
+        mov.stock_anterior = mov.stock_resultante - mov.cambio
+ 
+    # El parcial ahora está en modales/
+    return render(request, 'stokka/modales/historial_dia_parcial.html', {
+        'movimientos':  page_obj,
+        'fecha':        fecha_str,
+        'filtro_tipo':  filtro_tipo,
+        'buscar_texto': buscar_texto,
     })
 
 @login_required

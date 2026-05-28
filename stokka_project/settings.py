@@ -12,25 +12,23 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 import environ
 from pathlib import Path
-from django.utils.translation import gettext_lazy as _ 
+from django.utils.translation import gettext_lazy as _
 from decouple import config
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+ 
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
+ 
+ 
 # ==============================================================================
-# SEGURIDAD — todos los valores sensibles vienen del .env
+# SEGURIDAD
 # ==============================================================================
 SECRET_KEY = config('SECRET_KEY')
- 
 DEBUG = config('DEBUG', default=False, cast=bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',')
  
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv()) []
-
-
-# Application definition
-
+ 
+# ==============================================================================
+# APLICACIONES
+# ==============================================================================
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -38,16 +36,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    #Nuestras Apps
     'inventario',
-
-    #Librerias externas
     'crispy_forms',
     'crispy_bootstrap5',
-
-
 ]
-
+ 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -59,9 +52,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
-
+ 
 ROOT_URLCONF = 'stokka_project.urls'
-
+ 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -78,25 +71,39 @@ TEMPLATES = [
         },
     },
 ]
-
+ 
 WSGI_APPLICATION = 'stokka_project.wsgi.application'
-
-
+ 
+ 
 # ==============================================================================
-# BASE DE DATOS — PostgreSQL (AlwaysData)
+# BASE DE DATOS
+# Detecta automáticamente: si existe DB_NAME en .env usa PostgreSQL,
+# si no existe usa SQLite (desarrollo local)
 # ==============================================================================
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME':     config('DB_NAME'),
-        'USER':     config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST':     config('DB_HOST'),
-        'PORT':     config('DB_PORT', default='5432'),
+_db_name = config('DB_NAME', default='')
+ 
+if _db_name:
+    # PRODUCCIÓN → PostgreSQL (AlwaysData)
+    DATABASES = {
+        'default': {
+            'ENGINE':   'django.db.backends.postgresql',
+            'NAME':     _db_name,
+            'USER':     config('DB_USER'),
+            'PASSWORD': config('DB_PASSWORD'),
+            'HOST':     config('DB_HOST'),
+            'PORT':     config('DB_PORT', default='5432'),
+        }
     }
-}
-
-
+else:
+    # LOCAL → SQLite
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+ 
+ 
 # ==============================================================================
 # VALIDACIÓN DE CONTRASEÑAS
 # ==============================================================================
@@ -106,8 +113,8 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-
-
+ 
+ 
 # ==============================================================================
 # INTERNACIONALIZACIÓN
 # ==============================================================================
@@ -119,18 +126,17 @@ LANGUAGES = [
 ]
  
 TIME_ZONE = 'Europe/Madrid'
- 
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True
-
-
+ 
+ 
 # ==============================================================================
 # ARCHIVOS ESTÁTICOS Y MEDIA
 # ==============================================================================
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # para collectstatic en producción
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
  
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -152,7 +158,7 @@ AUTH_USER_MODEL = 'inventario.Usuario'
  
  
 # ==============================================================================
-# EMAIL SMTP — credenciales desde .env
+# EMAIL SMTP
 # ==============================================================================
 EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST          = 'smtp.gmail.com'
