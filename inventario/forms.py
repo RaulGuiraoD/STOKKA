@@ -116,6 +116,8 @@ class EditarUsuarioAdminForm(forms.ModelForm):
         usuario_id = self.instance.pk if self.instance else None
         if User.objects.filter(email=email).exclude(pk=usuario_id).exists():
             raise forms.ValidationError("Este email ya está en uso por otro usuario.")
+        if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+            raise forms.ValidationError("Introduce un correo electrónico válido.")
         return email
 
     
@@ -231,6 +233,8 @@ class RegistroColaboradorForm(forms.ModelForm):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("Este email ya está en uso.")
+        if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+            raise forms.ValidationError("Introduce un correo electrónico válido.")
         return email
 
     def clean(self):
@@ -300,6 +304,8 @@ class RegistroUsuarioNuevoForm(forms.Form):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("Este correo ya tiene una cuenta en Stokka.")
+        if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+            raise forms.ValidationError("Introduce un correo electrónico válido.")
         return email
 
     def clean(self):
@@ -360,6 +366,8 @@ class RegistroEmpresaForm(forms.Form):
         email = self.cleaned_data.get('email_usuario')
         if not User.objects.filter(email=email).exists():
             raise forms.ValidationError("No existe ninguna cuenta con ese correo. Regístrate primero como usuario.")
+        if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+            raise forms.ValidationError("Introduce un correo electrónico válido.")
         return email
 
     def clean_nombre_empresa(self):

@@ -3,6 +3,7 @@ import json
 import csv
 import io
 import logging
+import re
 
 # 2. Django Core & Imports Comunes
 from django.contrib import messages
@@ -1157,6 +1158,10 @@ def editar_perfil_view(request):
 
         if User.objects.filter(email=email).exclude(pk=request.user.pk).exists():
             messages.error(request, "Este email ya está en uso.", extra_tags='open_edit_modal')
+            return redirect('perfil')
+
+        if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+            messages.error(request, "Introduce un correo electrónico válido.", extra_tags='open_edit_modal')
             return redirect('perfil')
 
         if password:
