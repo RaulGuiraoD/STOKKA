@@ -3,6 +3,7 @@ import json
 import csv
 import io
 import logging
+import re
 
 # 2. Django Core & Imports Comunes
 from django.contrib import messages
@@ -30,6 +31,7 @@ from .forms import EditarUsuarioAdminForm, ProductoForm, RegistroColaboradorForm
 from .models import Perfil, Producto, Usuario, HistorialMovimiento, Empresa, Membresia, TemaEmpresa, TokenVerificacionEmail, TokenRecuperacionPassword, CopiaSeguridad
 from datetime import date, timedelta, datetime
 from django.conf import settings as django_settings
+from inventario.forms import validar_password_segura
 
 User = get_user_model()
 
@@ -420,42 +422,44 @@ def resetear_password_view(request, token):
     except TokenRecuperacionPassword.DoesNotExist:
         messages.error(request, "Enlace inválido o ya utilizado.")
         return render(request, 'registration/resetear_password.html', {'token_invalido': True})
-
+ 
     if token_obj.ha_expirado():
         messages.error(request, "El enlace ha caducado. Solicita uno nuevo.")
         return render(request, 'registration/resetear_password.html', {'token_invalido': True})
-
+ 
     if request.method == 'POST':
         password1 = request.POST.get('password1', '')
         password2 = request.POST.get('password2', '')
-
-        if len(password1) < 8:
-            messages.error(request, "La contraseña debe tener al menos 8 caracteres.")
+ 
+        # Validación de requisitos
+        from inventario.forms import validar_password_segura
+        errores = validar_password_segura(password1)
+        if errores:
+            messages.error(
+                request,
+                f"La contraseña debe contener: {', '.join(errores)}."
+            )
             return render(request, 'registration/resetear_password.html', {'token': token})
-
+ 
         if password1 != password2:
             messages.error(request, "Las contraseñas no coinciden.")
             return render(request, 'registration/resetear_password.html', {'token': token})
-
+ 
         usuario = token_obj.usuario
-        usuario.set_password(password1)
-        usuario.save()
-
-        token_obj.usado = True
-        token_obj.save(update_fields=['usado'])
-
-        usuario = token_obj.usuario
-
+ 
         if check_password(password1, usuario.password):
             messages.error(request, "La nueva contraseña no puede ser igual a la anterior.")
             return render(request, 'registration/resetear_password.html', {'token': token})
-
+ 
         usuario.set_password(password1)
         usuario.save()
-
+ 
+        token_obj.usado = True
+        token_obj.save(update_fields=['usado'])
+ 
         messages.success(request, "¡Contraseña actualizada! Ya puedes iniciar sesión.")
         return redirect('login')
-
+ 
     return render(request, 'registration/resetear_password.html', {'token': token})
 
 
@@ -1156,7 +1160,20 @@ def editar_perfil_view(request):
             messages.error(request, "Este email ya está en uso.", extra_tags='open_edit_modal')
             return redirect('perfil')
 
+        if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+            messages.error(request, "Introduce un correo electrónico válido.", extra_tags='open_edit_modal')
+            return redirect('perfil')
+
         if password:
+            from inventario.forms import validar_password_segura
+            errores = validar_password_segura(password)
+            if errores:
+                messages.error(
+                    request,
+                    f"La contraseña debe contener: {', '.join(errores)}.",
+                    extra_tags='open_edit_modal'
+                )
+                return redirect('perfil')
             if check_password(password, request.user.password):
                 messages.error(request, "La nueva contraseña debe ser diferente.", extra_tags='open_edit_modal')
                 return redirect('perfil')

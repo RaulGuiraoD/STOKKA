@@ -1,11 +1,30 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import check_password
+import re
 
 from .models import Producto, Empresa, Membresia, Usuario
 
 User = get_user_model()
-   
+
+
+def validar_password_segura(password):
+    """
+    Valida que la contraseña cumpla los requisitos de seguridad.
+    Devuelve una lista de errores. Si está vacía, la contraseña es válida.
+    """
+    errores = []
+    if len(password) < 8:
+        errores.append("al menos 8 caracteres")
+    if not re.search(r'[A-Z]', password):
+        errores.append("una letra mayúscula")
+    if not re.search(r'[0-9]', password):
+        errores.append("un número")
+    if not re.search(r'[!@#$%^&*(),.?\":{}|<>_\-\+\=\[\]\/\\]', password):
+        errores.append("un carácter especial (!@#$...)")
+    return errores
+
+
 class EditarUsuarioAdminForm(forms.ModelForm):
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
@@ -71,18 +90,25 @@ class EditarUsuarioAdminForm(forms.ModelForm):
             self.fields['rol'].help_text = "Solo el Dueño puede cambiar roles."
 
     def clean(self):
-        cleaned_data = super().clean()
-        password = cleaned_data.get("password")
+        cleaned_data     = super().clean()
+        password         = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
-
+ 
+        if password:
+            errores = validar_password_segura(password)
+            if errores:
+                self.add_error('password',
+                    f"La contraseña debe contener: {', '.join(errores)}."
+                )
+ 
         if password or confirm_password:
             if password != confirm_password:
                 self.add_error('confirm_password', "Las contraseñas no coinciden.")
-
+ 
         if password and self.instance.pk:
             if check_password(password, self.instance.password):
                 self.add_error('password', "La nueva contraseña debe ser diferente a la actual.")
-
+ 
         return cleaned_data
 
     def clean_email(self):
@@ -90,6 +116,8 @@ class EditarUsuarioAdminForm(forms.ModelForm):
         usuario_id = self.instance.pk if self.instance else None
         if User.objects.filter(email=email).exclude(pk=usuario_id).exists():
             raise forms.ValidationError("Este email ya está en uso por otro usuario.")
+        if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+            raise forms.ValidationError("Introduce un correo electrónico válido.")
         return email
 
     
@@ -205,15 +233,27 @@ class RegistroColaboradorForm(forms.ModelForm):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("Este email ya está en uso.")
+        if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+            raise forms.ValidationError("Introduce un correo electrónico válido.")
         return email
 
     def clean(self):
         cleaned_data = super().clean()
-        password = cleaned_data.get("password")
+        password        = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
+ 
+        if password:
+            errores = validar_password_segura(password)
+            if errores:
+                self.add_error('password',
+                    f"La contraseña debe contener: {', '.join(errores)}."
+                )
+ 
         if password and confirm_password and password != confirm_password:
             self.add_error('confirm_password', "Las contraseñas no coinciden.")
+ 
         return cleaned_data
+
 
 # ==============================================================================
 # REGISTRO PASO 1: solo el usuario
@@ -264,14 +304,25 @@ class RegistroUsuarioNuevoForm(forms.Form):
         email = self.cleaned_data.get('email')
         if User.objects.filter(email=email).exists():
             raise forms.ValidationError("Este correo ya tiene una cuenta en Stokka.")
+        if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+            raise forms.ValidationError("Introduce un correo electrónico válido.")
         return email
 
     def clean(self):
         cleaned_data = super().clean()
         password = cleaned_data.get('password')
-        confirm = cleaned_data.get('confirm_password')
+        confirm  = cleaned_data.get('confirm_password')
+ 
+        if password:
+            errores = validar_password_segura(password)
+            if errores:
+                self.add_error('password',
+                    f"La contraseña debe contener: {', '.join(errores)}."
+                )
+ 
         if password and confirm and password != confirm:
             self.add_error('confirm_password', "Las contraseñas no coinciden.")
+ 
         return cleaned_data
 
 
@@ -315,6 +366,8 @@ class RegistroEmpresaForm(forms.Form):
         email = self.cleaned_data.get('email_usuario')
         if not User.objects.filter(email=email).exists():
             raise forms.ValidationError("No existe ninguna cuenta con ese correo. Regístrate primero como usuario.")
+        if not re.match(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$', email):
+            raise forms.ValidationError("Introduce un correo electrónico válido.")
         return email
 
     def clean_nombre_empresa(self):
